@@ -17,22 +17,33 @@ export default function Library() {
   const [category, setCategory] = useState(searchParams.get('category') || '');
   const [sort, setSort] = useState('-published_date');
   const [totalCount, setTotalCount] = useState(null);
+  const [categoriesReady, setCategoriesReady] = useState(false);
 
   useEffect(() => { fetchCategories(); }, []);
-  useEffect(() => { fetchArticles(); }, [category, difficulty, sort]);
+  useEffect(() => { if (categoriesReady) fetchArticles(); }, [category, difficulty, sort, categoriesReady]);
 
   const fetchCategories = async () => {
     try {
       const res = await base44.entities.Category.list('-updated_date', 100);
-      setCategories(res.results || res || []);
+      const catArr = res.results || res || [];
+      setCategories(catArr);
+      const urlCat = searchParams.get('category');
+      if (urlCat) {
+        const matched = catArr.find(c => c.slug === urlCat || c.id === urlCat);
+        if (matched) setCategory(matched.id);
+      }
       const countsRes = await base44.functions.invoke('getCounts', {});
       setTotalCount((countsRes.data || countsRes || {}).articles ?? null);
     } catch (e) {}
+    setCategoriesReady(true);
   };
 
   const buildFilter = () => {
     const filter = { status: 'published' };
-    if (category) filter.category_id = category;
+    if (category) {
+      const matched = categories.find(c => c.slug === category || c.id === category);
+      filter.category_id = matched ? matched.id : category;
+    }
     if (difficulty) filter.difficulty = difficulty;
     return filter;
   };
