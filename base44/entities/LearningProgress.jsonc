@@ -1,0 +1,32 @@
+{
+  "name": "LearningProgress",
+  "type": "object",
+  "properties": {
+    "learning_path_id": {
+      "type": "string"
+    },
+    "path_slug": {
+      "type": "string"
+    },
+    "path_title": {
+      "type": "string"
+    },
+    "completed_lesson_orders": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "default": []
+    },
+    "last_lesson_order": {
+      "type": "number"
+    },
+    "last_accessed": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "learning_path_id"
+  ]
+}

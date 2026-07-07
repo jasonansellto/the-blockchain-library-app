@@ -28,11 +28,46 @@ export default function LearningPathDetail() {
         }
       }));
       setArticles(lessonArticles);
+      try {
+        const authed = await base44.auth.isAuthenticated();
+        if (authed) {
+          const prog = await base44.entities.LearningProgress.filter({ learning_path_id: p.id }, '-updated_date', 1);
+          const progArr = prog.results || prog || [];
+          if (progArr.length) {
+            const comp = {};
+            (progArr[0].completed_lesson_orders || []).forEach(o => { comp[o] = true; });
+            setCompleted(comp);
+          }
+        }
+      } catch (e2) {}
     } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
   const toggleComplete = (order) => {
-    setCompleted(prev => ({ ...prev, [order]: !prev[order] }));
+    setCompleted(prev => {
+      const next = { ...prev, [order]: !prev[order] };
+      saveProgress(next, order);
+      return next;
+    });
+  };
+
+  const saveProgress = async (comp, lastOrder) => {
+    try {
+      if (!path) return;
+      const orders = Object.keys(comp).filter(k => comp[k]).map(Number);
+      const existing = await base44.entities.LearningProgress.filter({ learning_path_id: path.id }, '-updated_date', 1);
+      const exArr = existing.results || existing || [];
+      if (exArr.length) {
+        await base44.entities.LearningProgress.update(exArr[0].id, {
+          completed_lesson_orders: orders, last_lesson_order: lastOrder, last_accessed: new Date().toISOString()
+        });
+      } else {
+        await base44.entities.LearningProgress.create({
+          learning_path_id: path.id, path_slug: path.slug, path_title: path.title,
+          completed_lesson_orders: orders, last_lesson_order: lastOrder, last_accessed: new Date().toISOString()
+        });
+      }
+    } catch (e) {}
   };
 
   if (loading) return <div className="flex justify-center py-32"><div className="w-8 h-8 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin" /></div>;

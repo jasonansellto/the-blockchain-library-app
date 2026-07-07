@@ -1,0 +1,29 @@
+{
+  "name": "Bookmark",
+  "type": "object",
+  "properties": {
+    "article_id": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "featured_image": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "category_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "article_id",
+    "slug",
+    "title"
+  ]
+}

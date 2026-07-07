@@ -1,0 +1,37 @@
+{
+  "name": "ReadingHistory",
+  "type": "object",
+  "properties": {
+    "article_id": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "featured_image": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "resource_type": {
+      "type": "string",
+      "default": "article"
+    },
+    "category_name": {
+      "type": "string"
+    },
+    "accessed_date": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "article_id",
+    "slug",
+    "title"
+  ]
+}

@@ -16,6 +16,8 @@ export default function ArticleDetail() {
   const [author, setAuthor] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('');
+  const [bookmarked, setBookmarked] = useState(false);
+  const [isAuthed, setIsAuthed] = useState(false);
 
   useEffect(() => { fetchArticle(); }, [slug]);
 
@@ -33,6 +35,28 @@ export default function ArticleDetail() {
       if (art.author_id) {
         try { const au = await base44.entities.Author.get(art.author_id); setAuthor(au); } catch (e) {}
       }
+      // Track reading history + bookmark for logged-in users
+      try {
+        const authed = await base44.auth.isAuthenticated();
+        setIsAuthed(authed);
+        if (authed) {
+          const hist = await base44.entities.ReadingHistory.filter({ article_id: art.id }, '-updated_date', 1);
+          const histArr = hist.results || hist || [];
+          if (histArr.length) {
+            await base44.entities.ReadingHistory.update(histArr[0].id, { accessed_date: new Date().toISOString() });
+          } else {
+            await base44.entities.ReadingHistory.create({
+              article_id: art.id, slug: art.slug, title: art.title,
+              featured_image: art.featured_image || '', summary: art.summary || '',
+              resource_type: 'article', category_name: category?.name || '',
+              accessed_date: new Date().toISOString()
+            });
+          }
+          const bm = await base44.entities.Bookmark.filter({ article_id: art.id }, '-updated_date', 1);
+          setBookmarked((bm.results || bm || []).length > 0);
+        }
+      } catch (e) {}
+
       if (art.related_articles?.length) {
         try {
           const rels = await Promise.all(art.related_articles.slice(0, 3).map(id => base44.entities.Article.get(id).catch(() => null)));
@@ -49,6 +73,24 @@ export default function ArticleDetail() {
       <Link to="/library" className="text-blue-600 font-medium">Browse all articles →</Link>
     </div>
   );
+
+  const toggleBookmark = async () => {
+    try {
+      if (bookmarked) {
+        const bm = await base44.entities.Bookmark.filter({ article_id: article.id }, '-updated_date', 1);
+        const bmArr = bm.results || bm || [];
+        if (bmArr.length) await base44.entities.Bookmark.delete(bmArr[0].id);
+        setBookmarked(false);
+      } else {
+        await base44.entities.Bookmark.create({
+          article_id: article.id, slug: article.slug, title: article.title,
+          featured_image: article.featured_image || '', summary: article.summary || '',
+          category_name: category?.name || ''
+        });
+        setBookmarked(true);
+      }
+    } catch (e) { console.error(e); }
+  };
 
   const toc = Array.isArray(article.toc) ? article.toc : [];
 
@@ -90,6 +132,11 @@ export default function ArticleDetail() {
             {article.reading_time && <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{article.reading_time} min read</span>}
             {article.published_date && <span className="flex items-center gap-1"><Calendar className="w-4 h-4" />{new Date(article.published_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>}
             <div className="flex items-center gap-1 ml-auto">
+              {isAuthed && (
+                <button onClick={toggleBookmark} className={`p-1.5 rounded transition-colors ${bookmarked ? 'text-blue-600' : 'hover:text-blue-600'}`} title="Bookmark">
+                  <BookMarked className="w-4 h-4" fill={bookmarked ? 'currentColor' : 'none'} />
+                </button>
+              )}
               <button onClick={() => window.print()} className="p-1.5 hover:text-blue-600 rounded transition-colors" title="Print"><Printer className="w-4 h-4" /></button>
               <button onClick={() => navigator.share?.({ title: article.title, url: window.location.href }).catch(() => {})} className="p-1.5 hover:text-blue-600 rounded transition-colors" title="Share"><Share2 className="w-4 h-4" /></button>
             </div>
