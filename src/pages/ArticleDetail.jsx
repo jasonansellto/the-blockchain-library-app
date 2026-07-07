@@ -94,6 +94,16 @@ export default function ArticleDetail() {
 
   const toc = Array.isArray(article.toc) ? article.toc : [];
 
+  const cleanExcerpt = (text) => {
+    if (!text) return text;
+    if (/[.!?]["']?\s*$/.test(text)) return text;
+    const lastEnd = Math.max(text.lastIndexOf('. '), text.lastIndexOf('? '), text.lastIndexOf('! '));
+    if (lastEnd > 40) return text.substring(0, lastEnd + 1).trim();
+    const lastSpace = text.lastIndexOf(' ');
+    if (lastSpace > 40) return text.substring(0, lastSpace).trim() + '...';
+    return text;
+  };
+
   return (
     <div>
       {/* Breadcrumbs */}
@@ -119,7 +129,7 @@ export default function ArticleDetail() {
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight leading-[1.15] mb-4">
             {article.title}
           </h1>
-          <p className="text-lg text-slate-500 leading-relaxed mb-6">{article.summary}</p>
+          <p className="text-lg text-slate-500 leading-relaxed mb-6">{cleanExcerpt(article.summary)}</p>
           <div className="flex items-center gap-5 text-sm text-slate-400 flex-wrap">
             {author && (
               <Link to={`/authors/${author.slug}`} className="flex items-center gap-2 group">
@@ -164,7 +174,7 @@ export default function ArticleDetail() {
             </aside>
           )}
 
-          <article className="flex-1 min-w-0 max-w-3xl">
+          <article className="flex-1 min-w-0 max-w-3xl mx-auto">
             {article.featured_image && (
               <div className="mb-8 rounded-xl overflow-hidden bg-slate-100">
                 <img src={article.featured_image} alt={article.title} className="w-full h-auto" />
