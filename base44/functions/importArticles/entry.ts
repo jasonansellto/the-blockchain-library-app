@@ -32,10 +32,10 @@ Deno.serve(async (req) => {
         return true;
       });
 
-      // Get already imported slugs
+      // Get already imported slugs — fetch ALL articles in large batches
       const existingSlugs = new Set();
       try {
-        const existing = await base44.asServiceRole.entities.Article.list('-updated_date', 500);
+        const existing = await base44.asServiceRole.entities.Article.list('-updated_date', 5000);
         const existingArr = existing.results || existing || [];
         if (Array.isArray(existingArr)) {
           for (const a of existingArr) { if (a.slug) existingSlugs.add(a.slug); }
