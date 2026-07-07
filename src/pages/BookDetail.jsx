@@ -50,17 +50,29 @@ export default function BookDetail() {
                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200"><BookMarked className="w-16 h-16 text-slate-300" /></div>
               )}
             </div>
-            {book.amazon_link && (
-              <a href={book.amazon_link} target="_blank" rel="noopener noreferrer"
-                className="mt-4 w-full inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
-                <ExternalLink className="w-4 h-4" /> View on Amazon
-              </a>
-            )}
+            <div className="mt-4 space-y-2">
+              {book.amazon_link && (
+                <a href={book.amazon_link} target="_blank" rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                  <ExternalLink className="w-4 h-4" /> Buy Paperback
+                </a>
+              )}
+              {book.amazon_kindle_link && (
+                <a href={book.amazon_kindle_link} target="_blank" rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200">
+                  <ExternalLink className="w-4 h-4" /> Buy Kindle
+                </a>
+              )}
+            </div>
           </div>
 
           {/* Details */}
           <div className="md:col-span-2">
-            <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-3">{book.title}</h1>
+            {book.series && (
+              <span className="inline-block text-xs font-semibold text-blue-700 bg-blue-50 px-3 py-1 rounded-full mb-3">{book.series}{book.reading_order ? ` · Book ${book.reading_order}` : ''}</span>
+            )}
+            <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-2">{book.title}</h1>
+            {book.subtitle && <p className="text-lg text-slate-500 font-medium mb-4 italic">{book.subtitle}</p>}
             {book.rating > 0 && (
               <div className="flex items-center gap-1.5 mb-4">
                 <div className="flex">
@@ -85,6 +97,15 @@ export default function BookDetail() {
                 <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Available Formats</p>
                 <div className="flex flex-wrap gap-2">
                   {book.formats.map(f => <span key={f} className="px-3 py-1 text-xs font-medium text-slate-600 bg-slate-100 rounded-full">{f}</span>)}
+                </div>
+              </div>
+            )}
+
+            {book.tags?.length > 0 && (
+              <div className="mb-6">
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Topics</p>
+                <div className="flex flex-wrap gap-2">
+                  {book.tags.map(t => <span key={t} className="px-3 py-1 text-xs font-medium text-teal-700 bg-teal-50 rounded-full">{t}</span>)}
                 </div>
               </div>
             )}

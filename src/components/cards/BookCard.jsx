@@ -17,16 +17,22 @@ export default function BookCard({ book }) {
           )}
         </div>
         <div className="p-4 flex-1 flex flex-col">
+          {book.series && (
+            <span className="inline-block text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full mb-1.5 self-start">{book.series}</span>
+          )}
           <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm mb-1 line-clamp-2">
             {book.title}
           </h3>
-          <p className="text-xs text-slate-400 mb-2">{book.publisher || 'Unknown publisher'}</p>
-          {book.rating > 0 && (
-            <div className="flex items-center gap-1 text-xs text-amber-500 mt-auto">
-              <Star className="w-3.5 h-3.5 fill-amber-400" />
-              <span className="font-medium text-slate-600">{book.rating.toFixed(1)}</span>
-            </div>
-          )}
+          {book.subtitle && <p className="text-xs text-slate-500 mb-2 line-clamp-2">{book.subtitle}</p>}
+          <div className="flex items-center gap-2 mt-auto">
+            {book.rating > 0 && (
+              <div className="flex items-center gap-1 text-xs text-amber-500">
+                <Star className="w-3.5 h-3.5 fill-amber-400" />
+                <span className="font-medium text-slate-600">{book.rating.toFixed(1)}</span>
+              </div>
+            )}
+            <span className="text-xs text-slate-400">{book.language === 'French' ? 'FR' : 'EN'}</span>
+          </div>
         </div>
       </div>
     </Link>
