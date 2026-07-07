@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Loader2, Filter, BookOpen } from 'lucide-react';
+import { Loader2, Filter, BookOpen, ChevronDown } from 'lucide-react';
 import ArticleCard from '@/components/cards/ArticleCard';
 import DifficultyBadge from '@/components/DifficultyBadge';
 
 export default function Library() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const PAGE_SIZE = 20;
   const [articles, setArticles] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [difficulty, setDifficulty] = useState('');
   const [category, setCategory] = useState(searchParams.get('category') || '');
   const [sort, setSort] = useState('-published_date');
@@ -21,15 +24,31 @@ export default function Library() {
     try { const res = await base44.entities.Category.list('-updated_date', 100); setCategories(res.results || res || []); } catch (e) {}
   };
 
+  const buildFilter = () => {
+    const filter = { status: 'published' };
+    if (category) filter.category_id = category;
+    if (difficulty) filter.difficulty = difficulty;
+    return filter;
+  };
+
   const fetchArticles = async () => {
     setLoading(true);
     try {
-      const filter = { status: 'published' };
-      if (category) filter.category_id = category;
-      if (difficulty) filter.difficulty = difficulty;
-      const res = await base44.entities.Article.filter(filter, sort, 60);
-      setArticles(res.results || res || []);
+      const res = await base44.entities.Article.filter(buildFilter(), sort, PAGE_SIZE, 0);
+      const arr = res.results || res || [];
+      setArticles(arr);
+      setHasMore(arr.length === PAGE_SIZE);
     } catch (e) { console.error(e); } finally { setLoading(false); }
+  };
+
+  const loadMore = async () => {
+    setLoadingMore(true);
+    try {
+      const res = await base44.entities.Article.filter(buildFilter(), sort, PAGE_SIZE, articles.length);
+      const arr = res.results || res || [];
+      setArticles(prev => [...prev, ...arr]);
+      setHasMore(arr.length === PAGE_SIZE);
+    } catch (e) { console.error(e); } finally { setLoadingMore(false); }
   };
 
   const catName = (id) => categories.find(c => c.id === id)?.name;
@@ -100,9 +119,20 @@ export default function Library() {
                 <p className="text-slate-400">No articles found. Try adjusting your filters.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {articles.map(a => <ArticleCard key={a.id} article={a} categoryName={catName(a.category_id)} />)}
-              </div>
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {articles.map(a => <ArticleCard key={a.id} article={a} categoryName={catName(a.category_id)} />)}
+                </div>
+                {hasMore && (
+                  <div className="flex justify-center mt-10">
+                    <button onClick={loadMore} disabled={loadingMore}
+                      className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors disabled:opacity-60">
+                      {loadingMore ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronDown className="w-4 h-4" />}
+                      {loadingMore ? 'Loading...' : 'Load More'}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

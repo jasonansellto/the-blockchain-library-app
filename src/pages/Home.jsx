@@ -21,14 +21,14 @@ export default function Home() {
 
   const fetchData = async () => {
     try {
-      const [articles, books, research, paths, categories, authors, glossary] = await Promise.all([
+      const [articles, books, research, paths, categories, authors, countsRes] = await Promise.all([
         base44.entities.Article.filter({ status: 'published' }, '-published_date', 20),
         base44.entities.Book.list('-updated_date', 20),
         base44.entities.ResearchPaper.list('-updated_date', 20),
         base44.entities.LearningPath.list('-updated_date', 20),
         base44.entities.Category.list('-updated_date', 50),
         base44.entities.Author.filter({ is_featured: true }, '-updated_date', 6),
-        base44.entities.GlossaryTerm.list('-updated_date', 1),
+        base44.functions.invoke('getCounts', {}),
       ]);
 
       const articlesArr = articles.results || articles || [];
@@ -37,7 +37,7 @@ export default function Home() {
       const pathsArr = paths.results || paths || [];
       const catsArr = categories.results || categories || [];
       const authorsArr = authors.results || authors || [];
-      const glossaryArr = glossary.results || glossary || [];
+      const counts = countsRes.data || countsRes || {};
 
       setData({
         featuredArticles: articlesArr.filter(a => a.is_featured).slice(0, 3),
@@ -48,11 +48,11 @@ export default function Home() {
         categories: catsArr.slice(0, 8),
         authors: authorsArr,
         counts: {
-          articles: articlesArr.length,
-          glossary: glossaryArr.length,
-          books: booksArr.length,
-          research: researchArr.length,
-          paths: pathsArr.length,
+          articles: counts.articles ?? 0,
+          glossary: counts.glossary ?? 0,
+          books: counts.books ?? 0,
+          research: counts.research ?? 0,
+          paths: counts.paths ?? 0,
         }
       });
     } catch (err) {
