@@ -8,15 +8,53 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { urls, category_map, author_id } = await req.json();
+    const { urls, category_map, author_id, sitemap_mode, batch_size, sitemap_url } = await req.json();
 
     const turndown = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced', bulletListMarker: '-' });
     turndown.remove(['div.sharedaddy', '.sd-sharing', '.sd-block', '.jp-relatedposts', '.wp-block-jetpack-related-posts', 'ins.adsbygoogle', '.advertisement', '.promo-wrap', '.article-promo-top', '.article-promo-bottom', '.wp-block-jetpack-slideshow']);
 
+    let urlsToProcess = urls || [];
+
+    // Sitemap mode: fetch sitemap, filter out already-imported slugs
+    let remainingAfter = 0;
+    if (sitemap_mode) {
+      const batchSize = batch_size || 40;
+      const sitemapRes = await fetch(sitemap_url || 'https://jasonansell.ca/sitemap.xml', { headers: { 'User-Agent': 'Mozilla/5.0' } });
+      const sitemapXml = await sitemapRes.text();
+      const allUrls = [...sitemapXml.matchAll(/<loc>(.*?)<\/loc>/g)].map(m => m[1].trim());
+      const articleUrls = allUrls.filter(u => {
+        if (!u.includes('jasonansell.ca/')) return false;
+        const path = u.replace('https://jasonansell.ca/', '').replace('http://jasonansell.ca/', '');
+        const parts = path.split('/').filter(Boolean);
+        if (parts.length < 2) return false;
+        const excluded = ['about', 'blog', 'disclaimer', 'privacy-policy', 'category', 'author', 'wp-content', 'wp-includes', 'wp-json', 'feed', 'comments', 'tag', 'page'];
+        if (excluded.includes(parts[0])) return false;
+        return true;
+      });
+
+      // Get already imported slugs
+      const existingSlugs = new Set();
+      try {
+        const existing = await base44.asServiceRole.entities.Article.list('-updated_date', 500);
+        const existingArr = existing.results || existing || [];
+        if (Array.isArray(existingArr)) {
+          for (const a of existingArr) { if (a.slug) existingSlugs.add(a.slug); }
+        }
+      } catch (e) { console.log('list error:', e.message); }
+
+      const toImport = articleUrls.filter(u => {
+        const slug = u.match(/\/([^/]+)\/?$/)?.[1] || '';
+        return !existingSlugs.has(slug);
+      });
+
+      urlsToProcess = toImport.slice(0, batchSize);
+      remainingAfter = toImport.length - urlsToProcess.length;
+    }
+
     const articles = [];
     const errors = [];
 
-    for (const url of urls) {
+    for (const url of urlsToProcess) {
       try {
         const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
         const html = await res.text();
@@ -82,17 +120,26 @@ Deno.serve(async (req) => {
           continue;
         }
 
+        // Skip 404 / page not found
+        if (/page not found|404|not found/i.test(title)) {
+          errors.push({ url, reason: 'Page not found (404)' });
+          continue;
+        }
+
+        // Truncate body to avoid oversized records
+        const truncatedBody = articleBody.length > 50000 ? articleBody.substring(0, 50000) + '\n\n*[Article truncated]*' : articleBody;
+
         articles.push({
           title,
           slug,
-          body: articleBody,
-          summary: summary.substring(0, 300),
-          featured_image: featuredImage,
+          body: truncatedBody,
+          summary: (summary || '').substring(0, 300),
+          featured_image: featuredImage || '',
           status: 'published',
           published_date: published_date || new Date().toISOString().split('T')[0],
-          category_id,
-          tags,
-          author_id,
+          category_id: category_id || null,
+          tags: Array.isArray(tags) ? tags : [],
+          author_id: author_id || null,
           difficulty: 'intermediate',
           views: 0,
         });
@@ -108,8 +155,9 @@ Deno.serve(async (req) => {
 
     return Response.json({
       imported: created.length,
-      attempted: urls.length,
+      attempted: urlsToProcess.length,
       skipped: errors.length,
+      remaining: remainingAfter,
       errors,
       titles: articles.map(a => a.title),
     });
