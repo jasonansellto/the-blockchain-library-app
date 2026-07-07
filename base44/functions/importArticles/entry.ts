@@ -8,7 +8,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { urls, category_map, author_id, sitemap_mode, batch_size, sitemap_url } = await req.json();
+    const { urls, category_map, author_id, sitemap_mode, batch_size, sitemap_url, offset } = await req.json();
 
     const turndown = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced', bulletListMarker: '-' });
     turndown.remove(['div.sharedaddy', '.sd-sharing', '.sd-block', '.jp-relatedposts', '.wp-block-jetpack-related-posts', 'ins.adsbygoogle', '.advertisement', '.promo-wrap', '.article-promo-top', '.article-promo-bottom', '.wp-block-jetpack-slideshow']);
@@ -47,8 +47,9 @@ Deno.serve(async (req) => {
         return !existingSlugs.has(slug);
       });
 
-      urlsToProcess = toImport.slice(0, batchSize);
-      remainingAfter = toImport.length - urlsToProcess.length;
+      const off = offset || 0;
+      urlsToProcess = toImport.slice(off, off + batchSize);
+      remainingAfter = toImport.length - off - urlsToProcess.length;
     }
 
     const articles = [];
