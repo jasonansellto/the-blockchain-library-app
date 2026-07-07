@@ -1,0 +1,129 @@
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Search, Menu, X, ChevronDown, BookOpen } from 'lucide-react';
+
+const navItems = [
+  { label: 'Home', path: '/' },
+  { label: 'Learn', path: '/learn' },
+  { label: 'Library', path: '/library' },
+  { label: 'Glossary', path: '/glossary' },
+  { label: 'Books', path: '/books' },
+  { label: 'Research', path: '/research' },
+];
+
+const resourceItems = [
+  { label: 'Tools', path: '/tools' },
+  { label: 'Developers', path: '/developers' },
+  { label: 'News & Insights', path: '/news' },
+];
+
+const secondaryItems = [
+  { label: 'About', path: '/about' },
+  { label: 'Contact', path: '/contact' },
+];
+
+export default function Navbar() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const navigate = useNavigate();
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (query.trim()) {
+      navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+      setSearchOpen(false);
+      setMobileOpen(false);
+      setQuery('');
+    }
+  };
+
+  return (
+    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
+      <nav className="container-tbl">
+        <div className="flex items-center justify-between h-16">
+          <Link to="/" className="flex items-center gap-2.5 shrink-0">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-600 to-teal-500 flex items-center justify-center">
+              <BookOpen className="w-5 h-5 text-white" strokeWidth={2.5} />
+            </div>
+            <span className="font-bold text-[15px] text-slate-900 tracking-tight hidden sm:block">
+              The Blockchain <span className="text-blue-600">Library</span>
+            </span>
+          </Link>
+
+          <div className="hidden lg:flex items-center gap-1">
+            {navItems.map((item) => (
+              <Link key={item.path} to={item.path}
+                className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-slate-50 rounded-md transition-colors">
+                {item.label}
+              </Link>
+            ))}
+            <div className="relative group">
+              <button className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-slate-50 rounded-md transition-colors flex items-center gap-1">
+                Resources <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+              <div className="absolute left-0 top-full pt-1 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all">
+                <div className="bg-white rounded-lg shadow-lg border border-slate-200 py-1.5 min-w-[180px]">
+                  {resourceItems.map((item) => (
+                    <Link key={item.path} to={item.path}
+                      className="block px-4 py-2 text-sm text-slate-600 hover:text-blue-600 hover:bg-slate-50">
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+            {secondaryItems.map((item) => (
+              <Link key={item.path} to={item.path}
+                className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-slate-50 rounded-md transition-colors">
+                {item.label}
+              </Link>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button onClick={() => setSearchOpen(!searchOpen)}
+              className="p-2 text-slate-600 hover:text-blue-600 hover:bg-slate-50 rounded-md transition-colors">
+              <Search className="w-5 h-5" />
+            </button>
+            <Link to="/login"
+              className="hidden sm:inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors">
+              Login
+            </Link>
+            <button onClick={() => setMobileOpen(!mobileOpen)}
+              className="lg:hidden p-2 text-slate-600 rounded-md">
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+
+        {searchOpen && (
+          <form onSubmit={handleSearch} className="pb-4 animate-fade-in-fast">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <input autoFocus type="text" value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search articles, glossary terms, books, research..."
+                className="w-full pl-12 pr-4 py-3 text-base bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white" />
+            </div>
+          </form>
+        )}
+
+        {mobileOpen && (
+          <div className="lg:hidden pb-4 space-y-1 animate-fade-in-fast">
+            {[...navItems, ...resourceItems, ...secondaryItems].map((item) => (
+              <Link key={item.path} to={item.path} onClick={() => setMobileOpen(false)}
+                className="block px-3 py-2.5 text-sm font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50 rounded-md">
+                {item.label}
+              </Link>
+            ))}
+            <Link to="/login" onClick={() => setMobileOpen(false)}
+              className="block px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-md text-center mt-2">
+              Login
+            </Link>
+          </div>
+        )}
+      </nav>
+    </header>
+  );
+}

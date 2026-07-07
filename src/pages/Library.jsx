@@ -1,0 +1,112 @@
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { base44 } from '@/api/base44Client';
+import { Loader2, Filter, BookOpen } from 'lucide-react';
+import ArticleCard from '@/components/cards/ArticleCard';
+import DifficultyBadge from '@/components/DifficultyBadge';
+
+export default function Library() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [articles, setArticles] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [difficulty, setDifficulty] = useState('');
+  const [category, setCategory] = useState(searchParams.get('category') || '');
+  const [sort, setSort] = useState('-published_date');
+
+  useEffect(() => { fetchCategories(); }, []);
+  useEffect(() => { fetchArticles(); }, [category, difficulty, sort]);
+
+  const fetchCategories = async () => {
+    try { const res = await base44.entities.Category.list('-updated_date', 100); setCategories(res.results || res || []); } catch (e) {}
+  };
+
+  const fetchArticles = async () => {
+    setLoading(true);
+    try {
+      const filter = { status: 'published' };
+      if (category) filter.category_id = category;
+      if (difficulty) filter.difficulty = difficulty;
+      const res = await base44.entities.Article.filter(filter, sort, 60);
+      setArticles(res.results || res || []);
+    } catch (e) { console.error(e); } finally { setLoading(false); }
+  };
+
+  const catName = (id) => categories.find(c => c.id === id)?.name;
+  const updateCategory = (val) => { setCategory(val); setSearchParams(val ? { category: val } : {}); };
+
+  return (
+    <div>
+      <div className="border-b border-slate-100 bg-slate-50">
+        <div className="container-tbl py-12">
+          <div className="flex items-center gap-2 text-sm text-slate-400 mb-3">
+            <span>Home</span><span>/</span><span className="text-slate-700 font-medium">Library</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-2">Article Library</h1>
+          <p className="text-slate-500 max-w-2xl">Thousands of expertly written articles covering blockchain, cryptocurrency, Web3, AI, and decentralized technology — all interconnected through our knowledge graph.</p>
+        </div>
+      </div>
+
+      <div className="container-tbl py-10">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Filters sidebar */}
+          <aside className="lg:w-64 shrink-0 space-y-6">
+            <div className="bg-white rounded-xl border border-slate-200 p-5">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900 mb-4"><Filter className="w-4 h-4 text-blue-600" />Filters</h3>
+              <div className="space-y-5">
+                <div>
+                  <label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2 block">Category</label>
+                  <select value={category} onChange={(e) => updateCategory(e.target.value)}
+                    className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All categories</option>
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2 block">Difficulty</label>
+                  <div className="space-y-1.5">
+                    {['', 'beginner', 'intermediate', 'advanced', 'expert'].map(d => (
+                      <button key={d} onClick={() => setDifficulty(d)}
+                        className={`block w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors capitalize ${difficulty === d ? 'bg-blue-50 text-blue-700 font-medium' : 'text-slate-600 hover:bg-slate-50'}`}>
+                        {d || 'All levels'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2 block">Sort by</label>
+                  <select value={sort} onChange={(e) => setSort(e.target.value)}
+                    className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="-published_date">Newest first</option>
+                    <option value="published_date">Oldest first</option>
+                    <option value="-views">Most viewed</option>
+                    <option value="title">Alphabetical</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* Article grid */}
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-6">
+              <p className="text-sm text-slate-500">{loading ? 'Loading...' : `${articles.length} articles`}</p>
+            </div>
+            {loading ? (
+              <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-blue-600 animate-spin" /></div>
+            ) : articles.length === 0 ? (
+              <div className="text-center py-20">
+                <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-400">No articles found. Try adjusting your filters.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {articles.map(a => <ArticleCard key={a.id} article={a} categoryName={catName(a.category_id)} />)}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -6,6 +6,24 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
+import Layout from '@/components/layout/Layout';
+import Home from '@/pages/Home';
+import Library from '@/pages/Library';
+import Glossary from '@/pages/Glossary';
+import Books from '@/pages/Books';
+import Research from '@/pages/Research';
+import Learn from '@/pages/Learn';
+import ArticleDetail from '@/pages/ArticleDetail';
+import GlossaryDetail from '@/pages/GlossaryDetail';
+import BookDetail from '@/pages/BookDetail';
+import ResearchDetail from '@/pages/ResearchDetail';
+import LearningPathDetail from '@/pages/LearningPathDetail';
+import SearchPage from '@/pages/SearchPage';
+import About from '@/pages/About';
+import Contact from '@/pages/Contact';
+import Resources from '@/pages/Resources';
+import Authors from '@/pages/Authors';
+import AuthorDetail from '@/pages/AuthorDetail';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -34,8 +52,28 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      {/* Add your page Route elements here */}
-      <Route path="*" element={<PageNotFound />} />
+      <Route element={<Layout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/learn" element={<Learn />} />
+        <Route path="/learn/:slug" element={<LearningPathDetail />} />
+        <Route path="/library" element={<Library />} />
+        <Route path="/article/:slug" element={<ArticleDetail />} />
+        <Route path="/glossary" element={<Glossary />} />
+        <Route path="/glossary/:slug" element={<GlossaryDetail />} />
+        <Route path="/books" element={<Books />} />
+        <Route path="/books/:slug" element={<BookDetail />} />
+        <Route path="/research" element={<Research />} />
+        <Route path="/research/:slug" element={<ResearchDetail />} />
+        <Route path="/authors" element={<Authors />} />
+        <Route path="/authors/:slug" element={<AuthorDetail />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/tools" element={<Resources type="tools" />} />
+        <Route path="/developers" element={<Resources type="developers" />} />
+        <Route path="/news" element={<Resources type="news" />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="*" element={<PageNotFound />} />
+      </Route>
     </Routes>
   );
 };

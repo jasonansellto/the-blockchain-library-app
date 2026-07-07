@@ -1,0 +1,171 @@
+{
+  "name": "Article",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "featured_image": {
+      "type": "string"
+    },
+    "body": {
+      "type": "string"
+    },
+    "toc": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "level": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced",
+        "expert"
+      ],
+      "default": "beginner"
+    },
+    "reading_time": {
+      "type": "number"
+    },
+    "author_id": {
+      "type": "string"
+    },
+    "category_id": {
+      "type": "string"
+    },
+    "subcategory_id": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "pending",
+        "published",
+        "archived"
+      ],
+      "default": "draft"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "views": {
+      "type": "number",
+      "default": 0
+    },
+    "key_takeaways": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "faq": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string"
+          },
+          "answer": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "related_articles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "related_glossary": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "related_books": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "related_research": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "related_external": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "seo_title": {
+      "type": "string"
+    },
+    "seo_description": {
+      "type": "string"
+    },
+    "published_date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "title",
+    "slug",
+    "status"
+  ]
+}

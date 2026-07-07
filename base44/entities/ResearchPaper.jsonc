@@ -1,0 +1,94 @@
+{
+  "name": "ResearchPaper",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "authors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "abstract": {
+      "type": "string"
+    },
+    "publication": {
+      "type": "string"
+    },
+    "publication_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "doi": {
+      "type": "string"
+    },
+    "pdf_url": {
+      "type": "string"
+    },
+    "citation": {
+      "type": "string"
+    },
+    "bibtex": {
+      "type": "string"
+    },
+    "category_id": {
+      "type": "string"
+    },
+    "research_type": {
+      "type": "string",
+      "enum": [
+        "paper",
+        "thesis",
+        "report",
+        "whitepaper",
+        "preprint"
+      ],
+      "default": "paper"
+    },
+    "downloads": {
+      "type": "number",
+      "default": 0
+    },
+    "citations_count": {
+      "type": "number",
+      "default": 0
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "related_articles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "related_books": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "related_glossary": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "seo_title": {
+      "type": "string"
+    },
+    "seo_description": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "slug"
+  ]
+}

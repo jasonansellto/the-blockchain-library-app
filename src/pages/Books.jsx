@@ -1,0 +1,55 @@
+import React, { useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
+import { Loader2, BookMarked, Search } from 'lucide-react';
+import BookCard from '@/components/cards/BookCard';
+
+export default function Books() {
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState('');
+
+  useEffect(() => { fetchBooks(); }, []);
+
+  const fetchBooks = async () => {
+    try {
+      const res = await base44.entities.Book.list('-updated_date', 100);
+      setBooks(res.results || res || []);
+    } catch (e) { console.error(e); } finally { setLoading(false); }
+  };
+
+  const filtered = books.filter(b =>
+    !query || b.title.toLowerCase().includes(query.toLowerCase()) || (b.publisher || '').toLowerCase().includes(query.toLowerCase())
+  );
+
+  return (
+    <div>
+      <div className="border-b border-slate-100 bg-slate-50">
+        <div className="container-tbl py-12">
+          <div className="flex items-center gap-2 text-sm text-slate-400 mb-3"><span>Home</span><span>/</span><span className="text-slate-700 font-medium">Books</span></div>
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-2">Blockchain Books</h1>
+          <p className="text-slate-500 max-w-2xl">Curated books on blockchain, cryptocurrency, and decentralized technology — with reviews, reading orders, and links to related articles and research.</p>
+        </div>
+      </div>
+      <div className="container-tbl py-10">
+        <div className="relative max-w-md mb-8">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <input type="text" value={query} onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search books..."
+            className="w-full pl-12 pr-4 py-3 text-base bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        {loading ? (
+          <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-blue-600 animate-spin" /></div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-20"><BookMarked className="w-12 h-12 text-slate-300 mx-auto mb-4" /><p className="text-slate-400">No books found.</p></div>
+        ) : (
+          <>
+            <p className="text-sm text-slate-500 mb-6">{filtered.length} books</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+              {filtered.map(b => <BookCard key={b.id} book={b} />)}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

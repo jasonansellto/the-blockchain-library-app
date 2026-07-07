@@ -1,0 +1,24 @@
+{
+  "name": "Newsletter",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "subscribed",
+        "unsubscribed",
+        "pending"
+      ],
+      "default": "subscribed"
+    },
+    "source": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "email"
+  ]
+}

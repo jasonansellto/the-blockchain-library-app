@@ -1,0 +1,111 @@
+{
+  "name": "Book",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "cover": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "isbn": {
+      "type": "string"
+    },
+    "amazon_link": {
+      "type": "string"
+    },
+    "formats": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "publisher": {
+      "type": "string"
+    },
+    "publication_year": {
+      "type": "number"
+    },
+    "author_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reviews": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "reviewer": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "number"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "rating": {
+      "type": "number",
+      "default": 0
+    },
+    "pages": {
+      "type": "number"
+    },
+    "language": {
+      "type": "string",
+      "default": "English"
+    },
+    "series": {
+      "type": "string"
+    },
+    "reading_order": {
+      "type": "number"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "related_articles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "related_glossary": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "related_research": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "category_id": {
+      "type": "string"
+    },
+    "seo_title": {
+      "type": "string"
+    },
+    "seo_description": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "slug"
+  ]
+}

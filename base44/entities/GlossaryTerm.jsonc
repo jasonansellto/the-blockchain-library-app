@@ -1,0 +1,82 @@
+{
+  "name": "GlossaryTerm",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "definition": {
+      "type": "string"
+    },
+    "category_id": {
+      "type": "string"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ],
+      "default": "beginner"
+    },
+    "examples": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "related_terms": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "related_articles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "related_books": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "related_research": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "external_references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "seo_title": {
+      "type": "string"
+    },
+    "seo_description": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "slug",
+    "definition"
+  ]
+}
