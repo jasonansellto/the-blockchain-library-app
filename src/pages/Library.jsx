@@ -16,12 +16,18 @@ export default function Library() {
   const [difficulty, setDifficulty] = useState('');
   const [category, setCategory] = useState(searchParams.get('category') || '');
   const [sort, setSort] = useState('-published_date');
+  const [totalCount, setTotalCount] = useState(null);
 
   useEffect(() => { fetchCategories(); }, []);
   useEffect(() => { fetchArticles(); }, [category, difficulty, sort]);
 
   const fetchCategories = async () => {
-    try { const res = await base44.entities.Category.list('-updated_date', 100); setCategories(res.results || res || []); } catch (e) {}
+    try {
+      const res = await base44.entities.Category.list('-updated_date', 100);
+      setCategories(res.results || res || []);
+      const countsRes = await base44.functions.invoke('getCounts', {});
+      setTotalCount((countsRes.data || countsRes || {}).articles ?? null);
+    } catch (e) {}
   };
 
   const buildFilter = () => {
@@ -109,7 +115,9 @@ export default function Library() {
           {/* Article grid */}
           <div className="flex-1">
             <div className="flex items-center justify-between mb-6">
-              <p className="text-sm text-slate-500">{loading ? 'Loading...' : `${articles.length} articles`}</p>
+              <p className="text-sm text-slate-500">
+                {loading ? 'Loading...' : (!category && !difficulty && totalCount != null ? `${totalCount} articles` : `${articles.length} articles`)}
+              </p>
             </div>
             {loading ? (
               <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-blue-600 animate-spin" /></div>
