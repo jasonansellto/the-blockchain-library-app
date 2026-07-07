@@ -5,6 +5,9 @@
     "title": {
       "type": "string"
     },
+    "subtitle": {
+      "type": "string"
+    },
     "slug": {
       "type": "string"
     },
@@ -18,6 +21,9 @@
       "type": "string"
     },
     "amazon_link": {
+      "type": "string"
+    },
+    "amazon_kindle_link": {
       "type": "string"
     },
     "formats": {
@@ -71,6 +77,12 @@
     },
     "reading_order": {
       "type": "number"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "is_featured": {
       "type": "boolean",
