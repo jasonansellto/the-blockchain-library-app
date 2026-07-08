@@ -477,7 +477,15 @@ Return JSON: { "books": [ {...}, ... ] } — up to ${limit} entries, no duplicat
 
       const existingRes = await base44.asServiceRole.entities.Book.filter({}, '-created_date', 1000);
       const existingArr: any[] = existingRes.results || existingRes || [];
-      const existingIsbns = new Set(existingArr.map((b) => b.isbn).filter(Boolean));
+      // Dedup keys: every existing ISBN-13, its derived ISBN-10, and the ASIN
+      // extracted from each amazon_link (covers originals imported before ISBNs
+      // were stored, and amazon.ca links that carry the ISBN-10 as /dp/ ASIN).
+      const existingIds = new Set<string>();
+      existingArr.forEach((b) => {
+        if (b.isbn) { existingIds.add(b.isbn); const d10 = isbn13To10(b.isbn); if (d10) existingIds.add(d10); }
+        const am = String(b.amazon_link || '').match(/\/dp\/([A-Z0-9]{10})(?:\?|$)/);
+        if (am) existingIds.add(am[1]);
+      });
       const existingSlugs = new Set(existingArr.map((b) => b.slug));
 
       // 1. Fetch + parse the search page(s)
@@ -493,7 +501,15 @@ Return JSON: { "books": [ {...}, ... ] } — up to ${limit} entries, no duplicat
       }
 
       // 2. Dedup by ISBN-13 (primary) + slug
-      const newBooks = found.filter((b) => b.isbn13 && !existingIsbns.has(b.isbn13) && !existingSlugs.has(slugify(b.title)));
+      const newBooks = found.filter((b) => {
+        if (!b.isbn13) return false;
+        if (existingIds.has(b.isbn13)) return false;
+        if (b.isbn10 && existingIds.has(b.isbn10)) return false;
+        const d10 = isbn13To10(b.isbn13);
+        if (d10 && existingIds.has(d10)) return false;
+        if (existingSlugs.has(slugify(b.title))) return false;
+        return true;
+      });
       const skipped = found.length - newBooks.length;
 
       if (!newBooks.length) {
