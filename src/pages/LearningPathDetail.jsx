@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ChevronRight, Clock, Layers, CheckCircle2, ArrowRight, GraduationCap, Play } from 'lucide-react';
+import { ChevronRight, Clock, Layers, GraduationCap, Play } from 'lucide-react';
 import DifficultyBadge from '@/components/DifficultyBadge';
+import LessonCard from '@/components/learn/LessonCard';
 
 export default function LearningPathDetail() {
   const { slug } = useParams();
-  const navigate = useNavigate();
   const [path, setPath] = useState(null);
   const [articles, setArticles] = useState({});
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState({});
   const [authed, setAuthed] = useState(false);
+  const [expandedIndex, setExpandedIndex] = useState(null);
   const lessonRefs = useRef([]);
 
   useEffect(() => { fetchPath(); }, [slug]);
@@ -78,8 +79,30 @@ export default function LearningPathDetail() {
     const sorted = (path.lessons || []).sort((a, b) => (a.order || 0) - (b.order || 0));
     const firstIncompleteIdx = sorted.findIndex((lesson, i) => !completed[lesson.order ?? i]);
     const idx = firstIncompleteIdx === -1 ? 0 : firstIncompleteIdx;
-    lessonRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setExpandedIndex(idx);
+    setTimeout(() => lessonRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
   };
+
+  const handleExpand = (index) => {
+    setExpandedIndex(prev => prev === index ? null : index);
+    setTimeout(() => lessonRefs.current[index]?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+  };
+
+  const handleCompleteAndNext = (order, index) => {
+    if (!completed[order]) toggleComplete(order);
+    const lessons = (path.lessons || []).sort((a, b) => (a.order || 0) - (b.order || 0));
+    if (index < lessons.length - 1) {
+      setExpandedIndex(index + 1);
+      setTimeout(() => lessonRefs.current[index + 1]?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+    }
+  };
+
+  useEffect(() => {
+    if (!path || loading) return;
+    const sorted = (path.lessons || []).sort((a, b) => (a.order || 0) - (b.order || 0));
+    const firstIncompleteIdx = sorted.findIndex((lesson, i) => !completed[lesson.order ?? i]);
+    setExpandedIndex(firstIncompleteIdx === -1 ? 0 : firstIncompleteIdx);
+  }, [path, loading]);
 
   if (loading) return <div className="flex justify-center py-32"><div className="w-8 h-8 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin" /></div>;
   if (!path) return <div className="container-tbl py-32 text-center"><h1 className="text-2xl font-bold text-slate-900 mb-3">Learning path not found</h1><Link to="/learn" className="text-blue-600 font-medium">Browse paths →</Link></div>;
@@ -102,7 +125,7 @@ export default function LearningPathDetail() {
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-teal-500" />
         )}
-        <div className="relative container-tbl py-14">
+        <div className="relative container-tbl py-10 sm:py-14">
           <nav className="flex items-center gap-1.5 text-sm text-white/60 mb-4">
             <Link to="/" className="hover:text-white">Home</Link><ChevronRight className="w-3.5 h-3.5" />
             <Link to="/learn" className="hover:text-white">Learn</Link><ChevronRight className="w-3.5 h-3.5" />
@@ -114,7 +137,7 @@ export default function LearningPathDetail() {
             <span className="flex items-center gap-1 text-sm text-white/70"><Layers className="w-4 h-4" />{totalLessons} lessons</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-3">{path.title}</h1>
-          <p className="text-lg text-white/80 max-w-2xl mb-6">{path.description}</p>
+          <p className="text-base sm:text-lg text-white/80 max-w-2xl mb-6">{path.description}</p>
           <div className="max-w-md">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-white/70">Your progress</span>
@@ -135,48 +158,23 @@ export default function LearningPathDetail() {
 
       <div className="container-tbl py-10 max-w-3xl">
         <h2 className="text-xl font-bold text-slate-900 mb-5">Lessons</h2>
-        <div className="space-y-3">
-          {sortedLessons.map((lesson, i) => {
-            const isDone = completed[lesson.order ?? i];
-            const art = lesson.article_id ? articles[lesson.article_id] : null;
-            const lessonLink = art ? `/article/${art.slug}` : null;
-            return (
-              <div key={i} ref={el => lessonRefs.current[i] = el} className="relative flex items-stretch gap-3">
-                {/* Circle column with connecting line */}
-                <div className="relative shrink-0 flex flex-col items-center self-stretch">
-                  {i !== 0 && <div className="w-px flex-1 bg-slate-200" />}
-                  <div className="shrink-0">
-                    {authed ? (
-                      <button onClick={(e) => { e.stopPropagation(); toggleComplete(lesson.order ?? i); }} className="shrink-0">
-                        {isDone ? <CheckCircle2 className="w-7 h-7 text-teal-600" /> : <div className="w-7 h-7 rounded-full border-2 border-slate-300 hover:border-blue-500 bg-white transition-colors" />}
-                      </button>
-                    ) : (
-                      <div className="w-7 h-7 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center text-xs font-bold text-slate-400">{i + 1}</div>
-                    )}
-                  </div>
-                  {i !== sortedLessons.length - 1 && <div className="w-px flex-1 bg-slate-200" />}
-                </div>
-                {/* Lesson card */}
-                <div onClick={() => lessonLink && navigate(lessonLink)}
-                  className={`flex-1 flex items-center gap-4 p-3 rounded-xl border transition-all ${lessonLink ? 'cursor-pointer' : ''} ${isDone ? 'bg-teal-50 border-teal-200' : 'bg-white border-slate-200 hover:border-blue-200 hover:shadow-sm'}`}>
-                  {art?.featured_image && (
-                    <div className="shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-slate-100">
-                      <img src={art.featured_image} alt="" className="w-full h-full object-cover" loading="lazy" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-xs font-bold text-slate-400">Lesson {lesson.order ?? i + 1}</span>
-                      {lesson.duration && <span className="text-xs text-slate-400">· {lesson.duration}</span>}
-                    </div>
-                    <h3 className="font-semibold text-slate-900 text-sm leading-snug truncate">{lesson.title || art?.title}</h3>
-                    {art?.summary && <p className="text-xs text-slate-400 line-clamp-1 mt-0.5">{art.summary}</p>}
-                  </div>
-                  {lessonLink && <ArrowRight className="shrink-0 w-5 h-5 text-slate-400" />}
-                </div>
-              </div>
-            );
-          })}
+        <div>
+          {sortedLessons.map((lesson, i) => (
+            <LessonCard
+              key={i}
+              ref={el => lessonRefs.current[i] = el}
+              lesson={lesson}
+              index={i}
+              total={totalLessons}
+              article={lesson.article_id ? articles[lesson.article_id] : null}
+              isDone={!!completed[lesson.order ?? i]}
+              authed={authed}
+              isExpanded={expandedIndex === i}
+              onExpand={handleExpand}
+              onToggle={toggleComplete}
+              onCompleteAndNext={handleCompleteAndNext}
+            />
+          ))}
         </div>
 
         {progress === 100 && (
