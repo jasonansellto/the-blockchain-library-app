@@ -82,8 +82,22 @@ export default function BooksBatchPanel() {
   const fixRatings = async () => {
     setFixingRatings(true); setRatingsResult(null); setError(null);
     try {
-      const res = await base44.functions.invoke('generateBooksBatch', { action: 'fix-ratings' });
-      setRatingsResult(res.data || res);
+      const allResults = [];
+      let totalUpdated = 0;
+      let totalTargets = 0;
+      let hasMore = true;
+      let guard = 0;
+      while (hasMore && guard < 10) {
+        const res = await base44.functions.invoke('generateBooksBatch', { action: 'fix-ratings' });
+        const data = res.data || res;
+        allResults.push(...(data.results || []));
+        totalUpdated += data.updated || 0;
+        totalTargets = data.totalTargets || totalTargets;
+        hasMore = data.hasMore === true;
+        guard++;
+        setRatingsResult({ updated: totalUpdated, total: totalTargets, results: allResults, running: hasMore });
+        if (hasMore) await checkExisting();
+      }
       await checkExisting();
     } catch (e) {
       setError(e.response?.data?.error || e.message || 'Ratings update failed');

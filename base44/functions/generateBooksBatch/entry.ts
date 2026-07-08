@@ -37,31 +37,59 @@ function amazonUrl(asin: string): string {
   return `https://www.amazon.ca/dp/${asin}?tag=${AFFILIATE_TAG}`;
 }
 
-// Reliable cover + ISBN from the Google Books API (no key required).
-// LLM-generated m.media-amazon.com cover URLs frequently 404, so every
-// imported book gets its cover from Google Books instead.
-async function googleBooksCover(title: string, author: string): Promise<{ cover: string; isbn: string }> {
+// Reliable cover + ISBN from Open Library (free, lenient rate limits).
+// LLM-generated m.media-amazon.com cover URLs frequently 404, and the Google
+// Books API rate-limits (429) the server IP — so every imported book gets its
+// cover from Open Library instead.
+async function openLibraryCover(title: string, author: string): Promise<{ cover: string; isbn: string }> {
+  // Try title+author first, then title-only (catches multi-author books and
+  // minor author-name mismatches).
+  for (const useAuthor of [true, false]) {
+    try {
+      const sp = new URLSearchParams();
+      sp.set('title', title);
+      if (useAuthor && author) sp.set('author', author);
+      sp.set('limit', '1');
+      const r = await fetch(`https://openlibrary.org/search.json?${sp.toString()}`, { redirect: 'follow' });
+      if (!r.ok) continue;
+      const data: any = await r.json();
+      const doc = data?.docs?.[0];
+      if (doc && doc.cover_i) {
+        const isbnArr: any[] = doc.isbn || [];
+        return { cover: `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`, isbn: isbnArr[0] || '' };
+      }
+    } catch (_e) {
+      continue;
+    }
+  }
+  return { cover: '', isbn: '' };
+}
+
+// Fallback: fetch the Amazon product page and extract the real cover image URL
+// (og:image / hiRes / large). Used when Open Library has no match.
+async function amazonCover(link: string): Promise<string> {
+  if (!link) return '';
+  const cleanLink = link.split('?')[0];
   try {
-    const params = new URLSearchParams();
-    params.set('q', `intitle:"${title}"` + (author ? ` inauthor:"${author}"` : ''));
-    params.set('maxResults', '1');
-    const url = `https://www.googleapis.com/books/v1/volumes?${params.toString()}`;
-    const r = await fetch(url, { redirect: 'follow' });
-    if (!r.ok) return { cover: '', isbn: '' };
-    const data: any = await r.json();
-    const item = data?.items?.[0];
-    if (!item) return { cover: '', isbn: '' };
-    const vi = item.volumeInfo || {};
-    const imgs = vi.imageLinks || {};
-    const coverRaw = imgs.extraLarge || imgs.large || imgs.medium || imgs.thumbnail || imgs.smallThumbnail || '';
-    const cover = coverRaw ? coverRaw.replace(/^http:/, 'https:') : '';
-    const ids: any[] = vi.industryIdentifiers || [];
-    const isbn13 = ids.find((i) => i?.type === 'ISBN_13');
-    const isbn10 = ids.find((i) => i?.type === 'ISBN_10');
-    const isbn = (isbn13?.identifier) || (isbn10?.identifier) || '';
-    return { cover, isbn };
+    const r = await fetch(cleanLink, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9'
+      },
+      redirect: 'follow'
+    });
+    if (!r.ok) return '';
+    const html = await r.text();
+    const og = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i);
+    if (og && og[1]) return og[1];
+    const hiRes = html.match(/["']hiRes["']\s*:\s*["'](https:\/\/m\.media-amazon\.com\/images\/I\/[^"']+)["']/i);
+    if (hiRes && hiRes[1]) return hiRes[1];
+    const large = html.match(/["']large["']\s*:\s*["'](https:\/\/m\.media-amazon\.com\/images\/I\/[^"']+)["']/i);
+    if (large && large[1]) return large[1];
+    return '';
   } catch (_e) {
-    return { cover: '', isbn: '' };
+    return '';
   }
 }
 
@@ -107,7 +135,8 @@ async function persistNewBooks(generated: any[], existingArr: any[], base44: any
     const asin = String(b.asin || '').trim();
     const kindleAsin = String(b.kindle_asin || '').trim();
     const authorName = String(b.author || '').trim();
-    const { cover, isbn } = await googleBooksCover(b.title, authorName);
+    let { cover, isbn } = await openLibraryCover(b.title, authorName);
+    if (!cover && asin) cover = await amazonCover(amazonUrl(asin));
     const formats = kindleAsin ? ['Paperback', 'Kindle'] : ['Paperback'];
     const rating = typeof b.rating === 'number' ? Math.max(0, Math.min(5, b.rating)) : 0;
     const desc = b.description || '';
@@ -204,7 +233,8 @@ Deno.serve(async (req) => {
       const updates: any[] = [];
       for (const b of targets) {
         const author = (b.author_ids?.[0]) || '';
-        const { cover, isbn } = await googleBooksCover(b.title, author);
+        let { cover, isbn } = await openLibraryCover(b.title, author);
+        if (!cover && b.amazon_link) cover = await amazonCover(b.amazon_link);
         if (cover) {
           const upd: any = { id: b.id, cover };
           if (isbn) upd.isbn = isbn;
@@ -223,59 +253,56 @@ Deno.serve(async (req) => {
     }
 
     // ---- Action: update Amazon ratings for books missing them (rating 0) ----
+    // Fetches each book's Amazon product page directly (browser UA) and extracts
+    // the "X.X out of 5 stars" rating — far more reliable than LLM web search for
+    // less-indexed titles. Processes all missing-rating books in one call.
     if (body.action === 'fix-ratings') {
-      const res = await base44.asServiceRole.entities.Book.filter({}, '-created_date', 1000);
+      const res = await base44.asServiceRole.entities.Book.filter({}, 'internal_id', 1000);
       const books: any[] = res.results || res || [];
       const targets = books.filter((b) => !b.rating || b.rating === 0);
-      if (!targets.length) {
-        return Response.json({ action: 'fix-ratings', updated: 0, total: 0, results: [] });
+      const totalTargets = targets.length;
+      if (!totalTargets) {
+        return Response.json({ action: 'fix-ratings', updated: 0, totalTargets: 0, hasMore: false, results: [] });
       }
-      const titleList = targets
-        .map((b, i) => `${i + 1}. Title: "${b.title}" — Author: ${b.author_ids?.[0] || 'unknown'}`)
-        .join('\n');
-      const prompt = `You are researching real Amazon product pages. For each book below, find its current Amazon average customer rating (1.0 to 5.0, one decimal). Search Amazon for each title to confirm. Return the rating as a number. If the book has no Amazon rating or you cannot confirm it, return -1 for that book.
-
-Books to look up:
-${titleList}
-
-Return JSON: { "ratings": [ { "title": "exact title", "rating": number_or_-1 } ] } — one entry per input book, same order. Use -1 (not null) when no rating is confirmed.`;
-      const llmResponse: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
-        prompt,
-        add_context_from_internet: true,
-        model: 'gemini_3_flash',
-        response_json_schema: {
-          type: 'object',
-          properties: {
-            ratings: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  title: { type: 'string' },
-                  rating: { type: 'number' }
-                }
-              }
-            }
-          }
-        }
-      });
-      const ratings: any[] = (llmResponse && llmResponse.ratings) || [];
       const results: any[] = [];
       const updates: any[] = [];
       for (const b of targets) {
-        const match = ratings.find((r) => r && slugify(r.title) === slugify(b.title));
-        const rating = match && typeof match.rating === 'number' ? match.rating : -1;
-        if (rating > 0) {
-          updates.push({ id: b.id, rating: Math.max(0, Math.min(5, Math.round(rating * 10) / 10)) });
-          results.push({ title: b.title, rating, status: 'updated' });
-        } else {
-          results.push({ title: b.title, rating: null, status: 'no_rating' });
+        const link = (b.amazon_link || '').split('?')[0];
+        if (!link) {
+          results.push({ title: b.title, rating: null, status: 'no_link' });
+          continue;
         }
+        try {
+          const r = await fetch(link, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+              'Accept-Language': 'en-US,en;q=0.9'
+            },
+            redirect: 'follow'
+          });
+          if (!r.ok) {
+            results.push({ title: b.title, rating: null, status: 'fetch_failed', code: r.status });
+            continue;
+          }
+          const html = await r.text();
+          const m = html.match(/(\d+\.\d)\s+out of 5\s+stars/i);
+          if (m) {
+            const rating = Math.max(0, Math.min(5, parseFloat(m[1])));
+            updates.push({ id: b.id, rating });
+            results.push({ title: b.title, rating, status: 'updated' });
+          } else {
+            results.push({ title: b.title, rating: null, status: 'no_rating_on_page' });
+          }
+        } catch (e) {
+          results.push({ title: b.title, rating: null, status: 'error', error: e.message });
+        }
+        await new Promise((resolve) => setTimeout(resolve, 400));
       }
       if (updates.length) {
         await base44.asServiceRole.entities.Book.bulkUpdate(updates);
       }
-      return Response.json({ action: 'fix-ratings', updated: updates.length, total: targets.length, results });
+      return Response.json({ action: 'fix-ratings', updated: updates.length, totalTargets, hasMore: false, results });
     }
 
     // ---- Action: bulk import from an Amazon category URL ----
