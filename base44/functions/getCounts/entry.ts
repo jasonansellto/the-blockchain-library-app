@@ -6,6 +6,9 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
+    let body: any = {};
+    try { body = await req.json(); } catch (e) {}
+
     const [articles, glossary, books, research, paths] = await Promise.all([
       base44.asServiceRole.entities.Article.filter({ status: 'published' }, '-updated_date', 5000),
       base44.asServiceRole.entities.GlossaryTerm.list('-updated_date', 5000),
@@ -16,12 +19,21 @@ Deno.serve(async (req) => {
 
     const count = (r) => (r.results || r || []).length;
 
+    let filteredArticles = null;
+    if (body.article_filter) {
+      const filtered = await base44.asServiceRole.entities.Article.filter(
+        body.article_filter, '-updated_date', 5000
+      );
+      filteredArticles = count(filtered);
+    }
+
     return Response.json({
       articles: count(articles),
       glossary: count(glossary),
       books: count(books),
       research: count(research),
       paths: count(paths),
+      filtered_articles: filteredArticles,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

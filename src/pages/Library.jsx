@@ -16,7 +16,7 @@ export default function Library() {
   const [difficulty, setDifficulty] = useState('');
   const [category, setCategory] = useState(searchParams.get('category') || '');
   const [sort, setSort] = useState('-published_date');
-  const [totalCount, setTotalCount] = useState(null);
+  const [filteredCount, setFilteredCount] = useState(null);
   const [categoriesReady, setCategoriesReady] = useState(false);
 
   useEffect(() => { fetchCategories(); }, []);
@@ -32,8 +32,6 @@ export default function Library() {
         const matched = catArr.find(c => c.slug === urlCat || c.id === urlCat);
         if (matched) setCategory(matched.id);
       }
-      const countsRes = await base44.functions.invoke('getCounts', {});
-      setTotalCount((countsRes.data || countsRes || {}).articles ?? null);
     } catch (e) {}
     setCategoriesReady(true);
   };
@@ -51,10 +49,15 @@ export default function Library() {
   const fetchArticles = async () => {
     setLoading(true);
     try {
-      const res = await base44.entities.Article.filter(buildFilter(), sort, PAGE_SIZE, 0);
+      const filter = buildFilter();
+      const [res, countsRes] = await Promise.all([
+        base44.entities.Article.filter(filter, sort, PAGE_SIZE, 0),
+        base44.functions.invoke('getCounts', { article_filter: filter }),
+      ]);
       const arr = res.results || res || [];
       setArticles(arr);
       setHasMore(arr.length === PAGE_SIZE);
+      setFilteredCount((countsRes.data || countsRes || {}).filtered_articles ?? null);
     } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
@@ -127,7 +130,7 @@ export default function Library() {
           <div className="flex-1">
             <div className="flex items-center justify-between mb-6">
               <p className="text-sm text-slate-500">
-                {loading ? 'Loading...' : (!category && !difficulty && totalCount != null ? `${totalCount} articles` : `${articles.length} articles`)}
+                {loading ? 'Loading...' : (filteredCount != null ? `${filteredCount} articles` : `${articles.length} articles`)}
               </p>
             </div>
             {loading ? (
