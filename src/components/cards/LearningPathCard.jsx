@@ -11,9 +11,9 @@ export default function LearningPathCard({ path, categoryName, progress = 0 }) {
     <Link to={`/learn/${path.slug}`} className="group block">
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden h-full hover:shadow-lg hover:border-blue-200 transition-all duration-300 flex flex-col">
         {path.cover_image && (
-          <div className="h-36 overflow-hidden bg-slate-100">
+          <div className="overflow-hidden bg-slate-100">
             <img src={path.cover_image} alt={path.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+              className="w-full h-auto group-hover:scale-105 transition-transform duration-500" loading="lazy" />
           </div>
         )}
         <div className="p-5 flex-1 flex flex-col">
