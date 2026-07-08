@@ -10,7 +10,6 @@ const navItems = [
   { label: 'Glossary', path: '/glossary' },
   { label: 'Books', path: '/books' },
   { label: 'Research', path: '/research' },
-  { label: 'AI Assistant', path: '/ai-assistant' },
 ];
 
 const resourceItems = [
@@ -18,6 +17,7 @@ const resourceItems = [
   { label: 'Developers', path: '/developers' },
   { label: 'News & Insights', path: '/news' },
   { label: 'Newsletter', path: '/newsletter' },
+  { label: 'AI Assistant', path: '/ai-assistant' },
 ];
 
 const secondaryItems = [
