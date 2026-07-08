@@ -44,6 +44,7 @@ export default function Navbar() {
   };
 
   return (
+    <>
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
       <nav className="container-tbl">
         <div className="flex items-center justify-between h-16">
@@ -120,32 +121,34 @@ export default function Navbar() {
           </form>
         )}
 
-        {mobileOpen && (
-          <>
-            <div className="lg:hidden fixed inset-0 top-16 z-40 bg-black/20" onClick={() => setMobileOpen(false)} />
-            <div className="lg:hidden fixed inset-x-0 top-16 bottom-0 z-50 bg-white overflow-y-auto animate-fade-in-fast">
-              <div className="container-tbl py-4 space-y-1">
-                {[...navItems, ...resourceItems, ...secondaryItems].map((item) => (
-                  <Link key={item.path} to={item.path} onClick={() => setMobileOpen(false)}
-                    className="block px-3 py-3 text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50 rounded-md">
-                    {item.label}
-                  </Link>
-                ))}
-                {isAdmin && (
-                  <Link to="/admin/learning-paths" onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-1.5 px-3 py-3 text-base font-medium text-blue-600 bg-blue-50 rounded-md mt-2">
-                    <Shield className="w-4 h-4" /> Admin
-                  </Link>
-                )}
-                <Link to="/login" onClick={() => setMobileOpen(false)}
-                  className="block px-3 py-3 text-base font-semibold text-white bg-blue-600 rounded-md text-center mt-3">
-                  Login
-                </Link>
-              </div>
-            </div>
-          </>
-        )}
       </nav>
     </header>
+
+    {mobileOpen && (
+      <>
+        <div className="lg:hidden fixed inset-0 top-16 z-40 bg-black/20" onClick={() => setMobileOpen(false)} />
+        <div className="lg:hidden fixed inset-x-0 top-16 bottom-0 z-50 bg-white overflow-y-auto animate-fade-in-fast">
+          <div className="container-tbl py-4 space-y-1">
+            {[...navItems, ...resourceItems, ...secondaryItems].map((item) => (
+              <Link key={item.path} to={item.path} onClick={() => setMobileOpen(false)}
+                className="block px-3 py-3 text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50 rounded-md">
+                {item.label}
+              </Link>
+            ))}
+            {isAdmin && (
+              <Link to="/admin/learning-paths" onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-1.5 px-3 py-3 text-base font-medium text-blue-600 bg-blue-50 rounded-md mt-2">
+                <Shield className="w-4 h-4" /> Admin
+              </Link>
+            )}
+            <Link to="/login" onClick={() => setMobileOpen(false)}
+              className="block px-3 py-3 text-base font-semibold text-white bg-blue-600 rounded-md text-center mt-3">
+              Login
+            </Link>
+          </div>
+        </div>
+      </>
+    )}
+    </>
   );
 }
