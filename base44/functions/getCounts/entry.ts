@@ -19,6 +19,11 @@ Deno.serve(async (req) => {
 
     let filteredArticles = null;
     if (body.article_filter) {
+      let user = null;
+      try { user = await base44.auth.me(); } catch (e) {}
+      if (!user || (user.role !== 'admin' && user.role !== 'editor')) {
+        return Response.json({ error: 'Forbidden — admin or editor only for custom filters' }, { status: 403 });
+      }
       const filtered = await base44.asServiceRole.entities.Article.filter(
         body.article_filter, '-updated_date', 5000
       );

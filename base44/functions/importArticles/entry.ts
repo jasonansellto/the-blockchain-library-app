@@ -7,6 +7,9 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (user.role !== 'admin' && user.role !== 'editor') {
+      return Response.json({ error: 'Forbidden — admin or editor only' }, { status: 403 });
+    }
 
     const { urls, category_map, author_id, sitemap_mode, batch_size, sitemap_url, offset } = await req.json();
 
