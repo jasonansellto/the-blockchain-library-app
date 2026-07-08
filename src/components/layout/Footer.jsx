@@ -19,7 +19,7 @@ const footerSections = [
       { label: 'Developer Hub', path: '/developers' },
       { label: 'Tools', path: '/tools' },
       { label: 'News & Insights', path: '/news' },
-      { label: 'AI Assistant', path: '/assistant' },
+      { label: 'AI Assistant', path: '/ai-assistant' },
       { label: 'Categories', path: '/library' },
     ],
   },
@@ -30,7 +30,6 @@ const footerSections = [
       { label: 'Contact', path: '/contact' },
       { label: 'Authors', path: '/authors' },
       { label: 'Submit Content', path: '/contact' },
-      { label: 'Premium', path: '/premium' },
     ],
   },
 ];
