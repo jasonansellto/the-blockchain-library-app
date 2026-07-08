@@ -74,6 +74,7 @@ export default function AdminSeoDashboard() {
         </div>
 
         <div className="flex gap-2 mb-6 text-sm">
+          <a href="/admin/content" className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Content</a>
           <a href="/admin/seo" className="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-medium">SEO Dashboard</a>
           <a href="/admin/learning-paths" className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Learning Paths</a>
           <a href="/admin/revisions" className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Revisions</a>

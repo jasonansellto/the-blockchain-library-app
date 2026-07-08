@@ -44,6 +44,7 @@ import ServeRaw from '@/pages/ServeRaw';
 import TopicHub from '@/pages/TopicHub';
 import TagBrowse from '@/pages/TagBrowse';
 import AdminRevisions from '@/pages/AdminRevisions';
+import AdminContent from '@/pages/AdminContent';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -115,6 +116,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/learning-paths" element={<AdminLearningPaths />} />
             <Route path="/admin/seo" element={<AdminSeoDashboard />} />
             <Route path="/admin/revisions" element={<AdminRevisions />} />
+            <Route path="/admin/content" element={<AdminContent />} />
           </Route>
         </Route>
         <Route path="*" element={<PageNotFound />} />
