@@ -29,6 +29,7 @@ import CodeSnippetDetail from '@/pages/CodeSnippetDetail';
 import RpcDirectory from '@/pages/RpcDirectory';
 import SdkReference from '@/pages/SdkReference';
 import ApiDocs from '@/pages/ApiDocs';
+import News from '@/pages/News';
 import Authors from '@/pages/Authors';
 import AuthorDetail from '@/pages/AuthorDetail';
 import Dashboard from '@/pages/Dashboard';
@@ -88,7 +89,7 @@ const AuthenticatedApp = () => {
         <Route path="/developers/rpc" element={<RpcDirectory />} />
         <Route path="/developers/sdks" element={<SdkReference />} />
         <Route path="/developers/api" element={<ApiDocs />} />
-        <Route path="/news" element={<Resources type="news" />} />
+        <Route path="/news" element={<News />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/ai-assistant" element={<AIAssistant />} />

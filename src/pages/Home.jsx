@@ -9,6 +9,7 @@ import BookCard from '@/components/cards/BookCard';
 import ResearchCard from '@/components/cards/ResearchCard';
 import LearningPathCard from '@/components/cards/LearningPathCard';
 import CategoryCard from '@/components/cards/CategoryCard';
+import LatestNewsWidget from '@/components/news/LatestNewsWidget';
 import Seo from '@/components/Seo';
 
 export default function Home() {
@@ -17,8 +18,21 @@ export default function Home() {
     featuredResearch: [], featuredPaths: [], categories: [], authors: [], counts: {}
   });
   const [loading, setLoading] = useState(true);
+  const [news, setNews] = useState([]);
+  const [newsLoading, setNewsLoading] = useState(true);
 
   useEffect(() => { fetchData(); }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await base44.functions.invoke('fetchNews', { t: Date.now() });
+        const data = res.data || res;
+        if (!data.error) setNews(data.items || []);
+      } catch (e) { console.error(e); }
+      setNewsLoading(false);
+    })();
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -160,6 +174,11 @@ export default function Home() {
               {data.latestArticles.map(a => <ArticleCard key={a.id} article={a} categoryName={catName(a.category_id)} />)}
             </div>
           </section>
+        )}
+
+        {/* Latest News */}
+        {(newsLoading || news.length > 0) && (
+          <LatestNewsWidget items={news} loading={newsLoading} />
         )}
 
         {/* Featured Books */}
