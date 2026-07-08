@@ -55,7 +55,7 @@ export default function Home() {
       const catPriority = ['blockchain', 'cryptocurrency', 'web3', 'technology'];
       const catDeprio = ['money', 'affiliate'];
       const sortedCats = catsArr
-        .filter(c => articleCatIds.has(c.id))
+        .filter(c => articleCatIds.has(c.id) && !catDeprio.some(d => (c.name || '').toLowerCase().includes(d)))
         .sort((a, b) => {
           const aName = (a.name || '').toLowerCase();
           const bName = (b.name || '').toLowerCase();
@@ -64,10 +64,6 @@ export default function Home() {
           if (aPri !== -1 && bPri !== -1) return aPri - bPri;
           if (aPri !== -1) return -1;
           if (bPri !== -1) return 1;
-          const aDep = catDeprio.some(d => aName.includes(d));
-          const bDep = catDeprio.some(d => bName.includes(d));
-          if (aDep && !bDep) return 1;
-          if (bDep && !aDep) return -1;
           return 0;
         });
 
