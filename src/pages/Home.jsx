@@ -52,6 +52,24 @@ export default function Home() {
       const catsArr = categories.results || categories || [];
       const authorsArr = authors.results || authors || [];
       const articleCatIds = new Set(articlesArr.map(a => a.category_id).filter(Boolean));
+      const catPriority = ['blockchain', 'cryptocurrency', 'web3', 'technology'];
+      const catDeprio = ['money', 'affiliate'];
+      const sortedCats = catsArr
+        .filter(c => articleCatIds.has(c.id))
+        .sort((a, b) => {
+          const aName = (a.name || '').toLowerCase();
+          const bName = (b.name || '').toLowerCase();
+          const aPri = catPriority.findIndex(p => aName.includes(p));
+          const bPri = catPriority.findIndex(p => bName.includes(p));
+          if (aPri !== -1 && bPri !== -1) return aPri - bPri;
+          if (aPri !== -1) return -1;
+          if (bPri !== -1) return 1;
+          const aDep = catDeprio.some(d => aName.includes(d));
+          const bDep = catDeprio.some(d => bName.includes(d));
+          if (aDep && !bDep) return 1;
+          if (bDep && !aDep) return -1;
+          return 0;
+        });
 
       setData({
         featuredArticles: articlesArr.filter(a => a.is_featured).slice(0, 3),
@@ -59,7 +77,7 @@ export default function Home() {
         featuredBooks: booksArr.filter(b => b.is_featured).slice(0, 4).length ? booksArr.filter(b => b.is_featured).slice(0, 4) : booksArr.slice(0, 4),
         featuredResearch: researchArr.filter(r => r.is_featured).slice(0, 3).length ? researchArr.filter(r => r.is_featured).slice(0, 3) : researchArr.slice(0, 3),
         featuredPaths: pathsArr.filter(p => p.is_featured).slice(0, 3).length ? pathsArr.filter(p => p.is_featured).slice(0, 3) : pathsArr.slice(0, 3),
-        categories: catsArr.filter(c => articleCatIds.has(c.id)).slice(0, 8),
+        categories: sortedCats.slice(0, 8),
         authors: authorsArr,
         counts: {}
       });
