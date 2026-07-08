@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, Layers, ArrowRight } from 'lucide-react';
 import DifficultyBadge from '@/components/DifficultyBadge';
+import { pathEstimatedTime } from '@/lib/duration';
 
 export default function LearningPathCard({ path, categoryName, progress = 0 }) {
   const lessonCount = Array.isArray(path.lessons) ? path.lessons.length : 0;
@@ -19,9 +20,9 @@ export default function LearningPathCard({ path, categoryName, progress = 0 }) {
         <div className="p-5 flex-1 flex flex-col">
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <DifficultyBadge level={path.difficulty} />
-            {path.estimated_time && (
+            {pathEstimatedTime(path) && (
               <span className="flex items-center gap-1 text-xs text-slate-400">
-                <Clock className="w-3.5 h-3.5" />{path.estimated_time}
+                <Clock className="w-3.5 h-3.5" />{pathEstimatedTime(path)}
               </span>
             )}
             {categoryName && <span className="text-xs text-slate-400">{categoryName}</span>}

@@ -1,3 +1,5 @@
+import { pathEstimatedTime } from '@/lib/duration';
+
 const SITE_URL = typeof window !== 'undefined' ? window.location.origin : 'https://theblockchainlibrary.com';
 const SITE_NAME = 'The Blockchain Library';
 const LOGO_URL = `${SITE_URL}/logo.png`;
@@ -206,6 +208,7 @@ export function buildPersonSchema(author) {
 }
 
 export function buildCourseSchema(path, category) {
+  const estimatedTime = pathEstimatedTime(path);
   const schema = {
     "@context": "https://schema.org",
     "@type": "Course",
@@ -215,14 +218,14 @@ export function buildCourseSchema(path, category) {
     "provider": { "@type": "Organization", "name": SITE_NAME, "sameAs": SITE_URL },
     "inLanguage": path.language || 'en'
   };
-  if (path.estimated_time) schema.timeRequired = path.estimated_time;
+  if (estimatedTime) schema.timeRequired = estimatedTime;
   if (category) schema.about = { "@type": "Thing", "name": category.name };
   if (path.difficulty) {
     const prereqMap = { beginner: '', intermediate: 'Basic understanding of blockchain fundamentals', advanced: 'Solid understanding of blockchain, smart contracts, and DeFi', expert: 'Deep technical knowledge of blockchain architecture and development' };
     if (prereqMap[path.difficulty]) schema.coursePrerequisites = prereqMap[path.difficulty];
   }
   if (path.lessons?.length) {
-    schema.hasCourseInstance = { "@type": "CourseInstance", "courseMode": "online", "courseWorkload": path.estimated_time || `PT${path.lessons.length * 15}M` };
+    schema.hasCourseInstance = { "@type": "CourseInstance", "courseMode": "online", "courseWorkload": estimatedTime || `PT${path.lessons.length * 15}M` };
   }
   return schema;
 }

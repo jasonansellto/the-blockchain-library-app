@@ -8,6 +8,7 @@ import Seo from '@/components/Seo';
 import { buildCourseSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 import CitationBox from '@/components/CitationBox';
 import GeoSummary from '@/components/GeoSummary';
+import { pathEstimatedTime } from '@/lib/duration';
 
 export default function LearningPathDetail() {
   const { slug } = useParams();
@@ -112,7 +113,7 @@ export default function LearningPathDetail() {
   return (
     <div>
       <Seo title={path.title} description={path.description} image={path.cover_image} type="article" schemas={schemas} />
-      <GeoSummary type="Learning Path" title={path.title} summary={path.description} keyConcepts={[path.difficulty, path.estimated_time].filter(Boolean)} relatedLinks={[]} />
+      <GeoSummary type="Learning Path" title={path.title} summary={path.description} keyConcepts={[path.difficulty, pathEstimatedTime(path)].filter(Boolean)} relatedLinks={[]} />
       {/* Hero with cover image */}
       <div className="relative border-b border-slate-100 overflow-hidden">
         {path.cover_image ? (
@@ -131,7 +132,7 @@ export default function LearningPathDetail() {
           </nav>
           <div className="flex items-center gap-2 mb-4">
             <DifficultyBadge level={path.difficulty} />
-            {path.estimated_time && <span className="flex items-center gap-1 text-sm text-white/70"><Clock className="w-4 h-4" />{path.estimated_time}</span>}
+            {pathEstimatedTime(path) && <span className="flex items-center gap-1 text-sm text-white/70"><Clock className="w-4 h-4" />{pathEstimatedTime(path)}</span>}
             <span className="flex items-center gap-1 text-sm text-white/70"><Layers className="w-4 h-4" />{totalLessons} lessons</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight mb-3">{path.title}</h1>

@@ -4,20 +4,12 @@ import { Loader2, GraduationCap, Filter, Search } from 'lucide-react';
 import LearningPathCard from '@/components/cards/LearningPathCard';
 import Seo from '@/components/Seo';
 import { buildCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
+import { pathTotalMinutes, parseDurationToMinutes } from '@/lib/duration';
 
-const bucketTime = (timeStr) => {
-  if (!timeStr) return null;
-  const lower = timeStr.toLowerCase();
-  const hoursMatch = lower.match(/(\d+)\s*hour/);
-  const minMatch = lower.match(/(\d+)\s*min/);
-  let totalMin = 0;
-  if (hoursMatch) totalMin += parseInt(hoursMatch[1]) * 60;
-  if (minMatch) totalMin += parseInt(minMatch[1]);
-  if (!totalMin) {
-    if (lower.includes('hour')) return 'medium';
-    if (lower.includes('min')) return 'short';
-    return null;
-  }
+const bucketTime = (path) => {
+  let totalMin = pathTotalMinutes(path);
+  if (!totalMin) totalMin = parseDurationToMinutes(path?.estimated_time);
+  if (!totalMin) return null;
   if (totalMin <= 60) return 'short';
   if (totalMin <= 180) return 'medium';
   return 'long';
@@ -73,7 +65,7 @@ export default function Learn() {
     }
     if (catFilter && p.category_id !== catFilter) return false;
     if (diffFilter && p.difficulty !== diffFilter) return false;
-    if (timeFilter && bucketTime(p.estimated_time) !== timeFilter) return false;
+    if (timeFilter && bucketTime(p) !== timeFilter) return false;
     return true;
   });
 
