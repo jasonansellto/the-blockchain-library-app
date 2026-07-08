@@ -10,7 +10,7 @@ export default function LearningPathCard({ path, categoryName, progress = 0 }) {
 
   return (
     <Link to={`/learn/${path.slug}`} className="group block">
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden h-full hover:shadow-lg hover:border-blue-200 transition-all duration-300 flex flex-col">
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden h-full card-premium hover:border-blue-200 flex flex-col">
         {path.cover_image && (
           <div className="overflow-hidden bg-slate-100">
             <img src={path.cover_image} alt={path.title}

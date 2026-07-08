@@ -12,6 +12,7 @@ import { buildArticleSchema, buildBreadcrumbSchema, buildFAQSchema } from '@/lib
 import CitationBox from '@/components/CitationBox';
 import GeoSummary from '@/components/GeoSummary';
 import LessonNav from '@/components/learn/LessonNav';
+import ReadingProgress from '@/components/animations/ReadingProgress';
 
 export default function ArticleDetail() {
   const { slug } = useParams();
@@ -181,6 +182,7 @@ export default function ArticleDetail() {
   return (
     <div>
       <Seo title={article.title} description={article.summary} image={article.featured_image} type="article" schemas={schemas} />
+      <ReadingProgress />
       <GeoSummary type="Article" title={article.title} summary={article.summary} keyConcepts={article.tags || []} relatedLinks={[...related.map(r => ({ title: r.title, type: 'Article', url: `/article/${r.slug}` })), ...relatedGlossary.map(r => ({ title: r.title, type: 'Glossary Term', url: `/glossary/${r.slug}` })), ...relatedBooks.map(r => ({ title: r.title, type: 'Book', url: `/books/${r.slug}` })), ...relatedPaths.map(r => ({ title: r.title, type: 'Learning Path', url: `/learn/${r.slug}` }))]} />
       {/* Breadcrumbs */}
       <div className="border-b border-slate-100 bg-slate-50">

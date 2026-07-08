@@ -7,7 +7,7 @@ import CategoryBadge from '@/components/CategoryBadge';
 export default function ArticleCard({ article, categoryName, featured = false }) {
   return (
     <Link to={`/article/${article.slug}`} className="group block">
-      <article className={`bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:border-blue-200 transition-all duration-300 ${featured ? 'flex flex-col' : ''}`}>
+      <article className={`bg-white rounded-xl border border-slate-200 overflow-hidden card-premium hover:border-blue-200 ${featured ? 'flex flex-col' : ''}`}>
         {article.featured_image && (
           <div className={`overflow-hidden bg-slate-100 ${featured ? 'h-56' : 'h-44'}`}>
             <img src={article.featured_image} alt={article.title}

@@ -5,7 +5,7 @@ import { Star, BookMarked } from 'lucide-react';
 export default function BookCard({ book }) {
   return (
     <Link to={`/books/${book.slug}`} className="group block">
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:border-blue-200 transition-all duration-300 h-full flex flex-col">
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden card-premium hover:border-blue-200 h-full flex flex-col">
         <div className="aspect-[3/4] bg-slate-100 overflow-hidden">
           {book.cover ? (
             <img src={book.cover} alt={book.title} loading="lazy"

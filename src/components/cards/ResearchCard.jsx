@@ -16,7 +16,7 @@ export default function ResearchCard({ paper }) {
   const isOriginal = paper.is_original_research;
   return (
     <Link to={`/research/${paper.slug}`} className="group block h-full">
-      <div className={`rounded-xl border p-5 h-full hover:shadow-md transition-all duration-300 flex flex-col ${isOriginal ? 'border-teal-300 ring-1 ring-teal-200 bg-gradient-to-b from-teal-50/40 to-white' : 'border-slate-200 bg-white hover:border-blue-200'}`}>
+      <div className={`rounded-xl border p-5 h-full card-premium flex flex-col ${isOriginal ? 'border-teal-300 ring-1 ring-teal-200 bg-gradient-to-b from-teal-50/40 to-white' : 'border-slate-200 bg-white hover:border-blue-200'}`}>
         <div className="flex items-center gap-2 mb-3 flex-wrap">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-blue-700 bg-blue-50">
             <FileText className="w-3 h-3" />{TYPE_LABELS[paper.research_type] || 'Paper'}

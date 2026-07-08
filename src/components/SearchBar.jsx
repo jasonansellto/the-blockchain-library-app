@@ -1,10 +1,22 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
+import useCyclingText from '@/hooks/useCyclingText';
 
-export default function SearchBar({ size = 'lg', placeholder = 'Search articles, glossary, books, research...' }) {
+const SUGGESTIONS = [
+  'Search articles, glossary, books, research…',
+  'Try "smart contracts"',
+  'Try "DeFi"',
+  'Try "Ethereum"',
+  'Try "NFTs"',
+  'Try "zero-knowledge proofs"',
+  'Try "wallet security"',
+];
+
+export default function SearchBar({ size = 'lg', placeholder }) {
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
+  const cyclingPlaceholder = useCyclingText(SUGGESTIONS);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -23,7 +35,7 @@ export default function SearchBar({ size = 'lg', placeholder = 'Search articles,
     <form onSubmit={handleSubmit} className="relative w-full">
       <Search className={`absolute top-1/2 -translate-y-1/2 text-slate-400 ${iconSizes[size]}`} />
       <input type="text" value={query} onChange={(e) => setQuery(e.target.value)}
-        placeholder={placeholder}
+        placeholder={placeholder || cyclingPlaceholder}
         className={`w-full ${sizes[size]} bg-white border border-slate-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 placeholder:text-slate-400`} />
       {size !== 'sm' && (
         <button type="submit"

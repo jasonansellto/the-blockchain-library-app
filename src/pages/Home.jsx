@@ -11,6 +11,10 @@ import LearningPathCard from '@/components/cards/LearningPathCard';
 import CategoryCard from '@/components/cards/CategoryCard';
 import LatestNewsWidget from '@/components/news/LatestNewsWidget';
 import Seo from '@/components/Seo';
+import NeuralGraph from '@/components/animations/NeuralGraph';
+import Reveal from '@/components/animations/Reveal';
+import StaggerGroup from '@/components/animations/StaggerGroup';
+import CountUp from '@/components/animations/CountUp';
 
 export default function Home() {
   const [data, setData] = useState({
@@ -98,6 +102,7 @@ export default function Home() {
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #0f172a 1px, transparent 0)', backgroundSize: '32px 32px' }} />
+        <NeuralGraph className="opacity-60" />
         <div className="container-tbl relative py-20 sm:py-28 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold mb-6 animate-fade-in">
             <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
@@ -140,7 +145,7 @@ export default function Home() {
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <stat.icon className={`w-7 h-7 mx-auto mb-2 ${stat.color}`} />
-                <div className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{stat.value ?? '—'}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{typeof stat.value === 'number' ? <CountUp end={stat.value} /> : '—'}</div>
                 <div className="text-xs text-slate-400 font-medium mt-1">{stat.label}</div>
               </div>
             ))}
@@ -152,40 +157,48 @@ export default function Home() {
         {/* Featured Learning Paths */}
         {data.featuredPaths.length > 0 && (
           <section>
-            <SectionHeader title="Featured Learning Paths" subtitle="Structured paths to take you from beginner to expert" link="/learn" linkLabel="All paths" icon={GraduationCap} />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Reveal>
+              <SectionHeader title="Featured Learning Paths" subtitle="Structured paths to take you from beginner to expert" link="/learn" linkLabel="All paths" icon={GraduationCap} />
+            </Reveal>
+            <StaggerGroup className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {data.featuredPaths.map(p => <LearningPathCard key={p.id} path={p} />)}
-            </div>
+            </StaggerGroup>
           </section>
         )}
 
         {/* Featured Articles */}
         {data.featuredArticles.length > 0 && (
           <section>
-            <SectionHeader title="Featured Articles" subtitle="Hand-picked essential reads from our editors" link="/library" linkLabel="All articles" icon={BookOpen} />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Reveal>
+              <SectionHeader title="Featured Articles" subtitle="Hand-picked essential reads from our editors" link="/library" linkLabel="All articles" icon={BookOpen} />
+            </Reveal>
+            <StaggerGroup className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {data.featuredArticles.map(a => <ArticleCard key={a.id} article={a} categoryName={catName(a.category_id)} featured />)}
-            </div>
+            </StaggerGroup>
           </section>
         )}
 
         {/* Popular Categories */}
         {data.categories.length > 0 && (
           <section>
-            <SectionHeader title="Popular Categories" subtitle="Explore the full spectrum of blockchain and emerging technology" link="/library" linkLabel="Browse all" icon={TrendingUp} />
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <Reveal>
+              <SectionHeader title="Popular Categories" subtitle="Explore the full spectrum of blockchain and emerging technology" link="/library" linkLabel="Browse all" icon={TrendingUp} />
+            </Reveal>
+            <StaggerGroup className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {data.categories.map(c => <CategoryCard key={c.id} category={c} />)}
-            </div>
+            </StaggerGroup>
           </section>
         )}
 
         {/* Latest Articles */}
         {data.latestArticles.length > 0 && (
           <section>
-            <SectionHeader title="Latest Articles" subtitle="Fresh educational content, continuously updated" link="/library" linkLabel="View all" icon={BookOpen} />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Reveal>
+              <SectionHeader title="Latest Articles" subtitle="Fresh educational content, continuously updated" link="/library" linkLabel="View all" icon={BookOpen} />
+            </Reveal>
+            <StaggerGroup className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {data.latestArticles.map(a => <ArticleCard key={a.id} article={a} categoryName={catName(a.category_id)} />)}
-            </div>
+            </StaggerGroup>
           </section>
         )}
 
@@ -197,20 +210,24 @@ export default function Home() {
         {/* Featured Books */}
         {data.featuredBooks.length > 0 && (
           <section>
-            <SectionHeader title="Featured Books" subtitle="Curated reading from leading blockchain authors" link="/books" linkLabel="All books" icon={BookMarked} />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <Reveal>
+              <SectionHeader title="Featured Books" subtitle="Curated reading from leading blockchain authors" link="/books" linkLabel="All books" icon={BookMarked} />
+            </Reveal>
+            <StaggerGroup className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {data.featuredBooks.map(b => <BookCard key={b.id} book={b} />)}
-            </div>
+            </StaggerGroup>
           </section>
         )}
 
         {/* Featured Research */}
         {data.featuredResearch.length > 0 && (
           <section>
-            <SectionHeader title="Featured Research" subtitle="Academic papers and industry research, annotated and linked" link="/research" linkLabel="All research" icon={FileText} />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Reveal>
+              <SectionHeader title="Featured Research" subtitle="Academic papers and industry research, annotated and linked" link="/research" linkLabel="All research" icon={FileText} />
+            </Reveal>
+            <StaggerGroup className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {data.featuredResearch.map(r => <ResearchCard key={r.id} paper={r} />)}
-            </div>
+            </StaggerGroup>
           </section>
         )}
 
