@@ -5,6 +5,7 @@ import { FileText, BookOpen, Users } from "lucide-react";
 import ArticleManager from "@/components/admin/content/ArticleManager";
 import GlossaryManager from "@/components/admin/content/GlossaryManager";
 import AuthorManager from "@/components/admin/content/AuthorManager";
+import ResearchManager from "@/components/admin/content/ResearchManager";
 import Seo from "@/components/Seo";
 
 export default function AdminContent() {
@@ -46,6 +47,7 @@ export default function AdminContent() {
           <TabsTrigger value="articles" className="gap-2"><FileText className="w-4 h-4" /> Articles</TabsTrigger>
           <TabsTrigger value="glossary" className="gap-2"><BookOpen className="w-4 h-4" /> Glossary</TabsTrigger>
           <TabsTrigger value="authors" className="gap-2"><Users className="w-4 h-4" /> Authors</TabsTrigger>
+          <TabsTrigger value="research" className="gap-2"><FileText className="w-4 h-4" /> Research</TabsTrigger>
         </TabsList>
         <TabsContent value="articles">
           <ArticleManager categories={categories} authors={authors} />
@@ -55,6 +57,9 @@ export default function AdminContent() {
         </TabsContent>
         <TabsContent value="authors">
           <AuthorManager onAuthorsChanged={setAuthors} />
+        </TabsContent>
+        <TabsContent value="research">
+          <ResearchManager categories={categories} />
         </TabsContent>
       </Tabs>
     </div>

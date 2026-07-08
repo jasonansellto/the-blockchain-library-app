@@ -1,47 +1,90 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Loader2, FileText, Search } from 'lucide-react';
+import { Loader2, FileText, Search, Layers } from 'lucide-react';
 import ResearchCard from '@/components/cards/ResearchCard';
 import Seo from '@/components/Seo';
 import { buildCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 
 export default function Research() {
   const [papers, setPapers] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [type, setType] = useState('');
+  const [collection, setCollection] = useState('');
 
-  useEffect(() => { fetchPapers(); }, []);
+  useEffect(() => { fetchPapers(); fetchCategories(); }, []);
 
   const fetchPapers = async () => {
     try {
-      const res = await base44.entities.ResearchPaper.list('-updated_date', 100);
-      setPapers(res.results || res || []);
+      const res = await base44.entities.ResearchPaper.list('-updated_date', 200);
+      const arr = res.results || res || [];
+      setPapers(arr.filter((p) => p.status !== 'draft'));
     } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
-  const filtered = papers.filter(p => {
-    if (query && !p.title.toLowerCase().includes(query.toLowerCase()) && !(p.abstract || '').toLowerCase().includes(query.toLowerCase())) return false;
+  const fetchCategories = async () => {
+    try {
+      const res = await base44.entities.Category.list('sort_order', 200);
+      setCategories(res.results || res || []);
+    } catch (e) { console.error(e); }
+  };
+
+  const collectionCounts = {};
+  papers.forEach((p) => { if (p.category_id) collectionCounts[p.category_id] = (collectionCounts[p.category_id] || 0) + 1; });
+  const collections = Object.entries(collectionCounts)
+    .map(([id, count]) => ({ id, name: (categories.find((c) => c.id === id) || {}).name || 'Collection', count }))
+    .sort((a, b) => b.count - a.count);
+
+  const filtered = papers.filter((p) => {
+    if (query) {
+      const q = query.toLowerCase();
+      const hay = `${p.title} ${p.abstract || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
     if (type && p.research_type !== type) return false;
+    if (collection && p.category_id !== collection) return false;
     return true;
   });
 
   const schemas = [
-    buildCollectionPageSchema('Research Database', 'Academic papers, whitepapers, and industry reports on blockchain and decentralized technology.', '/research', papers.slice(0, 10).map(p => ({ name: p.title, url: `/research/${p.slug}` }))),
+    buildCollectionPageSchema('Blockchain Research Database', 'Academic papers, whitepapers, EIPs, and industry reports on blockchain and decentralized technology — each AI-annotated and cross-linked to glossary terms and articles.', '/research', filtered.slice(0, 10).map((p) => ({ name: p.title, url: `/research/${p.slug}` }))),
     buildBreadcrumbSchema([{ name: 'Home', url: '/' }, { name: 'Research', url: '/research' }])
   ];
 
   return (
     <div>
-      <Seo title="Blockchain Research Database" description="Academic papers, whitepapers, and industry reports — with abstracts, citations, BibTeX exports, and links to related articles and glossary terms." schemas={schemas} />
+      <Seo title="Blockchain Research Database" description="Academic papers, whitepapers, EIPs, and industry reports — each AI-annotated with abstracts, key findings, citations, BibTeX exports, and links to related glossary terms and articles." schemas={schemas} />
       <div className="border-b border-slate-100 bg-slate-50">
         <div className="container-tbl py-12">
           <div className="flex items-center gap-2 text-sm text-slate-400 mb-3"><span>Home</span><span>/</span><span className="text-slate-700 font-medium">Research</span></div>
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-2">Research Database</h1>
-          <p className="text-slate-500 max-w-2xl">Academic papers, whitepapers, and industry reports — with abstracts, citations, BibTeX exports, and links to related articles and glossary terms.</p>
+          <p className="text-slate-500 max-w-2xl">Academic papers, whitepapers, EIPs, and industry reports — each AI-annotated with abstracts, key findings, citations, BibTeX exports, and links to related glossary terms and articles.</p>
         </div>
       </div>
+
       <div className="container-tbl py-10">
+        {/* Collections strip */}
+        {collections.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
+              <Layers className="w-3.5 h-3.5" /> Collections
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin">
+              <button onClick={() => setCollection('')}
+                className={`shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${!collection ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                All Collections
+              </button>
+              {collections.map((c) => (
+                <button key={c.id} onClick={() => setCollection(collection === c.id ? '' : c.id)}
+                  className={`shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${collection === c.id ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                  {c.name} <span className={`ml-1 ${collection === c.id ? 'text-blue-100' : 'text-slate-400'}`}>{c.count}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -54,11 +97,13 @@ export default function Research() {
             <option value="">All types</option>
             <option value="paper">Papers</option>
             <option value="whitepaper">Whitepapers</option>
+            <option value="standard">Standards</option>
             <option value="thesis">Theses</option>
             <option value="report">Reports</option>
             <option value="preprint">Preprints</option>
           </select>
         </div>
+
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-blue-600 animate-spin" /></div>
         ) : filtered.length === 0 ? (
@@ -67,7 +112,7 @@ export default function Research() {
           <>
             <p className="text-sm text-slate-500 mb-6">{filtered.length} papers</p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filtered.map(p => <ResearchCard key={p.id} paper={p} />)}
+              {filtered.map((p) => <ResearchCard key={p.id} paper={p} />)}
             </div>
           </>
         )}
