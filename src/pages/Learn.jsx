@@ -80,7 +80,7 @@ export default function Learn() {
   const catName = (id) => categories.find(c => c.id === id)?.name;
 
   const schemas = [
-    buildCollectionPageSchema('Learning Paths', 'Structured, step-by-step learning journeys for blockchain, crypto, and Web3.', '/learn'),
+    buildCollectionPageSchema('Learning Paths', 'Structured, step-by-step learning journeys for blockchain, crypto, and Web3.', '/learn', paths.slice(0, 10).map(p => ({ name: p.title, url: `/learn/${p.slug}` }))),
     buildBreadcrumbSchema([{ name: 'Home', url: '/' }, { name: 'Learn', url: '/learn' }])
   ];
 

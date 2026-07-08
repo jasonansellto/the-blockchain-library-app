@@ -5,6 +5,7 @@ import { ChevronRight, Star, ExternalLink, BookOpen, FileText, Calendar, BookMar
 import Seo from '@/components/Seo';
 import { buildBookSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 import CitationBox from '@/components/CitationBox';
+import GeoSummary from '@/components/GeoSummary';
 
 export default function BookDetail() {
   const { slug } = useParams();
@@ -45,6 +46,7 @@ export default function BookDetail() {
   return (
     <div>
       <Seo title={book.title} description={book.description || book.subtitle} image={book.cover} type="book" schemas={schemas} />
+      <GeoSummary type="Book" title={book.title} summary={book.description || book.subtitle} keyConcepts={book.tags || []} relatedLinks={authors.map(a => ({ title: a.name, type: 'Author', url: `/authors/${a.slug}` }))} />
       <div className="border-b border-slate-100 bg-slate-50">
         <div className="container-tbl py-3">
           <nav className="flex items-center gap-1.5 text-sm text-slate-400 flex-wrap">

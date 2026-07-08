@@ -38,7 +38,7 @@ export default function Books() {
   });
 
   const schemas = [
-    buildCollectionPageSchema('Books by Jason Ansell', 'Accessible books on blockchain, cryptocurrency, Web3, AI, and decentralized technology.', '/books'),
+    buildCollectionPageSchema('Books by Jason Ansell', 'Accessible books on blockchain, cryptocurrency, Web3, AI, and decentralized technology.', '/books', books.slice(0, 10).map(b => ({ name: b.title, url: `/books/${b.slug}` }))),
     buildBreadcrumbSchema([{ name: 'Home', url: '/' }, { name: 'Books', url: '/books' }])
   ];
 

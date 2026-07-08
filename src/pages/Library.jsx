@@ -90,7 +90,7 @@ export default function Library() {
   const updateCategory = (val) => { setCategory(val); setSearchParams(val ? { category: val } : {}); };
 
   const schemas = [
-    buildCollectionPageSchema('Article Library', 'Thousands of expertly written articles covering blockchain, cryptocurrency, Web3, AI, and decentralized technology.', '/library'),
+    buildCollectionPageSchema('Article Library', 'Thousands of expertly written articles covering blockchain, cryptocurrency, Web3, AI, and decentralized technology.', '/library', articles.slice(0, 10).map(a => ({ name: a.title, url: `/article/${a.slug}` }))),
     buildBreadcrumbSchema([{ name: 'Home', url: '/' }, { name: 'Library', url: '/library' }])
   ];
 

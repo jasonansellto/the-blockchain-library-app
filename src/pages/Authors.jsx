@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Loader2, Users } from 'lucide-react';
+import Seo from '@/components/Seo';
+import { buildBreadcrumbSchema } from '@/lib/seoSchemas';
 
 export default function Authors() {
   const [authors, setAuthors] = useState([]);
@@ -16,8 +18,11 @@ export default function Authors() {
     } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
+  const schemas = [buildBreadcrumbSchema([{ name: 'Home', url: '/' }, { name: 'Authors', url: '/authors' }])];
+
   return (
     <div>
+      <Seo title="Our Authors" description="Experts and practitioners who write accurate, neutral, well-referenced educational content for the blockchain community." schemas={schemas} />
       <div className="border-b border-slate-100 bg-slate-50">
         <div className="container-tbl py-12">
           <div className="flex items-center gap-2 text-sm text-slate-400 mb-3"><span>Home</span><span>/</span><span className="text-slate-700 font-medium">Authors</span></div>

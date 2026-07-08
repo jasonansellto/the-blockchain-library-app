@@ -49,7 +49,7 @@ export default function Glossary() {
   }, [terms, query, activeLetter, difficulty, subcategory]);
 
   const schemas = [
-    buildCollectionPageSchema('Blockchain Glossary', 'Clear, precise definitions for every blockchain, crypto, and Web3 term.', '/glossary'),
+    buildCollectionPageSchema('Blockchain Glossary', 'Clear, precise definitions for every blockchain, crypto, and Web3 term.', '/glossary', terms.slice(0, 10).map(t => ({ name: t.title, url: `/glossary/${t.slug}` }))),
     buildBreadcrumbSchema([{ name: 'Home', url: '/' }, { name: 'Glossary', url: '/glossary' }])
   ];
 

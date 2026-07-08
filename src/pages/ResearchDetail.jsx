@@ -5,6 +5,7 @@ import { ChevronRight, Download, Quote, FileText, ExternalLink, BookOpen, BookMa
 import Seo from '@/components/Seo';
 import { buildScholarlyArticleSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 import CitationBox from '@/components/CitationBox';
+import GeoSummary from '@/components/GeoSummary';
 
 export default function ResearchDetail() {
   const { slug } = useParams();
@@ -39,6 +40,7 @@ export default function ResearchDetail() {
   return (
     <div>
       <Seo title={paper.title} description={paper.abstract} type="article" schemas={schemas} />
+      <GeoSummary type="Research Paper" title={paper.title} summary={paper.abstract} keyConcepts={paper.authors || []} relatedLinks={[]} />
       <div className="border-b border-slate-100 bg-slate-50">
         <div className="container-tbl py-3">
           <nav className="flex items-center gap-1.5 text-sm text-slate-400 flex-wrap">

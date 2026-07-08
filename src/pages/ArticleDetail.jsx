@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import MarkdownContent from '@/components/MarkdownContent';
-import { Clock, Calendar, ChevronRight, Lightbulb, HelpCircle, BookOpen, FileText, ExternalLink, Printer, Share2, ArrowRight, BookMarked, Library } from 'lucide-react';
+import { Clock, Calendar, ChevronRight, Lightbulb, HelpCircle, BookOpen, FileText, ExternalLink, Printer, Share2, ArrowRight, BookMarked, Library, GraduationCap } from 'lucide-react';
 import DifficultyBadge from '@/components/DifficultyBadge';
 import CategoryBadge from '@/components/CategoryBadge';
 import NewsletterSignup from '@/components/NewsletterSignup';
@@ -10,6 +10,7 @@ import ArticleCard from '@/components/cards/ArticleCard';
 import Seo from '@/components/Seo';
 import { buildArticleSchema, buildBreadcrumbSchema, buildFAQSchema } from '@/lib/seoSchemas';
 import CitationBox from '@/components/CitationBox';
+import GeoSummary from '@/components/GeoSummary';
 import LessonNav from '@/components/learn/LessonNav';
 
 export default function ArticleDetail() {
@@ -21,6 +22,7 @@ export default function ArticleDetail() {
   const [related, setRelated] = useState([]);
   const [relatedGlossary, setRelatedGlossary] = useState([]);
   const [relatedBooks, setRelatedBooks] = useState([]);
+  const [relatedPaths, setRelatedPaths] = useState([]);
   const [category, setCategory] = useState(null);
   const [author, setAuthor] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -84,6 +86,11 @@ export default function ArticleDetail() {
           setRelatedBooks(bks.filter(Boolean));
         } catch (e) {}
       }
+      try {
+        const pRes = await base44.entities.LearningPath.list('-updated_date', 50);
+        const pArr = pRes.results || pRes || [];
+        setRelatedPaths(pArr.filter(p => p.lessons?.some(l => l.article_id === art.id)).slice(0, 3));
+      } catch (e) {}
     } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
@@ -140,6 +147,7 @@ export default function ArticleDetail() {
   return (
     <div>
       <Seo title={article.title} description={article.summary} image={article.featured_image} type="article" schemas={schemas} />
+      <GeoSummary type="Article" title={article.title} summary={article.summary} keyConcepts={article.tags || []} relatedLinks={[...related.map(r => ({ title: r.title, type: 'Article', url: `/article/${r.slug}` })), ...relatedGlossary.map(r => ({ title: r.title, type: 'Glossary Term', url: `/glossary/${r.slug}` })), ...relatedBooks.map(r => ({ title: r.title, type: 'Book', url: `/books/${r.slug}` })), ...relatedPaths.map(r => ({ title: r.title, type: 'Learning Path', url: `/learn/${r.slug}` }))]} />
       {/* Breadcrumbs */}
       <div className="border-b border-slate-100 bg-slate-50">
         <div className="container-tbl py-3">
@@ -329,6 +337,20 @@ export default function ArticleDetail() {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {relatedPaths.length > 0 && (
+              <div className="mt-6">
+                <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900 mb-3 uppercase tracking-wide"><GraduationCap className="w-4 h-4 text-amber-600" />Related Learning Paths</h3>
+                <div className="space-y-2">
+                  {relatedPaths.map(r => (
+                    <Link key={r.id} to={`/learn/${r.slug}`} className="block p-3 bg-white border border-slate-200 rounded-lg hover:border-amber-200 hover:shadow-sm transition-all">
+                      <p className="text-sm font-semibold text-slate-900">{r.title}</p>
+                      {r.estimated_time && <p className="text-xs text-slate-400">{r.estimated_time} · {r.lessons?.length || 0} lessons</p>}
+                    </Link>
+                  ))}
+                </div>
               </div>
             )}
 

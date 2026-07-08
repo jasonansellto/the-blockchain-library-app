@@ -27,7 +27,7 @@ export default function Research() {
   });
 
   const schemas = [
-    buildCollectionPageSchema('Research Database', 'Academic papers, whitepapers, and industry reports on blockchain and decentralized technology.', '/research'),
+    buildCollectionPageSchema('Research Database', 'Academic papers, whitepapers, and industry reports on blockchain and decentralized technology.', '/research', papers.slice(0, 10).map(p => ({ name: p.title, url: `/research/${p.slug}` }))),
     buildBreadcrumbSchema([{ name: 'Home', url: '/' }, { name: 'Research', url: '/research' }])
   ];
 

@@ -7,6 +7,7 @@ import LessonCard from '@/components/learn/LessonCard';
 import Seo from '@/components/Seo';
 import { buildCourseSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 import CitationBox from '@/components/CitationBox';
+import GeoSummary from '@/components/GeoSummary';
 
 export default function LearningPathDetail() {
   const { slug } = useParams();
@@ -111,6 +112,7 @@ export default function LearningPathDetail() {
   return (
     <div>
       <Seo title={path.title} description={path.description} image={path.cover_image} type="article" schemas={schemas} />
+      <GeoSummary type="Learning Path" title={path.title} summary={path.description} keyConcepts={[path.difficulty, path.estimated_time].filter(Boolean)} relatedLinks={[]} />
       {/* Hero with cover image */}
       <div className="relative border-b border-slate-100 overflow-hidden">
         {path.cover_image ? (

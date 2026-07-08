@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, MessageSquare, Send, Loader2, CheckCircle2, MapPin } from 'lucide-react';
+import Seo from '@/components/Seo';
+import { buildBreadcrumbSchema } from '@/lib/seoSchemas';
 
 export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
@@ -11,8 +13,11 @@ export default function Contact() {
     setTimeout(() => setStatus('success'), 1200);
   };
 
+  const schemas = [buildBreadcrumbSchema([{ name: 'Home', url: '/' }, { name: 'Contact', url: '/contact' }])];
+
   return (
     <div>
+      <Seo title="Contact Us" description="Questions, feedback, content submissions, or partnership inquiries — we'd love to hear from you." schemas={schemas} />
       <div className="border-b border-slate-100 bg-slate-50">
         <div className="container-tbl py-12">
           <div className="flex items-center gap-2 text-sm text-slate-400 mb-3"><span>Home</span><span>/</span><span className="text-slate-700 font-medium">Contact</span></div>
