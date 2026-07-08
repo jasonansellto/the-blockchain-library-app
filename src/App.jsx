@@ -45,6 +45,10 @@ import TopicHub from '@/pages/TopicHub';
 import TagBrowse from '@/pages/TagBrowse';
 import AdminRevisions from '@/pages/AdminRevisions';
 import AdminContent from '@/pages/AdminContent';
+import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import ForgotPassword from '@/pages/ForgotPassword';
+import ResetPassword from '@/pages/ResetPassword';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -79,6 +83,10 @@ const AuthenticatedApp = () => {
       <Route path="/llms.txt" element={<ServeRaw mode="llms" />} />
       <Route path="/llms-full.txt" element={<ServeRaw mode="llms-full" />} />
       <Route path="/ai.txt" element={<ServeRaw mode="aitxt" />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/learn" element={<Learn />} />
