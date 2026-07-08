@@ -120,17 +120,17 @@ export default function Navbar() {
               {isAuthenticated ? (
                 <>
                   <Link to="/dashboard"
-                    className="sm:inline-flex lg:hidden items-center px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors">
+                    className="hidden sm:inline-flex lg:hidden items-center px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors">
                     Dashboard
                   </Link>
                   <button onClick={() => logout()}
-                    className="sm:inline-flex lg:hidden items-center gap-1.5 px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors">
+                    className="hidden sm:inline-flex lg:hidden items-center gap-1.5 px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors">
                     <LogOut className="w-4 h-4" /> Logout
                   </button>
                 </>
               ) : (
                 <Link to="/login"
-                  className="sm:inline-flex lg:hidden items-center px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors">
+                  className="hidden sm:inline-flex lg:hidden items-center px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors">
                   Login
                 </Link>
               )}
