@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, ChevronDown, BookOpen, Shield } from 'lucide-react';
+import { Search, Menu, X, ChevronDown, BookOpen, Shield, LogOut } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 
 const navItems = [
@@ -26,7 +26,7 @@ const secondaryItems = [
 ];
 
 export default function Navbar() {
-  const { user } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const isAdmin = user && ['editor', 'admin'].includes(user.role);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -98,10 +98,23 @@ export default function Navbar() {
               className="p-2 text-slate-600 hover:text-blue-600 hover:bg-slate-50 rounded-md transition-colors">
               <Search className="w-5 h-5" />
             </button>
-            <Link to="/login"
-              className="hidden sm:inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors">
-              Login
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link to="/dashboard"
+                  className="hidden sm:inline-flex items-center px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors">
+                  Dashboard
+                </Link>
+                <button onClick={() => logout()}
+                  className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors">
+                  <LogOut className="w-4 h-4" /> Logout
+                </button>
+              </>
+            ) : (
+              <Link to="/login"
+                className="hidden sm:inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors">
+                Login
+              </Link>
+            )}
             <button onClick={() => setMobileOpen(!mobileOpen)}
               className="lg:hidden p-2 text-slate-600 rounded-md">
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -141,10 +154,23 @@ export default function Navbar() {
                 <Shield className="w-4 h-4" /> Admin
               </Link>
             )}
-            <Link to="/login" onClick={() => setMobileOpen(false)}
-              className="block px-3 py-3 text-base font-semibold text-white bg-blue-600 rounded-md text-center mt-3">
-              Login
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link to="/dashboard" onClick={() => setMobileOpen(false)}
+                  className="block px-3 py-3 text-base font-semibold text-blue-700 bg-blue-50 rounded-md text-center mt-3">
+                  Dashboard
+                </Link>
+                <button onClick={() => { setMobileOpen(false); logout(); }}
+                  className="block w-full px-3 py-3 text-base font-semibold text-slate-600 bg-slate-100 rounded-md text-center mt-2">
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link to="/login" onClick={() => setMobileOpen(false)}
+                className="block px-3 py-3 text-base font-semibold text-white bg-blue-600 rounded-md text-center mt-3">
+                Login
+              </Link>
+            )}
           </div>
         </div>
       </>
