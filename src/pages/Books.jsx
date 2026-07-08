@@ -37,9 +37,9 @@ export default function Books() {
     return b.title.toLowerCase().includes(query.toLowerCase()) || (b.subtitle || '').toLowerCase().includes(query.toLowerCase()) || (b.publisher || '').toLowerCase().includes(query.toLowerCase());
   });
 
-  // All Books view (no search): pin featured titles first, then rest by rating desc.
+  // All Books view (no search): mix every title together by rating descending.
   const displayBooks = (activeTab === 'all' && !query)
-    ? [...filtered.filter(b => b.is_featured)].sort((a, b) => b.rating - a.rating).concat([...filtered.filter(b => !b.is_featured)].sort((a, b) => b.rating - a.rating))
+    ? [...filtered].sort((a, b) => (b.rating || 0) - (a.rating || 0))
     : filtered;
 
   const schemas = [
