@@ -226,6 +226,21 @@ function cleanAuthor(raw: string): string {
   return commaM ? `${commaM[2].trim()} ${commaM[1].trim()}` : first;
 }
 
+// Derive the ISBN-10 from a 978-prefixed ISBN-13 (the ISBN-10 is a valid Amazon
+// ASIN). 979-prefixed ISBN-13s have no ISBN-10 equivalent — those books use a
+// separate B0... ASIN on Amazon which isbnsearch does not expose, so we return
+// '' and skip building an amazon link for them (avoids 404 buy-links).
+function isbn13To10(isbn13: string): string {
+  if (!isbn13 || !isbn13.startsWith('978')) return '';
+  const core = isbn13.slice(3, 12);
+  if (!/^\d{9}$/.test(core)) return '';
+  let sum = 0;
+  for (let i = 0; i < 9; i++) sum += parseInt(core[i], 10) * (10 - i);
+  const check = (11 - (sum % 11)) % 11;
+  const checkChar = check === 10 ? 'X' : String(check);
+  return core + checkChar;
+}
+
 // Parse one isbnsearch.org search-results HTML page into book records.
 // Anchors each book on its cover image (one per result, at the start of the
 // block), then captures title / author / ISBN-13 / ISBN-10 forward to the next
@@ -521,7 +536,7 @@ Return JSON: { "descriptions": [{ "isbn13": "...", "description": "..." }] } —
       const entries: any[] = [];
       for (const b of newBooks) {
         const detail = await fetchIsbnDetail(b.isbn13);
-        const asin = b.isbn10 || b.isbn13;
+        const asin = b.isbn10 || isbn13To10(b.isbn13);
         const rating = await fetchAmazonRating(asin);
         await new Promise((resolve) => setTimeout(resolve, 350));
         maxNum += 1;
@@ -535,7 +550,7 @@ Return JSON: { "descriptions": [{ "isbn13": "...", "description": "..." }] } —
           cover,
           description: desc,
           isbn: b.isbn13,
-          amazon_link: `https://www.amazon.com/dp/${asin}?tag=${AFFILIATE_TAG}`,
+          amazon_link: asin ? `https://www.amazon.com/dp/${asin}?tag=${AFFILIATE_TAG}` : '',
           amazon_kindle_link: '',
           formats: [detail.binding || 'Paperback'],
           publisher: detail.publisher,
