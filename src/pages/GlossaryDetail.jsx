@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ChevronRight, BookOpen, BookMarked, FileText, ExternalLink, Lightbulb } from 'lucide-react';
+import { ChevronRight, BookOpen, FileText, ExternalLink, Lightbulb, CheckCircle2, AlertTriangle, HelpCircle, Sparkles, Target, Cog, Globe } from 'lucide-react';
 import DifficultyBadge from '@/components/DifficultyBadge';
+import CategoryBadge from '@/components/CategoryBadge';
 import Seo from '@/components/Seo';
 import { buildDefinedTermSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 
@@ -25,8 +26,10 @@ export default function GlossaryDetail() {
       setTerm(t);
       if (t.related_terms?.length) {
         try {
-          const rels = await Promise.all(t.related_terms.slice(0, 5).map(id => base44.entities.GlossaryTerm.get(id).catch(() => null)));
-          setRelatedTerms(rels.filter(Boolean));
+          const relRes = await base44.entities.GlossaryTerm.filter(
+            { title: { $in: t.related_terms.slice(0, 10) } }, 'title', 10
+          );
+          setRelatedTerms(relRes.results || relRes || []);
         } catch (e) {}
       }
       if (t.related_articles?.length) {
@@ -53,7 +56,7 @@ export default function GlossaryDetail() {
 
   return (
     <div>
-      <Seo title={term.title} description={term.definition} type="article" schemas={schemas} />
+      <Seo title={term.title} description={term.seo_description || term.definition} type="article" schemas={schemas} />
       <div className="border-b border-slate-100 bg-slate-50">
         <div className="container-tbl py-3">
           <nav className="flex items-center gap-1.5 text-sm text-slate-400 flex-wrap">
@@ -65,11 +68,96 @@ export default function GlossaryDetail() {
       </div>
 
       <div className="container-tbl py-10 max-w-4xl">
-        <div className="flex items-center gap-3 mb-4">
-          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">{term.title}</h1>
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
+          {term.subcategory && <CategoryBadge name={term.subcategory} />}
           {term.difficulty && <DifficultyBadge level={term.difficulty} />}
         </div>
+        <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-4">{term.title}</h1>
         <p className="text-lg text-slate-600 leading-relaxed mb-8">{term.definition}</p>
+
+        {term.simple_explanation && (
+          <div className="mb-8 p-6 rounded-xl bg-blue-50 border border-blue-100">
+            <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 mb-3 uppercase tracking-wide">
+              <Sparkles className="w-4 h-4 text-blue-600" /> Explain Like I'm 12
+            </h2>
+            <p className="text-[17px] text-slate-700 leading-relaxed">{term.simple_explanation}</p>
+          </div>
+        )}
+
+        {term.why_it_matters && (
+          <div className="mb-8">
+            <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900 mb-3 tracking-tight">
+              <Target className="w-5 h-5 text-teal-600" /> Why It Matters
+            </h2>
+            <p className="text-[17px] text-slate-700 leading-relaxed">{term.why_it_matters}</p>
+          </div>
+        )}
+
+        {term.how_it_works && (
+          <div className="mb-8">
+            <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900 mb-3 tracking-tight">
+              <Cog className="w-5 h-5 text-slate-600" /> How It Works
+            </h2>
+            <p className="text-[17px] text-slate-700 leading-relaxed">{term.how_it_works}</p>
+          </div>
+        )}
+
+        {term.real_world_example && (
+          <div className="mb-8 p-6 rounded-xl bg-teal-50 border border-teal-100">
+            <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 mb-3 uppercase tracking-wide">
+              <Globe className="w-4 h-4 text-teal-600" /> Real-World Example
+            </h2>
+            <p className="text-[17px] text-slate-700 leading-relaxed">{term.real_world_example}</p>
+          </div>
+        )}
+
+        {(term.advantages?.length > 0 || term.limitations?.length > 0) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {term.advantages?.length > 0 && (
+              <div className="p-5 rounded-xl bg-emerald-50 border border-emerald-100">
+                <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 mb-3 uppercase tracking-wide">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Advantages
+                </h2>
+                <ul className="space-y-2">
+                  {term.advantages.map((a, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />{a}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {term.limitations?.length > 0 && (
+              <div className="p-5 rounded-xl bg-amber-50 border border-amber-100">
+                <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 mb-3 uppercase tracking-wide">
+                  <AlertTriangle className="w-4 h-4 text-amber-600" /> Limitations
+                </h2>
+                <ul className="space-y-2">
+                  {term.limitations.map((l, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                      <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />{l}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        {term.common_misconceptions?.length > 0 && (
+          <div className="mb-8 p-5 rounded-xl bg-slate-50 border border-slate-200">
+            <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 mb-3 uppercase tracking-wide">
+              <HelpCircle className="w-4 h-4 text-slate-500" /> Common Misconceptions
+            </h2>
+            <ul className="space-y-3">
+              {term.common_misconceptions.map((m, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-slate-700 leading-relaxed">
+                  <HelpCircle className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />{m}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {term.examples?.length > 0 && (
           <div className="mb-8 p-5 rounded-xl bg-teal-50 border border-teal-100">

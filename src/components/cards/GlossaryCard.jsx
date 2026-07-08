@@ -13,6 +13,9 @@ export default function GlossaryCard({ term }) {
           {term.difficulty && <DifficultyBadge level={term.difficulty} />}
         </div>
         <p className="text-sm text-slate-500 line-clamp-3">{term.definition}</p>
+        {term.subcategory && (
+          <p className="mt-3 text-xs font-medium text-teal-600">{term.subcategory}</p>
+        )}
       </div>
     </Link>
   );

@@ -11,7 +11,40 @@
     "definition": {
       "type": "string"
     },
+    "simple_explanation": {
+      "type": "string"
+    },
+    "why_it_matters": {
+      "type": "string"
+    },
+    "how_it_works": {
+      "type": "string"
+    },
+    "real_world_example": {
+      "type": "string"
+    },
+    "advantages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "common_misconceptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "category_id": {
+      "type": "string"
+    },
+    "subcategory": {
       "type": "string"
     },
     "difficulty": {

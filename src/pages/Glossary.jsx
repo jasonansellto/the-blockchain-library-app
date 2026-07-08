@@ -14,6 +14,7 @@ export default function Glossary() {
   const [query, setQuery] = useState('');
   const [activeLetter, setActiveLetter] = useState('');
   const [difficulty, setDifficulty] = useState('');
+  const [subcategory, setSubcategory] = useState('');
 
   useEffect(() => { fetchData(); }, []);
 
@@ -28,10 +29,16 @@ export default function Glossary() {
     } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
+  const subcategories = useMemo(() => {
+    const set = new Set(terms.map(t => t.subcategory).filter(Boolean));
+    return Array.from(set).sort();
+  }, [terms]);
+
   const filtered = useMemo(() => {
     return terms.filter(t => {
       if (query && !t.title.toLowerCase().includes(query.toLowerCase()) && !t.definition.toLowerCase().includes(query.toLowerCase())) return false;
       if (difficulty && t.difficulty !== difficulty) return false;
+      if (subcategory && t.subcategory !== subcategory) return false;
       if (activeLetter) {
         const first = t.title[0]?.toUpperCase() || '';
         if (activeLetter === '#') return !/[A-Z]/.test(first);
@@ -39,7 +46,7 @@ export default function Glossary() {
       }
       return true;
     });
-  }, [terms, query, activeLetter, difficulty]);
+  }, [terms, query, activeLetter, difficulty, subcategory]);
 
   const schemas = [
     buildCollectionPageSchema('Blockchain Glossary', 'Clear, precise definitions for every blockchain, crypto, and Web3 term.', '/glossary'),
@@ -66,6 +73,11 @@ export default function Glossary() {
               placeholder="Search glossary terms..."
               className="w-full pl-12 pr-4 py-3 text-base bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
+          <select value={subcategory} onChange={(e) => setSubcategory(e.target.value)}
+            className="px-4 py-3 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">All categories</option>
+            {subcategories.map(sc => <option key={sc} value={sc}>{sc}</option>)}
+          </select>
           <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}
             className="px-4 py-3 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="">All levels</option>
