@@ -24,8 +24,14 @@ export default function BookDetail() {
       const b = books[0];
       setBook(b);
       if (b.author_ids?.length) {
-        const aus = await Promise.all(b.author_ids.map(id => base44.entities.Author.get(id).catch(() => null)));
-        setAuthors(aus.filter(Boolean));
+        // author_ids may be Author entity IDs (existing books) OR plain author-name
+        // strings (imported books). Resolve IDs to full records; fall back to a
+        // synthetic {name} so imported books still display their author.
+        const aus = await Promise.all(b.author_ids.map(async (id) => {
+          try { return await base44.entities.Author.get(id); }
+          catch { return { name: id, slug: null }; }
+        }));
+        setAuthors(aus.filter(a => a && a.name));
       }
     } catch (e) { console.error(e); } finally { setLoading(false); }
   };
@@ -136,17 +142,24 @@ export default function BookDetail() {
               <div>
                 <h3 className="text-sm font-bold text-slate-900 mb-3 uppercase tracking-wide">About the Author{authors.length > 1 ? 's' : ''}</h3>
                 <div className="space-y-3">
-                  {authors.map(a => (
-                    <Link key={a.id} to={`/authors/${a.slug}`} className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-lg hover:border-blue-200 transition-all">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden flex items-center justify-center text-sm font-bold text-slate-500 shrink-0">
-                        {a.photo ? <img src={a.photo} alt={a.name} className="w-full h-full object-cover" /> : a.name?.[0]}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">{a.name}</p>
-                        {a.expertise_areas?.length > 0 && <p className="text-xs text-slate-400">{a.expertise_areas.join(', ')}</p>}
-                      </div>
-                    </Link>
-                  ))}
+                  {authors.map(a => {
+                    const inner = (
+                      <>
+                        <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden flex items-center justify-center text-sm font-bold text-slate-500 shrink-0">
+                          {a.photo ? <img src={a.photo} alt={a.name} className="w-full h-full object-cover" /> : a.name?.[0]}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">{a.name}</p>
+                          {a.expertise_areas?.length > 0 && <p className="text-xs text-slate-400">{a.expertise_areas.join(', ')}</p>}
+                        </div>
+                      </>
+                    );
+                    return a.slug ? (
+                      <Link key={a.id || a.name} to={`/authors/${a.slug}`} className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-lg hover:border-blue-200 transition-all">{inner}</Link>
+                    ) : (
+                      <div key={a.id || a.name} className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-lg">{inner}</div>
+                    );
+                  })}
                 </div>
               </div>
             )}

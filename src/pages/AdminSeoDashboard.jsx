@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { Loader2, RefreshCw, TrendingUp, Target, BookOpen, Library, AlertCircle, Sparkles, Clock, AlertTriangle, Mail } from 'lucide-react';
 import Seo from '@/components/Seo';
 import ResearchBatchPanel from '@/components/admin/ResearchBatchPanel';
+import BooksBatchPanel from '@/components/admin/BooksBatchPanel';
 
 export default function AdminSeoDashboard() {
   const [data, setData] = useState(null);
@@ -82,6 +83,7 @@ export default function AdminSeoDashboard() {
         </div>
 
         <ResearchBatchPanel />
+        <BooksBatchPanel />
 
         {!data ? (
           <div className="text-center py-20">

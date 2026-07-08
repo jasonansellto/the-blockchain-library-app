@@ -37,19 +37,24 @@ export default function Books() {
     return b.title.toLowerCase().includes(query.toLowerCase()) || (b.subtitle || '').toLowerCase().includes(query.toLowerCase()) || (b.publisher || '').toLowerCase().includes(query.toLowerCase());
   });
 
+  // All Books view (no search): pin featured titles first, then rest by rating desc.
+  const displayBooks = (activeTab === 'all' && !query)
+    ? [...filtered.filter(b => b.is_featured)].sort((a, b) => b.rating - a.rating).concat([...filtered.filter(b => !b.is_featured)].sort((a, b) => b.rating - a.rating))
+    : filtered;
+
   const schemas = [
-    buildCollectionPageSchema('Books by Jason Ansell', 'Accessible books on blockchain, cryptocurrency, Web3, AI, and decentralized technology.', '/books', books.slice(0, 10).map(b => ({ name: b.title, url: `/books/${b.slug}` }))),
+    buildCollectionPageSchema('Blockchain & Crypto Book Library', 'A curated reading list of the best books on blockchain, crypto, and Web3.', '/books', books.slice(0, 10).map(b => ({ name: b.title, url: `/books/${b.slug}` }))),
     buildBreadcrumbSchema([{ name: 'Home', url: '/' }, { name: 'Books', url: '/books' }])
   ];
 
   return (
     <div>
-      <Seo title="Books by Jason Ansell" description="Accessible books on blockchain, cryptocurrency, Web3, AI, and decentralized technology — designed to make complex subjects genuinely understandable." schemas={schemas} />
+      <Seo title="Blockchain & Crypto Book Library" description="A curated reading list of the best books on blockchain, crypto, and Web3 — handpicked from Amazon bestsellers and expert recommendations." schemas={schemas} />
       <div className="border-b border-slate-100 bg-slate-50">
         <div className="container-tbl py-12">
           <div className="flex items-center gap-2 text-sm text-slate-400 mb-3"><span>Home</span><span>/</span><span className="text-slate-700 font-medium">Books</span></div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-2">Books by Jason Ansell</h1>
-          <p className="text-slate-500 max-w-2xl">Accessible books on blockchain, cryptocurrency, Web3, AI, and decentralized technology — designed to make complex subjects genuinely understandable, without sacrificing depth or accuracy.</p>
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-2">Blockchain &amp; Crypto Book Library</h1>
+          <p className="text-slate-500 max-w-2xl">A curated reading list of the best books on blockchain, crypto, and Web3 — handpicked from Amazon bestsellers and expert recommendations.</p>
         </div>
       </div>
       <div className="container-tbl py-10">
@@ -69,13 +74,13 @@ export default function Books() {
         </div>
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-blue-600 animate-spin" /></div>
-        ) : filtered.length === 0 ? (
+        ) : displayBooks.length === 0 ? (
           <div className="text-center py-20"><BookMarked className="w-12 h-12 text-slate-300 mx-auto mb-4" /><p className="text-slate-400">No books found.</p></div>
         ) : (
           <>
-            <p className="text-sm text-slate-500 mb-6">{filtered.length} book{filtered.length !== 1 ? 's' : ''}</p>
+            <p className="text-sm text-slate-500 mb-6">{displayBooks.length} book{displayBooks.length !== 1 ? 's' : ''}</p>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-              {filtered.map(b => <BookCard key={b.id} book={b} />)}
+              {displayBooks.map(b => <BookCard key={b.id} book={b} />)}
             </div>
           </>
         )}

@@ -109,6 +109,15 @@
     "category_id": {
       "type": "string"
     },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "default": "published"
+    },
     "seo_title": {
       "type": "string"
     },
