@@ -26,20 +26,41 @@ export default function GlossaryDetail() {
       if (!terms.length) { setTerm(null); return; }
       const t = terms[0];
       setTerm(t);
+      // Related terms (manual + auto-suggested from same category)
+      let relTerms = [];
       if (t.related_terms?.length) {
         try {
           const relRes = await base44.entities.GlossaryTerm.filter(
             { title: { $in: t.related_terms.slice(0, 10) } }, 'title', 10
           );
-          setRelatedTerms(relRes.results || relRes || []);
+          relTerms = relRes.results || relRes || [];
         } catch (e) {}
       }
+      if (relTerms.length < 5 && t.category_id) {
+        try {
+          const res = await base44.entities.GlossaryTerm.filter({ category_id: t.category_id }, 'title', 8);
+          const auto = (res.results || res || []).filter(g => g.id !== t.id && !relTerms.find(r => r.id === g.id));
+          relTerms = [...relTerms, ...auto].slice(0, 6);
+        } catch (e) {}
+      }
+      setRelatedTerms(relTerms);
+
+      // Related articles (manual + auto-suggested)
+      let relArts = [];
       if (t.related_articles?.length) {
         try {
           const arts = await Promise.all(t.related_articles.slice(0, 3).map(id => base44.entities.Article.get(id).catch(() => null)));
-          setRelatedArticles(arts.filter(Boolean));
+          relArts = arts.filter(Boolean);
         } catch (e) {}
       }
+      if (relArts.length < 3 && t.category_id) {
+        try {
+          const res = await base44.entities.Article.filter({ category_id: t.category_id, status: 'published' }, '-views', 5);
+          const auto = (res.results || res || []).filter(a => !relArts.find(r => r.id === a.id));
+          relArts = [...relArts, ...auto].slice(0, 4);
+        } catch (e) {}
+      }
+      setRelatedArticles(relArts);
     } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 

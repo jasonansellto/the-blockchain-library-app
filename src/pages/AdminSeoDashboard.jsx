@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Loader2, RefreshCw, TrendingUp, Target, BookOpen, Library, AlertCircle } from 'lucide-react';
+import { Loader2, RefreshCw, TrendingUp, Target, BookOpen, Library, AlertCircle, Sparkles } from 'lucide-react';
 import Seo from '@/components/Seo';
 
 export default function AdminSeoDashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [recalculating, setRecalculating] = useState(false);
+  const [faqGenRunning, setFaqGenRunning] = useState(false);
+  const [faqGenResult, setFaqGenResult] = useState(null);
 
   useEffect(() => { fetchCache(); }, []);
 
@@ -27,6 +29,17 @@ export default function AdminSeoDashboard() {
       if (result.success) setData(result);
     } catch (e) { console.error(e); }
     setRecalculating(false);
+  };
+
+  const generateFaqs = async () => {
+    setFaqGenRunning(true);
+    try {
+      const res = await base44.functions.invoke('generateArticleFaqs', { limit: 5 });
+      setFaqGenResult(res.data || res);
+    } catch (e) {
+      setFaqGenResult({ error: e.message });
+    }
+    setFaqGenRunning(false);
   };
 
   if (loading) return <div className="flex justify-center py-32"><Loader2 className="w-8 h-8 text-blue-600 animate-spin" /></div>;
@@ -88,6 +101,40 @@ export default function AdminSeoDashboard() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* AI Content Tools */}
+            <div className="bg-white rounded-xl border border-slate-200 p-6 mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">AI Content Tools</h2>
+                  <p className="text-sm text-slate-400 mt-1">Auto-generate FAQ sections for articles missing them (improves FAQPage schema & rich snippets)</p>
+                </div>
+                <button onClick={generateFaqs} disabled={faqGenRunning}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors disabled:opacity-60">
+                  {faqGenRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  {faqGenRunning ? 'Generating...' : 'Generate FAQs'}
+                </button>
+              </div>
+              {faqGenResult && !faqGenResult.error && (
+                <div className="bg-purple-50 border border-purple-100 rounded-lg p-4">
+                  <p className="text-sm text-slate-700 mb-2">
+                    Processed <strong>{faqGenResult.processed}</strong> of <strong>{faqGenResult.totalWithoutFaqs}</strong> articles without FAQs.
+                  </p>
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                    {faqGenResult.results?.map(r => (
+                      <div key={r.id} className="flex items-center gap-2 text-xs">
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${r.status === 'success' ? 'bg-emerald-500' : 'bg-amber-400'}`} />
+                        <span className="text-slate-600 truncate flex-1">{r.title}</span>
+                        <span className="text-slate-400 shrink-0">{r.count} FAQs{r.status === 'error' ? ` · ${r.error}` : ''}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {faqGenResult?.error && (
+                <div className="bg-rose-50 border border-rose-100 rounded-lg p-4 text-sm text-rose-700">{faqGenResult.error}</div>
+              )}
             </div>
 
             <p className="text-xs text-slate-400 mt-4 text-right">

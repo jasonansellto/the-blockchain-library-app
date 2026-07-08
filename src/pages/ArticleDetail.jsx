@@ -68,24 +68,58 @@ export default function ArticleDetail() {
         }
       } catch (e) {}
 
+      // Related articles (manual + auto-suggested from same category)
+      let relArts = [];
       if (art.related_articles?.length) {
         try {
           const rels = await Promise.all(art.related_articles.slice(0, 3).map(id => base44.entities.Article.get(id).catch(() => null)));
-          setRelated(rels.filter(Boolean));
+          relArts = rels.filter(Boolean);
         } catch (e) {}
       }
+      if (relArts.length < 3 && art.category_id) {
+        try {
+          const res = await base44.entities.Article.filter({ category_id: art.category_id, status: 'published' }, '-views', 6);
+          const auto = (res.results || res || []).filter(a => a.id !== art.id && !relArts.find(r => r.id === a.id));
+          relArts = [...relArts, ...auto].slice(0, 4);
+        } catch (e) {}
+      }
+      setRelated(relArts);
+
+      // Related glossary (manual + auto-suggested)
+      let relGls = [];
       if (art.related_glossary?.length) {
         try {
           const gls = await Promise.all(art.related_glossary.slice(0, 4).map(id => base44.entities.GlossaryTerm.get(id).catch(() => null)));
-          setRelatedGlossary(gls.filter(Boolean));
+          relGls = gls.filter(Boolean);
         } catch (e) {}
       }
+      if (relGls.length < 4 && art.category_id) {
+        try {
+          const res = await base44.entities.GlossaryTerm.filter({ category_id: art.category_id }, 'title', 8);
+          const auto = (res.results || res || []).filter(g => !relGls.find(r => r.id === g.id));
+          relGls = [...relGls, ...auto].slice(0, 5);
+        } catch (e) {}
+      }
+      setRelatedGlossary(relGls);
+
+      // Related books (manual + auto-suggested)
+      let relBks = [];
       if (art.related_books?.length) {
         try {
           const bks = await Promise.all(art.related_books.slice(0, 3).map(id => base44.entities.Book.get(id).catch(() => null)));
-          setRelatedBooks(bks.filter(Boolean));
+          relBks = bks.filter(Boolean);
         } catch (e) {}
       }
+      if (relBks.length < 3 && art.category_id) {
+        try {
+          const res = await base44.entities.Book.filter({ category_id: art.category_id }, '-rating', 5);
+          const auto = (res.results || res || []).filter(b => !relBks.find(r => r.id === b.id));
+          relBks = [...relBks, ...auto].slice(0, 3);
+        } catch (e) {}
+      }
+      setRelatedBooks(relBks);
+
+      // Related learning paths
       try {
         const pRes = await base44.entities.LearningPath.list('-updated_date', 50);
         const pArr = pRes.results || pRes || [];
