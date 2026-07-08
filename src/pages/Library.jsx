@@ -27,13 +27,24 @@ export default function Library() {
 
   const fetchCategories = async () => {
     try {
-      const res = await base44.entities.Category.list('-updated_date', 100);
-      const catArr = res.results || res || [];
-      setCategories(catArr);
+      const [catRes, artRes] = await Promise.all([
+        base44.entities.Category.list('-updated_date', 100),
+        base44.entities.Article.filter({ status: 'published' }, '-published_date', 200)
+      ]);
+      const catArr = catRes.results || catRes || [];
+      const artArr = artRes.results || artRes || [];
+      const articleCatIds = new Set(artArr.map(a => a.category_id).filter(Boolean));
+      const catsWithArticles = catArr.filter(c => articleCatIds.has(c.id));
+      setCategories(catsWithArticles);
       const urlCat = searchParams.get('category');
       if (urlCat) {
-        const matched = catArr.find(c => c.slug === urlCat || c.id === urlCat);
-        if (matched) setCategory(matched.id);
+        const matched = catsWithArticles.find(c => c.slug === urlCat || c.id === urlCat);
+        if (matched) {
+          setCategory(matched.id);
+        } else {
+          setCategory('');
+          setSearchParams({});
+        }
       }
     } catch (e) {}
     setCategoriesReady(true);

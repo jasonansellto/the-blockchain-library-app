@@ -51,6 +51,7 @@ export default function Home() {
       const pathsArr = paths.results || paths || [];
       const catsArr = categories.results || categories || [];
       const authorsArr = authors.results || authors || [];
+      const articleCatIds = new Set(articlesArr.map(a => a.category_id).filter(Boolean));
 
       setData({
         featuredArticles: articlesArr.filter(a => a.is_featured).slice(0, 3),
@@ -58,7 +59,7 @@ export default function Home() {
         featuredBooks: booksArr.filter(b => b.is_featured).slice(0, 4).length ? booksArr.filter(b => b.is_featured).slice(0, 4) : booksArr.slice(0, 4),
         featuredResearch: researchArr.filter(r => r.is_featured).slice(0, 3).length ? researchArr.filter(r => r.is_featured).slice(0, 3) : researchArr.slice(0, 3),
         featuredPaths: pathsArr.filter(p => p.is_featured).slice(0, 3).length ? pathsArr.filter(p => p.is_featured).slice(0, 3) : pathsArr.slice(0, 3),
-        categories: catsArr.slice(0, 8),
+        categories: catsArr.filter(c => articleCatIds.has(c.id)).slice(0, 8),
         authors: authorsArr,
         counts: {}
       });
