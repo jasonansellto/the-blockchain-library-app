@@ -23,6 +23,12 @@ import SearchPage from '@/pages/SearchPage';
 import About from '@/pages/About';
 import Contact from '@/pages/Contact';
 import Resources from '@/pages/Resources';
+import DeveloperHub from '@/pages/DeveloperHub';
+import CodeSnippets from '@/pages/CodeSnippets';
+import CodeSnippetDetail from '@/pages/CodeSnippetDetail';
+import RpcDirectory from '@/pages/RpcDirectory';
+import SdkReference from '@/pages/SdkReference';
+import ApiDocs from '@/pages/ApiDocs';
 import Authors from '@/pages/Authors';
 import AuthorDetail from '@/pages/AuthorDetail';
 import Dashboard from '@/pages/Dashboard';
@@ -76,7 +82,12 @@ const AuthenticatedApp = () => {
         <Route path="/authors/:slug" element={<AuthorDetail />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/tools" element={<Resources type="tools" />} />
-        <Route path="/developers" element={<Resources type="developers" />} />
+        <Route path="/developers" element={<DeveloperHub />} />
+        <Route path="/developers/snippets" element={<CodeSnippets />} />
+        <Route path="/developers/snippets/:slug" element={<CodeSnippetDetail />} />
+        <Route path="/developers/rpc" element={<RpcDirectory />} />
+        <Route path="/developers/sdks" element={<SdkReference />} />
+        <Route path="/developers/api" element={<ApiDocs />} />
         <Route path="/news" element={<Resources type="news" />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />

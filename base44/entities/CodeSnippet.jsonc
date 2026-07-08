@@ -1,0 +1,101 @@
+{
+  "name": "CodeSnippet",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "language": {
+      "type": "string",
+      "enum": [
+        "solidity",
+        "vyper",
+        "rust",
+        "javascript",
+        "typescript",
+        "python"
+      ],
+      "default": "solidity"
+    },
+    "chain": {
+      "type": "string",
+      "enum": [
+        "ethereum",
+        "solana",
+        "polygon",
+        "arbitrum",
+        "optimism",
+        "base",
+        "avalanche",
+        "multi",
+        "none"
+      ],
+      "default": "ethereum"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "tokens",
+        "nft",
+        "defi",
+        "infrastructure",
+        "integration",
+        "security"
+      ],
+      "default": "tokens"
+    },
+    "description": {
+      "type": "string"
+    },
+    "code": {
+      "type": "string"
+    },
+    "explanation": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced",
+        "expert"
+      ],
+      "default": "beginner"
+    },
+    "related_articles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "views": {
+      "type": "number",
+      "default": 0
+    },
+    "seo_title": {
+      "type": "string"
+    },
+    "seo_description": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "slug",
+    "code"
+  ]
+}
