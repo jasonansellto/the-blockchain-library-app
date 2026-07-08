@@ -43,6 +43,9 @@ Deno.serve(async (req) => {
 
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (user.role !== 'admin') {
+      return Response.json({ error: 'Admin access required' }, { status: 403 });
+    }
 
     if (action === 'single') {
       const articleId = body.article_id;
@@ -52,10 +55,6 @@ Deno.serve(async (req) => {
       const geo = calcGeo(article);
       await base44.asServiceRole.entities.Article.update(articleId, { health_score: health, geo_score: geo });
       return Response.json({ success: true, health_score: health, geo_score: geo });
-    }
-
-    if (user.role !== 'admin') {
-      return Response.json({ error: 'Admin access required for full recalculation' }, { status: 403 });
     }
 
     const articles = await base44.asServiceRole.entities.Article.filter({ status: 'published' }, '-updated_date', 1000);
