@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Newspaper, ArrowRight, ExternalLink } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { Newspaper, ArrowRight } from 'lucide-react';
+import NewsCard from '@/components/news/NewsCard';
 
 export default function LatestNewsWidget({ items, loading }) {
   return (
@@ -19,33 +19,22 @@ export default function LatestNewsWidget({ items, loading }) {
         </Link>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
-        {loading ? (
-          [...Array(5)].map((_, i) => (
-            <div key={i} className="p-4 flex items-center gap-4 animate-pulse">
-              <div className="h-3 w-20 bg-slate-100 rounded shrink-0" />
-              <div className="h-4 flex-1 bg-slate-100 rounded" />
-              <div className="h-3 w-16 bg-slate-50 rounded shrink-0" />
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="bg-white rounded-xl border border-slate-200 p-5 animate-pulse">
+              <div className="h-4 w-20 bg-slate-100 rounded mb-3" />
+              <div className="h-4 w-full bg-slate-100 rounded mb-2" />
+              <div className="h-4 w-3/4 bg-slate-100 rounded mb-4" />
+              <div className="h-3 w-24 bg-slate-50 rounded" />
             </div>
-          ))
-        ) : items.length === 0 ? null : (
-          items.slice(0, 5).map((item, i) => (
-            <a key={i} href={item.link} target="_blank" rel="noopener noreferrer"
-              className="group flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors">
-              <span className="inline-flex items-center shrink-0 px-2 py-0.5 rounded text-xs font-medium text-slate-500 bg-slate-100 max-w-[8rem] truncate">
-                {item.source || 'Source'}
-              </span>
-              <span className="flex-1 text-sm font-medium text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
-                {item.title}
-              </span>
-              <span className="text-xs text-slate-400 shrink-0 hidden sm:block">
-                {item.pubDate ? formatDistanceToNow(new Date(item.pubDate), { addSuffix: true }) : ''}
-              </span>
-              <ExternalLink className="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-600 transition-colors shrink-0" />
-            </a>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      ) : items.length === 0 ? null : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {items.slice(0, 6).map((item, i) => <NewsCard key={i} item={item} />)}
+        </div>
+      )}
 
       <Link to="/news" className="sm:hidden inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700 mt-4">
         See all news <ArrowRight className="w-4 h-4" />
