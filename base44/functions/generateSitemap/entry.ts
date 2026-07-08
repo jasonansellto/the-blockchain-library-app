@@ -26,7 +26,9 @@ const SITEMAP_CONFIG = [
   { type: 'authors', entity: 'Author', urlPath: (i) => `/authors/${i.slug}`, filter: {}, changefreq: 'monthly', priority: '0.5' },
   { type: 'learning-paths', entity: 'LearningPath', urlPath: (i) => `/learn/${i.slug}`, filter: {}, changefreq: 'weekly', priority: '0.9' },
   { type: 'categories', entity: 'Category', urlPath: (i) => `/topics/${i.slug}`, filter: {}, changefreq: 'weekly', priority: '0.8' },
-  { type: 'developers', entity: 'CodeSnippet', urlPath: (i) => `/developers/snippets/${i.slug}`, filter: {}, changefreq: 'monthly', priority: '0.6' }
+  { type: 'developers', entity: 'CodeSnippet', urlPath: (i) => `/developers/snippets/${i.slug}`, filter: {}, changefreq: 'monthly', priority: '0.6' },
+  { type: 'newsletter', entity: 'NewsletterEdition', urlPath: (i) => `/newsletter/${i.slug}`, filter: {}, changefreq: 'weekly', priority: '0.5' },
+  { type: 'tags', entity: 'tags' }
 ];
 
 function escapeXml(s) {
@@ -67,6 +69,19 @@ Deno.serve(async (req) => {
     if (config.entity === null) {
       for (const p of STATIC_PAGES) {
         xml += `  <url><loc>${SITE_URL}${p.url}</loc><changefreq>${p.changefreq}</changefreq><priority>${p.priority}</priority></url>\n`;
+      }
+    } else if (config.entity === 'tags') {
+      const [artRes, bookRes, snipRes] = await Promise.all([
+        base44.asServiceRole.entities.Article.filter({ status: 'published' }, '-updated_date', 5000),
+        base44.asServiceRole.entities.Book.list('-updated_date', 500),
+        base44.asServiceRole.entities.CodeSnippet.list('-updated_date', 500)
+      ]);
+      const tagSet = new Set();
+      [...(artRes.results || artRes || []), ...(bookRes.results || bookRes || []), ...(snipRes.results || snipRes || [])].forEach(item => {
+        (item.tags || []).forEach(t => tagSet.add(t));
+      });
+      for (const tag of tagSet) {
+        xml += `  <url><loc>${SITE_URL}/tags/${encodeURIComponent(tag)}</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>\n`;
       }
     } else {
       const entityApi = base44.asServiceRole.entities[config.entity];

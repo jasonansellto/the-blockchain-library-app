@@ -78,6 +78,14 @@
       ],
       "default": "draft"
     },
+    "access_level": {
+      "type": "string",
+      "enum": [
+        "public",
+        "premium"
+      ],
+      "default": "public"
+    },
     "is_featured": {
       "type": "boolean",
       "default": false

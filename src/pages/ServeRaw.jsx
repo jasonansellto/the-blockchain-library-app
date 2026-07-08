@@ -31,6 +31,10 @@ export default function ServeRaw({ mode }) {
         endpoint = 'generateLlmsTxt';
         payload = { variant: 'full' };
         break;
+      case 'aitxt':
+        endpoint = 'generateLlmsTxt';
+        payload = { variant: 'aitxt' };
+        break;
       default:
         return;
     }

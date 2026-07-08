@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import MarkdownContent from '@/components/MarkdownContent';
-import { Clock, Calendar, ChevronRight, Lightbulb, HelpCircle, BookOpen, FileText, ExternalLink, Printer, Share2, ArrowRight, BookMarked, Library, GraduationCap } from 'lucide-react';
+import { Clock, Calendar, ChevronRight, Lightbulb, HelpCircle, BookOpen, FileText, ExternalLink, Printer, Share2, ArrowRight, BookMarked, Library, GraduationCap, Lock } from 'lucide-react';
 import DifficultyBadge from '@/components/DifficultyBadge';
 import CategoryBadge from '@/components/CategoryBadge';
 import NewsletterSignup from '@/components/NewsletterSignup';
@@ -200,7 +200,7 @@ export default function ArticleDetail() {
           <div className="flex items-center gap-2 mb-4 flex-wrap">
             {category && <CategoryBadge name={category.name} slug={category.id} />}
             {article.difficulty && <DifficultyBadge level={article.difficulty} />}
-            {article.tags?.slice(0, 3).map(t => <span key={t} className="text-xs text-slate-400">#{t}</span>)}
+            {article.tags?.slice(0, 3).map(t => <Link key={t} to={`/tags/${encodeURIComponent(t)}`} className="text-xs text-slate-400 hover:text-blue-600 hover:underline">#{t}</Link>)}
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight leading-[1.15] mb-4">
             {article.title}
@@ -257,8 +257,18 @@ export default function ArticleDetail() {
               </div>
             )}
             <div className="prose-tbl">
-              <MarkdownContent>{article.body || ''}</MarkdownContent>
+              <MarkdownContent>{(article.access_level === 'premium' && !isAuthed) ? (article.body || '').split('\n').slice(0, 5).join('\n') + '\n\n...' : (article.body || '')}</MarkdownContent>
             </div>
+            {article.access_level === 'premium' && !isAuthed && (
+              <div className="mt-8 p-8 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 text-center">
+                <Lock className="w-10 h-10 text-blue-600 mx-auto mb-3" />
+                <h2 className="text-xl font-bold text-slate-900 mb-2">This is a Premium Article</h2>
+                <p className="text-sm text-slate-600 mb-4 max-w-md mx-auto">Log in to read the full article and access all premium educational content on The Blockchain Library.</p>
+                <Link to="/login" className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                  Log in to continue reading
+                </Link>
+              </div>
+            )}
 
             {/* Key Takeaways */}
             {article.key_takeaways?.length > 0 && (

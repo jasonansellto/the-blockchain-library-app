@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Loader2, RefreshCw, TrendingUp, Target, BookOpen, Library, AlertCircle, Sparkles } from 'lucide-react';
+import { Loader2, RefreshCw, TrendingUp, Target, BookOpen, Library, AlertCircle, Sparkles, Clock, AlertTriangle, Mail } from 'lucide-react';
 import Seo from '@/components/Seo';
 
 export default function AdminSeoDashboard() {
@@ -9,6 +9,8 @@ export default function AdminSeoDashboard() {
   const [recalculating, setRecalculating] = useState(false);
   const [faqGenRunning, setFaqGenRunning] = useState(false);
   const [faqGenResult, setFaqGenResult] = useState(null);
+  const [newsGenRunning, setNewsGenRunning] = useState(false);
+  const [newsGenResult, setNewsGenResult] = useState(null);
 
   useEffect(() => { fetchCache(); }, []);
 
@@ -42,6 +44,17 @@ export default function AdminSeoDashboard() {
     setFaqGenRunning(false);
   };
 
+  const generateNewsletter = async () => {
+    setNewsGenRunning(true);
+    try {
+      const res = await base44.functions.invoke('generateNewsletterEdition', {});
+      setNewsGenResult(res.data || res);
+    } catch (e) {
+      setNewsGenResult({ error: e.message });
+    }
+    setNewsGenRunning(false);
+  };
+
   if (loading) return <div className="flex justify-center py-32"><Loader2 className="w-8 h-8 text-blue-600 animate-spin" /></div>;
 
   return (
@@ -58,6 +71,12 @@ export default function AdminSeoDashboard() {
             {recalculating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
             {recalculating ? 'Recalculating...' : 'Recalculate'}
           </button>
+        </div>
+
+        <div className="flex gap-2 mb-6 text-sm">
+          <a href="/admin/seo" className="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-medium">SEO Dashboard</a>
+          <a href="/admin/learning-paths" className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Learning Paths</a>
+          <a href="/admin/revisions" className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Revisions</a>
         </div>
 
         {!data ? (
@@ -110,11 +129,18 @@ export default function AdminSeoDashboard() {
                   <h2 className="text-lg font-bold text-slate-900">AI Content Tools</h2>
                   <p className="text-sm text-slate-400 mt-1">Auto-generate FAQ sections for articles missing them (improves FAQPage schema & rich snippets)</p>
                 </div>
-                <button onClick={generateFaqs} disabled={faqGenRunning}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors disabled:opacity-60">
-                  {faqGenRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                  {faqGenRunning ? 'Generating...' : 'Generate FAQs'}
-                </button>
+                <div className="flex gap-2">
+                  <button onClick={generateFaqs} disabled={faqGenRunning}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors disabled:opacity-60">
+                    {faqGenRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    {faqGenRunning ? 'Generating...' : 'Generate FAQs'}
+                  </button>
+                  <button onClick={generateNewsletter} disabled={newsGenRunning}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors disabled:opacity-60">
+                    {newsGenRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                    {newsGenRunning ? 'Generating...' : 'Generate Newsletter'}
+                  </button>
+                </div>
               </div>
               {faqGenResult && !faqGenResult.error && (
                 <div className="bg-purple-50 border border-purple-100 rounded-lg p-4">
@@ -135,7 +161,40 @@ export default function AdminSeoDashboard() {
               {faqGenResult?.error && (
                 <div className="bg-rose-50 border border-rose-100 rounded-lg p-4 text-sm text-rose-700">{faqGenResult.error}</div>
               )}
+              {newsGenResult && !newsGenResult.error && (
+                <div className="bg-teal-50 border border-teal-100 rounded-lg p-4 mt-3">
+                  <p className="text-sm text-slate-700">
+                    Newsletter edition <strong>{newsGenResult.edition?.title}</strong> (Issue #{newsGenResult.edition?.issue_number}) created successfully.{' '}
+                    <a href={`/newsletter/${newsGenResult.edition?.slug}`} className="text-teal-600 font-medium hover:underline">View edition →</a>
+                  </p>
+                </div>
+              )}
+              {newsGenResult?.error && (
+                <div className="bg-rose-50 border border-rose-100 rounded-lg p-4 text-sm text-rose-700 mt-3">{newsGenResult.error}</div>
+              )}
             </div>
+
+            {/* Content Freshness */}
+            {data.stale_articles?.length > 0 && (
+              <div className="bg-white rounded-xl border border-slate-200 p-6 mb-8">
+                <div className="flex items-center gap-2 mb-1">
+                  <AlertTriangle className="w-5 h-5 text-amber-500" />
+                  <h2 className="text-lg font-bold text-slate-900">Content Freshness</h2>
+                </div>
+                <p className="text-sm text-slate-400 mb-4">{data.stale_count} articles need review (last reviewed &gt; 6 months ago or never reviewed)</p>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {data.stale_articles.map(a => (
+                    <div key={a.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-amber-50/50 border border-amber-100">
+                      <Clock className="w-4 h-4 text-amber-500 shrink-0" />
+                      <a href={`/article/${a.slug}`} target="_blank" className="text-sm font-medium text-slate-700 hover:text-blue-600 truncate flex-1">{a.title}</a>
+                      <span className="text-xs text-slate-400 shrink-0">
+                        {a.days_since_review === null ? 'Never reviewed' : `${a.days_since_review} days ago`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <p className="text-xs text-slate-400 mt-4 text-right">
               Last calculated: {data.calculated_at ? new Date(data.calculated_at).toLocaleString() : 'N/A'}

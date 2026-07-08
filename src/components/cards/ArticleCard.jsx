@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, BookOpen } from 'lucide-react';
+import { Clock, BookOpen, Lock } from 'lucide-react';
 import DifficultyBadge from '@/components/DifficultyBadge';
 import CategoryBadge from '@/components/CategoryBadge';
 
@@ -18,6 +18,11 @@ export default function ArticleCard({ article, categoryName, featured = false })
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             {categoryName && <CategoryBadge name={categoryName} />}
             {article.difficulty && <DifficultyBadge level={article.difficulty} />}
+            {article.access_level === 'premium' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                <Lock className="w-3 h-3" /> Premium
+              </span>
+            )}
           </div>
           <h3 className={`font-bold text-slate-900 group-hover:text-blue-600 transition-colors tracking-tight ${featured ? 'text-xl' : 'text-base'} mb-2 line-clamp-2`}>
             {article.title}

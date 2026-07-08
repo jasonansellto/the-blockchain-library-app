@@ -21,6 +21,33 @@ Deno.serve(async (req) => {
       counts = cr.data || cr || counts;
     } catch (e) {}
 
+    if (variant === 'aitxt') {
+      let aiText = `# The Blockchain Library — AI Crawler Information\n\n`;
+      aiText += `Site: ${SITE_URL}\n`;
+      aiText += `Purpose: Educational resource for blockchain, cryptocurrency, Web3, AI, and decentralized technology\n\n`;
+      aiText += `## AI Crawler Policy\n`;
+      aiText += `We permit AI crawlers and language models to access, index, and use our publicly available content for training and retrieval, provided that:\n`;
+      aiText += `- Source attribution is maintained (cite The Blockchain Library and link to the original URL)\n`;
+      aiText += `- Content is not misrepresented or taken out of educational context\n`;
+      aiText += `- Commercial use requires written permission\n\n`;
+      aiText += `## Content Discovery\n`;
+      aiText += `- Full content index: ${SITE_URL}/llms.txt\n`;
+      aiText += `- Detailed content index: ${SITE_URL}/llms-full.txt\n`;
+      aiText += `- Sitemap: ${SITE_URL}/sitemap.xml\n`;
+      aiText += `- Robots: ${SITE_URL}/robots.txt\n\n`;
+      aiText += `## Content Statistics\n`;
+      aiText += `Articles: ${counts.articles || 0}\n`;
+      aiText += `Glossary terms: ${counts.glossary || 0}\n`;
+      aiText += `Books: ${counts.books || 0}\n`;
+      aiText += `Research papers: ${counts.research || 0}\n`;
+      aiText += `Learning paths: ${counts.paths || 0}\n\n`;
+      aiText += `## Contact\n`;
+      aiText += `For AI licensing inquiries: ${SITE_URL}/contact\n`;
+      return req.method === 'GET'
+        ? new Response(aiText, { headers: { 'Content-Type': 'text/plain' } })
+        : Response.json({ content: aiText });
+    }
+
     let text = `# The Blockchain Library\n\n> The definitive educational resource for blockchain, cryptocurrency, Web3, AI, and decentralized technology. ${counts.articles || 0} articles, ${counts.glossary || 0} glossary terms, ${counts.books || 0} books, ${counts.research || 0} research papers, ${counts.paths || 0} learning paths.\n\n`;
     text += `## Learn\n- [Learning Paths](${SITE_URL}/learn): Structured educational paths from beginner to expert\n\n`;
     text += `## Library\n- [Article Library](${SITE_URL}/library): Browse all educational articles by category and difficulty\n- [Topic Hubs](${SITE_URL}/library): Comprehensive topic pages aggregating articles, glossary, books, and research by subject area\n\n`;

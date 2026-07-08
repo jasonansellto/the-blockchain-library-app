@@ -42,6 +42,8 @@ import AdminSeoDashboard from '@/pages/AdminSeoDashboard';
 import RoleRoute from '@/components/admin/RoleRoute';
 import ServeRaw from '@/pages/ServeRaw';
 import TopicHub from '@/pages/TopicHub';
+import TagBrowse from '@/pages/TagBrowse';
+import AdminRevisions from '@/pages/AdminRevisions';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -75,12 +77,14 @@ const AuthenticatedApp = () => {
       <Route path="/robots.txt" element={<ServeRaw mode="robots" />} />
       <Route path="/llms.txt" element={<ServeRaw mode="llms" />} />
       <Route path="/llms-full.txt" element={<ServeRaw mode="llms-full" />} />
+      <Route path="/ai.txt" element={<ServeRaw mode="aitxt" />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/learn" element={<Learn />} />
         <Route path="/learn/:slug" element={<LearningPathDetail />} />
         <Route path="/library" element={<Library />} />
         <Route path="/topics/:slug" element={<TopicHub />} />
+        <Route path="/tags/:tag" element={<TagBrowse />} />
         <Route path="/article/:slug" element={<ArticleDetail />} />
         <Route path="/glossary" element={<Glossary />} />
         <Route path="/glossary/:slug" element={<GlossaryDetail />} />
@@ -110,6 +114,7 @@ const AuthenticatedApp = () => {
           <Route element={<RoleRoute roles={['editor', 'admin']} />}>
             <Route path="/admin/learning-paths" element={<AdminLearningPaths />} />
             <Route path="/admin/seo" element={<AdminSeoDashboard />} />
+            <Route path="/admin/revisions" element={<AdminRevisions />} />
           </Route>
         </Route>
         <Route path="*" element={<PageNotFound />} />

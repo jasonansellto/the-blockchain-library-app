@@ -12,6 +12,20 @@ Disallow: /account
 Disallow: /history
 Disallow: /api/private/
 
+# AI Crawlers — explicitly welcomed
+User-agent: GPTBot
+Allow: /
+User-agent: CCBot
+Allow: /
+User-agent: anthropic-ai
+Allow: /
+User-agent: Google-Extended
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: Bytespider
+Allow: /
+
 Sitemap: ${SITE_URL}/sitemap.xml`;
 
     return req.method === 'GET'

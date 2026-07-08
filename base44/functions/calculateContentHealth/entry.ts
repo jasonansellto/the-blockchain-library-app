@@ -95,12 +95,30 @@ Deno.serve(async (req) => {
       return { id: cat.id, name: cat.name, slug: cat.slug, internal_id: cat.internal_id, articles: ac, glossary: gc, coverage: Math.round(coverage) };
     }).sort((a, b) => b.articles - a.articles);
 
+    const now = new Date();
+    const staleArticles = articlesArr
+      .filter(a => {
+        if (!a.last_reviewed) return true;
+        return new Date(a.last_reviewed) < new Date(now.getTime() - 180 * 86400000);
+      })
+      .map(a => ({
+        id: a.id, title: a.title, slug: a.slug, internal_id: a.internal_id,
+        last_reviewed: a.last_reviewed || null,
+        days_since_review: a.last_reviewed
+          ? Math.floor((now.getTime() - new Date(a.last_reviewed).getTime()) / 86400000)
+          : null
+      }))
+      .sort((a, b) => (b.days_since_review ?? 9999) - (a.days_since_review ?? 9999))
+      .slice(0, 20);
+
     const analyticsData = {
       total_articles: articlesArr.length,
       avg_health_score: articlesArr.length > 0 ? Math.round(totalHealth / articlesArr.length) : 0,
       avg_geo_score: articlesArr.length > 0 ? Math.round(totalGeo / articlesArr.length) : 0,
       health_buckets: buckets,
       topic_clusters: clusters,
+      stale_articles: staleArticles,
+      stale_count: staleArticles.length,
       calculated_at: new Date().toISOString()
     };
 
