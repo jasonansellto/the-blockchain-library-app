@@ -7,6 +7,10 @@ import DifficultyBadge from '@/components/DifficultyBadge';
 import Seo from '@/components/Seo';
 import { buildCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 
+// Categories hidden from the default Library view; shown only when a user
+// explicitly filters by them.
+const EXCLUDED_CAT_KEYWORDS = ['money', 'affiliate', 'publishing'];
+
 export default function Library() {
   const [searchParams, setSearchParams] = useSearchParams();
   const PAGE_SIZE = 20;
@@ -55,6 +59,13 @@ export default function Library() {
     if (category) {
       const matched = categories.find(c => c.slug === category || c.id === category);
       filter.category_id = matched ? matched.id : category;
+    } else {
+      // Exclude money / affiliate marketing / publishing from the default view;
+      // they only appear when a user explicitly filters by that category.
+      const excludedIds = categories
+        .filter(c => EXCLUDED_CAT_KEYWORDS.some(k => (c.name || '').toLowerCase().includes(k)))
+        .map(c => c.id);
+      if (excludedIds.length) filter.category_id = { $nin: excludedIds };
     }
     if (difficulty) filter.difficulty = difficulty;
     return filter;
