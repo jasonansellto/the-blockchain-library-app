@@ -411,6 +411,65 @@ Deno.serve(async (req) => {
       return Response.json({ action: 'fix-ratings', updated: updates.length, totalTargets, hasMore: false, results });
     }
 
+    // ---- Action: recover amazon.com buy-links for books missing them ----
+    // Looks up the ISBN on Open Library (by main title + author, then full title)
+    // and builds an amazon.com link using the derived ISBN-10 (valid ASIN). Also
+    // backfills the isbn field and cover when Open Library has them.
+    if (body.action === 'fix-amazon-links') {
+      const res = await base44.asServiceRole.entities.Book.filter({}, 'internal_id', 1000);
+      const books: any[] = res.results || res || [];
+      const targets = books.filter((b) => !b.amazon_link && b.title);
+      if (!targets.length) {
+        return Response.json({ action: 'fix-amazon-links', scanned: 0, restored: 0, results: [] });
+      }
+      const results: any[] = [];
+      const updates: any[] = [];
+      for (const b of targets) {
+        let isbn13 = '';
+        let coverFound = '';
+        // 1. Use the stored ISBN when it's a 978 (reliable, no network needed)
+        if (b.isbn && String(b.isbn).length === 13 && String(b.isbn).startsWith('978')) {
+          isbn13 = String(b.isbn);
+        }
+        // 2. Otherwise search isbnsearch by title (prefer a 978 edition)
+        if (!isbn13) {
+          const mainTitle = String(b.title).split(':')[0].trim();
+          for (const term of [mainTitle, String(b.title)]) {
+            try {
+              const r = await fetch(`https://isbnsearch.org/search?s=${encodeURIComponent(term)}`, { redirect: 'follow' });
+              if (!r.ok) continue;
+              const html = await r.text();
+              const found = parseIsbnSearch(html);
+              if (found.length) {
+                const match = found.find((f) => f.isbn13 && f.isbn13.startsWith('978')) || found[0];
+                isbn13 = match.isbn13;
+                if (match.coverId) coverFound = `https://m.media-amazon.com/images/I/${match.coverId}._SL500_.jpg`;
+                break;
+              }
+            } catch (_e) { continue; }
+          }
+        }
+        if (isbn13) {
+          const isbn10 = isbn13To10(isbn13);
+          if (isbn10) {
+            const upd: any = { id: b.id, amazon_link: `https://www.amazon.com/dp/${isbn10}?tag=${AFFILIATE_TAG}` };
+            if (!b.isbn) upd.isbn = isbn13;
+            if (!b.cover && coverFound) upd.cover = coverFound;
+            updates.push(upd);
+            results.push({ title: b.title, isbn: isbn13, status: 'restored' });
+          } else {
+            results.push({ title: b.title, status: 'no_isbn10' });
+          }
+        } else {
+          results.push({ title: b.title, status: 'not_found' });
+        }
+      }
+      if (updates.length) {
+        await base44.asServiceRole.entities.Book.bulkUpdate(updates);
+      }
+      return Response.json({ action: 'fix-amazon-links', scanned: targets.length, restored: updates.length, results });
+    }
+
     // ---- Action: bulk import from an Amazon category URL ----
     if (body.action === 'import-category') {
       const categoryUrl = String(body.category_url || '').trim();
