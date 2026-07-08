@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import ReactMarkdown from 'react-markdown';
+import MarkdownContent from '@/components/MarkdownContent';
 import { Loader2, ChevronRight, ArrowLeft, BookOpen, Tag } from 'lucide-react';
 import CodeBlock from '@/components/CodeBlock';
 import DifficultyBadge from '@/components/DifficultyBadge';
@@ -104,7 +104,7 @@ export default function CodeSnippetDetail() {
           <div className="mb-8">
             <h2 className="text-lg font-bold text-slate-900 mb-3 tracking-tight">Explanation</h2>
             <div className="prose-tbl">
-              <ReactMarkdown>{snippet.explanation}</ReactMarkdown>
+              <MarkdownContent>{snippet.explanation}</MarkdownContent>
             </div>
           </div>
         )}

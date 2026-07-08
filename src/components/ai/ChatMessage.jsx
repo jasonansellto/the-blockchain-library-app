@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactMarkdown from 'react-markdown';
+import MarkdownContent from '@/components/MarkdownContent';
 import { Link } from 'react-router-dom';
 import { Bot, User, BookOpen, ArrowRight, Terminal } from 'lucide-react';
 
@@ -24,7 +24,7 @@ export default function ChatMessage({ message }) {
         ) : (
           <div className="bg-white/[0.04] border border-white/10 rounded-2xl rounded-tl-md px-4 py-3 backdrop-blur-sm shadow-lg">
             <div className="prose-tbl-invert text-sm">
-              <ReactMarkdown>{message.content || ''}</ReactMarkdown>
+              <MarkdownContent>{message.content || ''}</MarkdownContent>
             </div>
             {message.sources?.length > 0 && (
               <div className="mt-4 pt-3 border-t border-white/5">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import ReactMarkdown from 'react-markdown';
+import MarkdownContent from '@/components/MarkdownContent';
 import { Clock, Calendar, ChevronRight, Lightbulb, HelpCircle, BookOpen, FileText, ExternalLink, Printer, Share2, ArrowRight, BookMarked } from 'lucide-react';
 import DifficultyBadge from '@/components/DifficultyBadge';
 import CategoryBadge from '@/components/CategoryBadge';
@@ -200,7 +200,7 @@ export default function ArticleDetail() {
               </div>
             )}
             <div className="prose-tbl">
-              <ReactMarkdown>{article.body || ''}</ReactMarkdown>
+              <MarkdownContent>{article.body || ''}</MarkdownContent>
             </div>
 
             {/* Key Takeaways */}

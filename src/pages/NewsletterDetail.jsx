@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import ReactMarkdown from 'react-markdown';
+import MarkdownContent from '@/components/MarkdownContent';
 import { ChevronRight, Calendar, Tag, Mail, ArrowLeft } from 'lucide-react';
 import NewsletterSignup from '@/components/NewsletterSignup';
 
@@ -78,7 +78,7 @@ export default function NewsletterDetail() {
         )}
 
         <div className="prose-tbl">
-          <ReactMarkdown>{edition.body || ''}</ReactMarkdown>
+          <MarkdownContent>{edition.body || ''}</MarkdownContent>
         </div>
       </div>
 
