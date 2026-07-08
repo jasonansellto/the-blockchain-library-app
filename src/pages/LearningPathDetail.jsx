@@ -6,6 +6,7 @@ import DifficultyBadge from '@/components/DifficultyBadge';
 import LessonCard from '@/components/learn/LessonCard';
 import Seo from '@/components/Seo';
 import { buildCourseSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
+import CitationBox from '@/components/CitationBox';
 
 export default function LearningPathDetail() {
   const { slug } = useParams();
@@ -176,6 +177,13 @@ export default function LearningPathDetail() {
             <p className="text-sm text-white/90">You've finished all lessons in this learning path.</p>
           </div>
         )}
+
+        <CitationBox
+          type="learning-path"
+          title={path.title}
+          date={path.last_reviewed}
+          url={`${window.location.origin}/learn/${path.slug}`}
+        />
       </div>
     </div>
   );

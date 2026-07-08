@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { ChevronRight, Download, Quote, FileText, ExternalLink, BookOpen, BookMarked, Calendar } from 'lucide-react';
 import Seo from '@/components/Seo';
 import { buildScholarlyArticleSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
+import CitationBox from '@/components/CitationBox';
 
 export default function ResearchDetail() {
   const { slug } = useParams();
@@ -102,6 +103,16 @@ export default function ResearchDetail() {
             )}
           </div>
         )}
+
+        <CitationBox
+          type="research"
+          title={paper.title}
+          authors={paper.authors}
+          date={paper.publication_date}
+          url={`${window.location.origin}/research/${paper.slug}`}
+          doi={paper.doi}
+          publication={paper.publication}
+        />
 
         {/* Related */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">

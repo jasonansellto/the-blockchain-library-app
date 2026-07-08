@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { ChevronRight, Twitter, Linkedin, Github, Globe, BookOpen, FileText } from 'lucide-react';
 import ArticleCard from '@/components/cards/ArticleCard';
+import Seo from '@/components/Seo';
+import { buildPersonSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 
 export default function AuthorDetail() {
   const { slug } = useParams();
@@ -33,8 +35,20 @@ export default function AuthorDetail() {
   const socials = author.social_links || {};
   const hasSocials = socials.twitter || socials.linkedin || socials.github || socials.website;
 
+  const breadcrumbItems = [
+    { name: 'Home', url: '/' },
+    { name: 'Authors', url: '/authors' },
+    { name: author.name }
+  ];
+
   return (
     <div>
+      <Seo
+        title={author.name}
+        description={author.bio || `Articles by ${author.name}`}
+        image={author.photo}
+        schemas={[buildPersonSchema(author), buildBreadcrumbSchema(breadcrumbItems)]}
+      />
       <div className="border-b border-slate-100 bg-slate-50">
         <div className="container-tbl py-3">
           <nav className="flex items-center gap-1.5 text-sm text-slate-400">

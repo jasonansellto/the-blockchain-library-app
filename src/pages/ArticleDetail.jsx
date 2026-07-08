@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import MarkdownContent from '@/components/MarkdownContent';
-import { Clock, Calendar, ChevronRight, Lightbulb, HelpCircle, BookOpen, FileText, ExternalLink, Printer, Share2, ArrowRight, BookMarked } from 'lucide-react';
+import { Clock, Calendar, ChevronRight, Lightbulb, HelpCircle, BookOpen, FileText, ExternalLink, Printer, Share2, ArrowRight, BookMarked, Library } from 'lucide-react';
 import DifficultyBadge from '@/components/DifficultyBadge';
 import CategoryBadge from '@/components/CategoryBadge';
 import NewsletterSignup from '@/components/NewsletterSignup';
 import ArticleCard from '@/components/cards/ArticleCard';
 import Seo from '@/components/Seo';
 import { buildArticleSchema, buildBreadcrumbSchema, buildFAQSchema } from '@/lib/seoSchemas';
+import CitationBox from '@/components/CitationBox';
 import LessonNav from '@/components/learn/LessonNav';
 
 export default function ArticleDetail() {
@@ -18,6 +19,8 @@ export default function ArticleDetail() {
   const lessonOrder = searchParams.get('lesson');
   const [article, setArticle] = useState(null);
   const [related, setRelated] = useState([]);
+  const [relatedGlossary, setRelatedGlossary] = useState([]);
+  const [relatedBooks, setRelatedBooks] = useState([]);
   const [category, setCategory] = useState(null);
   const [author, setAuthor] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -67,6 +70,18 @@ export default function ArticleDetail() {
         try {
           const rels = await Promise.all(art.related_articles.slice(0, 3).map(id => base44.entities.Article.get(id).catch(() => null)));
           setRelated(rels.filter(Boolean));
+        } catch (e) {}
+      }
+      if (art.related_glossary?.length) {
+        try {
+          const gls = await Promise.all(art.related_glossary.slice(0, 4).map(id => base44.entities.GlossaryTerm.get(id).catch(() => null)));
+          setRelatedGlossary(gls.filter(Boolean));
+        } catch (e) {}
+      }
+      if (art.related_books?.length) {
+        try {
+          const bks = await Promise.all(art.related_books.slice(0, 3).map(id => base44.entities.Book.get(id).catch(() => null)));
+          setRelatedBooks(bks.filter(Boolean));
         } catch (e) {}
       }
     } catch (e) { console.error(e); } finally { setLoading(false); }
@@ -250,6 +265,14 @@ export default function ArticleDetail() {
               </div>
             )}
 
+            <CitationBox
+              type="article"
+              title={article.title}
+              authors={author ? [author.name] : []}
+              date={article.published_date}
+              url={`${window.location.origin}/article/${article.slug}`}
+            />
+
             {/* Related content sidebar */}
             <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
               {related.length > 0 && (
@@ -277,6 +300,37 @@ export default function ArticleDetail() {
                 </div>
               )}
             </div>
+
+            {(relatedGlossary.length > 0 || relatedBooks.length > 0) && (
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {relatedGlossary.length > 0 && (
+                  <div>
+                    <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900 mb-3 uppercase tracking-wide"><Library className="w-4 h-4 text-teal-600" />Related Glossary Terms</h3>
+                    <div className="space-y-2">
+                      {relatedGlossary.map(r => (
+                        <Link key={r.id} to={`/glossary/${r.slug}`} className="block p-3 bg-white border border-slate-200 rounded-lg hover:border-teal-200 hover:shadow-sm transition-all">
+                          <p className="text-sm font-semibold text-slate-900">{r.title}</p>
+                          <p className="text-xs text-slate-400 line-clamp-1">{r.definition}</p>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {relatedBooks.length > 0 && (
+                  <div>
+                    <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900 mb-3 uppercase tracking-wide"><BookMarked className="w-4 h-4 text-indigo-600" />Related Books</h3>
+                    <div className="space-y-2">
+                      {relatedBooks.map(r => (
+                        <Link key={r.id} to={`/books/${r.slug}`} className="block p-3 bg-white border border-slate-200 rounded-lg hover:border-indigo-200 hover:shadow-sm transition-all">
+                          <p className="text-sm font-semibold text-slate-900">{r.title}</p>
+                          {r.subtitle && <p className="text-xs text-slate-400 line-clamp-1">{r.subtitle}</p>}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Lesson navigation or topic CTA */}
             {pathSlug && lessonOrder ? (

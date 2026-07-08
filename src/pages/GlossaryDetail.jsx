@@ -5,7 +5,8 @@ import { ChevronRight, BookOpen, FileText, ExternalLink, Lightbulb, CheckCircle2
 import DifficultyBadge from '@/components/DifficultyBadge';
 import CategoryBadge from '@/components/CategoryBadge';
 import Seo from '@/components/Seo';
-import { buildDefinedTermSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
+import { buildDefinedTermSchema, buildBreadcrumbSchema, buildGlossaryFAQSchema } from '@/lib/seoSchemas';
+import CitationBox from '@/components/CitationBox';
 
 export default function GlossaryDetail() {
   const { slug } = useParams();
@@ -51,6 +52,7 @@ export default function GlossaryDetail() {
   ];
   const schemas = [
     buildDefinedTermSchema(term),
+    buildGlossaryFAQSchema(term),
     buildBreadcrumbSchema(breadcrumbItems)
   ];
 
@@ -167,6 +169,13 @@ export default function GlossaryDetail() {
             </ul>
           </div>
         )}
+
+        <CitationBox
+          type="glossary"
+          title={term.title}
+          date={term.last_reviewed}
+          url={`${window.location.origin}/glossary/${term.slug}`}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
           {relatedTerms.length > 0 && (

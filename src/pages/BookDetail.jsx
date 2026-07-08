@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { ChevronRight, Star, ExternalLink, BookOpen, FileText, Calendar, BookMarked, User } from 'lucide-react';
 import Seo from '@/components/Seo';
 import { buildBookSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
+import CitationBox from '@/components/CitationBox';
 
 export default function BookDetail() {
   const { slug } = useParams();
@@ -167,6 +168,16 @@ export default function BookDetail() {
             </div>
           </div>
         )}
+
+        <CitationBox
+          type="book"
+          title={book.title}
+          authors={authors.map(a => a.name)}
+          date={book.publication_year ? `${book.publication_year}-01-01` : null}
+          url={`${window.location.origin}/books/${book.slug}`}
+          publisher={book.publisher}
+          isbn={book.isbn}
+        />
       </div>
     </div>
   );

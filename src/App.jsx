@@ -38,6 +38,7 @@ import NewsletterDetail from '@/pages/NewsletterDetail';
 import AIAssistant from '@/pages/AIAssistant';
 import History from '@/pages/History';
 import AdminLearningPaths from '@/pages/AdminLearningPaths';
+import AdminSeoDashboard from '@/pages/AdminSeoDashboard';
 import RoleRoute from '@/components/admin/RoleRoute';
 import ServeRaw from '@/pages/ServeRaw';
 // Add page imports here
@@ -106,6 +107,7 @@ const AuthenticatedApp = () => {
           <Route path="/history" element={<History />} />
           <Route element={<RoleRoute roles={['editor', 'admin']} />}>
             <Route path="/admin/learning-paths" element={<AdminLearningPaths />} />
+            <Route path="/admin/seo" element={<AdminSeoDashboard />} />
           </Route>
         </Route>
         <Route path="*" element={<PageNotFound />} />

@@ -1,0 +1,122 @@
+import React, { useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
+import { Loader2, RefreshCw, TrendingUp, Target, BookOpen, Library, AlertCircle } from 'lucide-react';
+import Seo from '@/components/Seo';
+
+export default function AdminSeoDashboard() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [recalculating, setRecalculating] = useState(false);
+
+  useEffect(() => { fetchCache(); }, []);
+
+  const fetchCache = async () => {
+    try {
+      const res = await base44.entities.SiteAnalyticsCache.filter({ cache_key: 'content_health' }, '-updated_date', 1);
+      const arr = res.results || res || [];
+      if (arr.length > 0) setData(arr[0].data);
+    } catch (e) {}
+    setLoading(false);
+  };
+
+  const recalculate = async () => {
+    setRecalculating(true);
+    try {
+      const res = await base44.functions.invoke('calculateContentHealth', { action: 'calculate' });
+      const result = res.data || res;
+      if (result.success) setData(result);
+    } catch (e) { console.error(e); }
+    setRecalculating(false);
+  };
+
+  if (loading) return <div className="flex justify-center py-32"><Loader2 className="w-8 h-8 text-blue-600 animate-spin" /></div>;
+
+  return (
+    <div>
+      <Seo title="SEO Dashboard" robots="noindex, nofollow" />
+      <div className="container-tbl py-10">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">SEO & Content Health Dashboard</h1>
+            <p className="text-slate-500 text-sm mt-1">Monitor content quality, GEO readiness, and topic cluster coverage</p>
+          </div>
+          <button onClick={recalculate} disabled={recalculating}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-60">
+            {recalculating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            {recalculating ? 'Recalculating...' : 'Recalculate'}
+          </button>
+        </div>
+
+        {!data ? (
+          <div className="text-center py-20">
+            <AlertCircle className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-400 mb-2">No cached analytics data yet.</p>
+            <p className="text-sm text-slate-400">Click "Recalculate" to generate content health scores and topic cluster coverage.</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+              <StatCard icon={BookOpen} label="Total Articles" value={data.total_articles || 0} color="text-blue-600" />
+              <StatCard icon={TrendingUp} label="Avg Health Score" value={`${data.avg_health_score || 0}/100`} color="text-teal-600" />
+              <StatCard icon={Target} label="Avg GEO Score" value={`${data.avg_geo_score || 0}/100`} color="text-purple-600" />
+              <StatCard icon={Library} label="Topic Clusters" value={data.topic_clusters?.length || 0} color="text-amber-600" />
+            </div>
+
+            <div className="bg-white rounded-xl border border-slate-200 p-6 mb-8">
+              <h2 className="text-lg font-bold text-slate-900 mb-4">Health Score Distribution</h2>
+              <div className="grid grid-cols-4 gap-4">
+                <HealthBucket label="Excellent (80+)" count={data.health_buckets?.excellent || 0} total={data.total_articles || 1} color="bg-emerald-500" />
+                <HealthBucket label="Good (60-79)" count={data.health_buckets?.good || 0} total={data.total_articles || 1} color="bg-blue-500" />
+                <HealthBucket label="Fair (40-59)" count={data.health_buckets?.fair || 0} total={data.total_articles || 1} color="bg-amber-500" />
+                <HealthBucket label="Poor (<40)" count={data.health_buckets?.poor || 0} total={data.total_articles || 1} color="bg-rose-500" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl border border-slate-200 p-6">
+              <h2 className="text-lg font-bold text-slate-900 mb-4">Topic Cluster Coverage</h2>
+              <div className="space-y-3">
+                {(data.topic_clusters || []).map(cluster => (
+                  <div key={cluster.id} className="flex items-center gap-4">
+                    <div className="w-40 shrink-0">
+                      <p className="text-sm font-medium text-slate-900 truncate">{cluster.name}</p>
+                      <p className="text-xs text-slate-400">{cluster.articles} articles · {cluster.glossary} terms</p>
+                    </div>
+                    <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden">
+                      <div className={`h-full rounded-full transition-all ${cluster.coverage >= 80 ? 'bg-emerald-500' : cluster.coverage >= 50 ? 'bg-blue-500' : cluster.coverage >= 30 ? 'bg-amber-500' : 'bg-rose-400'}`} style={{ width: `${cluster.coverage}%` }} />
+                    </div>
+                    <span className="text-sm font-semibold text-slate-700 w-12 text-right">{cluster.coverage}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-400 mt-4 text-right">
+              Last calculated: {data.calculated_at ? new Date(data.calculated_at).toLocaleString() : 'N/A'}
+            </p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ icon: Icon, label, value, color }) {
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 p-5">
+      <Icon className={`w-6 h-6 mb-2 ${color}`} />
+      <div className="text-2xl font-bold text-slate-900">{value}</div>
+      <div className="text-xs text-slate-400 font-medium mt-1">{label}</div>
+    </div>
+  );
+}
+
+function HealthBucket({ label, count, total, color }) {
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+  return (
+    <div className="text-center">
+      <div className={`h-2 rounded-full ${color} mb-2`} style={{ width: `${pct}%`, margin: '0 auto' }} />
+      <div className="text-xl font-bold text-slate-900">{count}</div>
+      <div className="text-xs text-slate-400 mt-1">{label}</div>
+    </div>
+  );
+}
