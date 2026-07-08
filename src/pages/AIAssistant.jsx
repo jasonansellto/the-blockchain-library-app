@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Send, Sparkles, Loader2, MessageSquare, Trash2, ChevronRight, Cpu, Zap, Terminal } from 'lucide-react';
+import { Send, Loader2, Trash2, ChevronRight, Cpu, Zap, Terminal, BrainCircuit } from 'lucide-react';
 import ChatMessage from '@/components/ai/ChatMessage';
 
 const SUGGESTIONS = [
@@ -92,7 +92,7 @@ export default function AIAssistant() {
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl blur-md opacity-60 animate-pulse" />
               <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center ring-1 ring-white/20">
-                <Sparkles className="w-6 h-6 text-white" />
+                <BrainCircuit className="w-7 h-7 text-white" />
               </div>
             </div>
             <div className="flex-1">
