@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, ChevronDown, BookOpen } from 'lucide-react';
+import { Search, Menu, X, ChevronDown, BookOpen, Shield } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
 
 const navItems = [
   { label: 'Home', path: '/' },
@@ -25,6 +26,8 @@ const secondaryItems = [
 ];
 
 export default function Navbar() {
+  const { user } = useAuth();
+  const isAdmin = user && ['editor', 'admin'].includes(user.role);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -81,6 +84,12 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
+            {isAdmin && (
+              <Link to="/admin/learning-paths"
+                className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-md transition-colors">
+                <Shield className="w-3.5 h-3.5" /> Admin
+              </Link>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -119,6 +128,12 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
+            {isAdmin && (
+              <Link to="/admin/learning-paths" onClick={() => setMobileOpen(false)}
+                className="block px-3 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-md mt-2">
+                Admin
+              </Link>
+            )}
             <Link to="/login" onClick={() => setMobileOpen(false)}
               className="block px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-md text-center mt-2">
               Login

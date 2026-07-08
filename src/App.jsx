@@ -30,6 +30,8 @@ import NewsletterArchive from '@/pages/Newsletter';
 import NewsletterDetail from '@/pages/NewsletterDetail';
 import AIAssistant from '@/pages/AIAssistant';
 import History from '@/pages/History';
+import AdminLearningPaths from '@/pages/AdminLearningPaths';
+import RoleRoute from '@/components/admin/RoleRoute';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -84,6 +86,9 @@ const AuthenticatedApp = () => {
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/history" element={<History />} />
+          <Route element={<RoleRoute roles={['editor', 'admin']} />}>
+            <Route path="/admin/learning-paths" element={<AdminLearningPaths />} />
+          </Route>
         </Route>
         <Route path="*" element={<PageNotFound />} />
       </Route>
