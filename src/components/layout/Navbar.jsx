@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, ChevronDown, Shield, LogOut, Library } from 'lucide-react';
+import { Search, Menu, X, ChevronDown, Shield, LogOut } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 
 const navItems = [
@@ -79,7 +79,7 @@ export default function Navbar() {
         <nav className="container-tbl">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-2 shrink-0">
-              <Library className="w-7 h-7 text-blue-600" />
+              <img src="https://media.base44.com/images/public/6a4cfcf76d7d1bf88148c979/376050251_blockchain-library-icon.png" alt="The Blockchain Library" className="w-8 h-8" />
               <span className="font-bold text-slate-900 tracking-tight text-base sm:text-lg">
                 The Blockchain <span className="text-blue-600">Library</span>
               </span>
