@@ -79,7 +79,7 @@ export default function Navbar() {
         <nav className="container-tbl">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center shrink-0">
-              <img src="https://media.base44.com/images/public/6a4cfcf76d7d1bf88148c979/e9ce981b2_blockchain-library-header.png" alt="The Blockchain Library" className="h-8 sm:h-9 w-auto" />
+              <img src="https://media.base44.com/images/public/6a4cfcf76d7d1bf88148c979/0e5d20830_bl-logo.png" alt="The Blockchain Library" className="h-8 sm:h-9 w-auto" />
             </Link>
 
             <div className="hidden lg:flex items-center gap-1">
