@@ -1,0 +1,28 @@
+{
+  "name": "ContentRevision",
+  "type": "object",
+  "properties": {
+    "entity_type": {
+      "type": "string"
+    },
+    "entity_id": {
+      "type": "string"
+    },
+    "internal_id": {
+      "type": "string"
+    },
+    "changed_fields": {
+      "type": "object"
+    },
+    "snapshot": {
+      "type": "object"
+    },
+    "editor_note": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "entity_type",
+    "entity_id"
+  ]
+}

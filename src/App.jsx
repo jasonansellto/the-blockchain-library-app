@@ -39,6 +39,7 @@ import AIAssistant from '@/pages/AIAssistant';
 import History from '@/pages/History';
 import AdminLearningPaths from '@/pages/AdminLearningPaths';
 import RoleRoute from '@/components/admin/RoleRoute';
+import ServeRaw from '@/pages/ServeRaw';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -67,6 +68,11 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
+      <Route path="/sitemap.xml" element={<ServeRaw mode="sitemap-index" />} />
+      <Route path="/sitemaps/:type.xml" element={<ServeRaw mode="sitemap-type" />} />
+      <Route path="/robots.txt" element={<ServeRaw mode="robots" />} />
+      <Route path="/llms.txt" element={<ServeRaw mode="llms" />} />
+      <Route path="/llms-full.txt" element={<ServeRaw mode="llms-full" />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/learn" element={<Learn />} />

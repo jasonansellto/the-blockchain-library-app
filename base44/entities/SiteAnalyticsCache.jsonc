@@ -1,0 +1,19 @@
+{
+  "name": "SiteAnalyticsCache",
+  "type": "object",
+  "properties": {
+    "cache_key": {
+      "type": "string"
+    },
+    "data": {
+      "type": "object"
+    },
+    "last_refreshed": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "cache_key"
+  ]
+}

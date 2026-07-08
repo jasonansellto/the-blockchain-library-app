@@ -50,6 +50,12 @@
     "author_id": {
       "type": "string"
     },
+    "author_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "category_id": {
       "type": "string"
     },
@@ -161,6 +167,57 @@
     "published_date": {
       "type": "string",
       "format": "date"
+    },
+    "internal_id": {
+      "type": "string"
+    },
+    "og_image": {
+      "type": "string"
+    },
+    "last_reviewed": {
+      "type": "string",
+      "format": "date"
+    },
+    "language": {
+      "type": "string",
+      "default": "en"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "public",
+        "unlisted",
+        "private"
+      ],
+      "default": "public"
+    },
+    "schema_type": {
+      "type": "string"
+    },
+    "source_links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "citation": {
+      "type": "string"
+    },
+    "health_score": {
+      "type": "number",
+      "default": 0
+    },
+    "geo_score": {
+      "type": "number",
+      "default": 0
     }
   },
   "required": [

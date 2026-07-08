@@ -85,6 +85,52 @@
     },
     "seo_description": {
       "type": "string"
+    },
+    "internal_id": {
+      "type": "string"
+    },
+    "og_image": {
+      "type": "string"
+    },
+    "last_reviewed": {
+      "type": "string",
+      "format": "date"
+    },
+    "language": {
+      "type": "string",
+      "default": "en"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "public",
+        "unlisted",
+        "private"
+      ],
+      "default": "public"
+    },
+    "schema_type": {
+      "type": "string"
+    },
+    "source_links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "author_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
   },
   "required": [
