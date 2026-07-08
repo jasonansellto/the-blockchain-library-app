@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { X, Save, Loader2 } from 'lucide-react';
 import LessonEditor from './LessonEditor';
+import ImageInput from './content/ImageInput';
 
 const slugify = (str) =>
   str.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '');
@@ -114,10 +115,8 @@ export default function PathDrawer({ open, onClose, path, categories, onSave }) 
             </select>
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5 block">Cover Image URL</label>
-            <input type="text" value={form.cover_image} onChange={(e) => updateField('cover_image', e.target.value)} placeholder="https://..."
-              className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            {form.cover_image && <img src={form.cover_image} alt="Preview" className="mt-2 w-full h-32 object-cover rounded-lg" />}
+            <label className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5 block">Cover Image</label>
+            <ImageInput value={form.cover_image} onChange={(v) => updateField('cover_image', v)} />
           </div>
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" checked={form.is_featured} onChange={(e) => updateField('is_featured', e.target.checked)}
