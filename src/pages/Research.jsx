@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Loader2, FileText, Search } from 'lucide-react';
 import ResearchCard from '@/components/cards/ResearchCard';
+import Seo from '@/components/Seo';
+import { buildCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 
 export default function Research() {
   const [papers, setPapers] = useState([]);
@@ -24,8 +26,14 @@ export default function Research() {
     return true;
   });
 
+  const schemas = [
+    buildCollectionPageSchema('Research Database', 'Academic papers, whitepapers, and industry reports on blockchain and decentralized technology.', '/research'),
+    buildBreadcrumbSchema([{ name: 'Home', url: '/' }, { name: 'Research', url: '/research' }])
+  ];
+
   return (
     <div>
+      <Seo title="Blockchain Research Database" description="Academic papers, whitepapers, and industry reports — with abstracts, citations, BibTeX exports, and links to related articles and glossary terms." schemas={schemas} />
       <div className="border-b border-slate-100 bg-slate-50">
         <div className="container-tbl py-12">
           <div className="flex items-center gap-2 text-sm text-slate-400 mb-3"><span>Home</span><span>/</span><span className="text-slate-700 font-medium">Research</span></div>

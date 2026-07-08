@@ -7,6 +7,8 @@ import DifficultyBadge from '@/components/DifficultyBadge';
 import CategoryBadge from '@/components/CategoryBadge';
 import NewsletterSignup from '@/components/NewsletterSignup';
 import ArticleCard from '@/components/cards/ArticleCard';
+import Seo from '@/components/Seo';
+import { buildArticleSchema, buildBreadcrumbSchema, buildFAQSchema } from '@/lib/seoSchemas';
 
 export default function ArticleDetail() {
   const { slug } = useParams();
@@ -104,8 +106,21 @@ export default function ArticleDetail() {
     return text;
   };
 
+  const breadcrumbItems = [
+    { name: 'Home', url: '/' },
+    { name: 'Library', url: '/library' },
+    ...(category ? [{ name: category.name, url: `/library?category=${category.id}` }] : []),
+    { name: article.title }
+  ];
+  const schemas = [
+    buildArticleSchema(article, author, category),
+    buildBreadcrumbSchema(breadcrumbItems),
+    buildFAQSchema(article.faq)
+  ];
+
   return (
     <div>
+      <Seo title={article.title} description={article.summary} image={article.featured_image} type="article" schemas={schemas} />
       {/* Breadcrumbs */}
       <div className="border-b border-slate-100 bg-slate-50">
         <div className="container-tbl py-3">

@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { ChevronRight, BookOpen, BookMarked, FileText, ExternalLink, Lightbulb } from 'lucide-react';
 import DifficultyBadge from '@/components/DifficultyBadge';
+import Seo from '@/components/Seo';
+import { buildDefinedTermSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 
 export default function GlossaryDetail() {
   const { slug } = useParams();
@@ -39,11 +41,22 @@ export default function GlossaryDetail() {
   if (loading) return <div className="flex justify-center py-32"><div className="w-8 h-8 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin" /></div>;
   if (!term) return <div className="container-tbl py-32 text-center"><h1 className="text-2xl font-bold text-slate-900 mb-3">Term not found</h1><Link to="/glossary" className="text-blue-600 font-medium">Browse glossary →</Link></div>;
 
+  const breadcrumbItems = [
+    { name: 'Home', url: '/' },
+    { name: 'Glossary', url: '/glossary' },
+    { name: term.title }
+  ];
+  const schemas = [
+    buildDefinedTermSchema(term),
+    buildBreadcrumbSchema(breadcrumbItems)
+  ];
+
   return (
     <div>
+      <Seo title={term.title} description={term.definition} type="article" schemas={schemas} />
       <div className="border-b border-slate-100 bg-slate-50">
         <div className="container-tbl py-3">
-          <nav className="flex items-center gap-1.5 text-sm text-slate-400">
+          <nav className="flex items-center gap-1.5 text-sm text-slate-400 flex-wrap">
             <Link to="/" className="hover:text-blue-600">Home</Link><ChevronRight className="w-3.5 h-3.5" />
             <Link to="/glossary" className="hover:text-blue-600">Glossary</Link><ChevronRight className="w-3.5 h-3.5" />
             <span className="text-slate-700 font-medium truncate">{term.title}</span>

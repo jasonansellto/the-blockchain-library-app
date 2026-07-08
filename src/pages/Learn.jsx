@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Loader2, GraduationCap, Filter, Search } from 'lucide-react';
 import LearningPathCard from '@/components/cards/LearningPathCard';
+import Seo from '@/components/Seo';
+import { buildCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 
 const bucketTime = (timeStr) => {
   if (!timeStr) return null;
@@ -30,6 +32,7 @@ export default function Learn() {
   const [catFilter, setCatFilter] = useState('');
   const [diffFilter, setDiffFilter] = useState('');
   const [timeFilter, setTimeFilter] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => { fetchData(); }, []);
 
@@ -76,8 +79,14 @@ export default function Learn() {
 
   const catName = (id) => categories.find(c => c.id === id)?.name;
 
+  const schemas = [
+    buildCollectionPageSchema('Learning Paths', 'Structured, step-by-step learning journeys for blockchain, crypto, and Web3.', '/learn'),
+    buildBreadcrumbSchema([{ name: 'Home', url: '/' }, { name: 'Learn', url: '/learn' }])
+  ];
+
   return (
     <div>
+      <Seo title="Learning Paths" description="Structured, step-by-step learning journeys that take you from fundamentals to mastery. Track your progress and earn certificates as you complete each path." schemas={schemas} />
       <div className="border-b border-slate-100 bg-gradient-to-br from-blue-50 to-teal-50">
         <div className="container-tbl py-14">
           <div className="flex items-center gap-2 text-sm text-slate-400 mb-3"><span>Home</span><span>/</span><span className="text-slate-700 font-medium">Learn</span></div>
@@ -93,8 +102,11 @@ export default function Learn() {
             className="w-full pl-12 pr-4 py-3 text-base bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
 
+        <button onClick={() => setShowFilters(!showFilters)} className="lg:hidden flex items-center gap-2 px-4 py-2.5 mb-4 text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg">
+          <Filter className="w-4 h-4" /> Filters {showFilters ? '(Hide)' : '(Show)'}
+        </button>
         <div className="flex flex-col lg:flex-row gap-8">
-          <aside className="lg:w-64 shrink-0 space-y-6">
+          <aside className={`lg:w-64 shrink-0 space-y-6 ${showFilters ? 'block' : 'hidden'} lg:block`}>
             <div className="bg-white rounded-xl border border-slate-200 p-5">
               <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900 mb-4"><Filter className="w-4 h-4 text-blue-600" />Filters</h3>
               <div className="space-y-5">

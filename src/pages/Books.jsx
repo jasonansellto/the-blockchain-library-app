@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Loader2, BookMarked, Search } from 'lucide-react';
 import BookCard from '@/components/cards/BookCard';
+import Seo from '@/components/Seo';
+import { buildCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 
 const SERIES_TABS = [
   { key: 'all', label: 'All Books' },
@@ -35,8 +37,14 @@ export default function Books() {
     return b.title.toLowerCase().includes(query.toLowerCase()) || (b.subtitle || '').toLowerCase().includes(query.toLowerCase()) || (b.publisher || '').toLowerCase().includes(query.toLowerCase());
   });
 
+  const schemas = [
+    buildCollectionPageSchema('Books by Jason Ansell', 'Accessible books on blockchain, cryptocurrency, Web3, AI, and decentralized technology.', '/books'),
+    buildBreadcrumbSchema([{ name: 'Home', url: '/' }, { name: 'Books', url: '/books' }])
+  ];
+
   return (
     <div>
+      <Seo title="Books by Jason Ansell" description="Accessible books on blockchain, cryptocurrency, Web3, AI, and decentralized technology — designed to make complex subjects genuinely understandable." schemas={schemas} />
       <div className="border-b border-slate-100 bg-slate-50">
         <div className="container-tbl py-12">
           <div className="flex items-center gap-2 text-sm text-slate-400 mb-3"><span>Home</span><span>/</span><span className="text-slate-700 font-medium">Books</span></div>

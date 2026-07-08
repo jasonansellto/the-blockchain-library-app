@@ -9,6 +9,7 @@ import BookCard from '@/components/cards/BookCard';
 import ResearchCard from '@/components/cards/ResearchCard';
 import LearningPathCard from '@/components/cards/LearningPathCard';
 import CategoryCard from '@/components/cards/CategoryCard';
+import Seo from '@/components/Seo';
 
 export default function Home() {
   const [data, setData] = useState({
@@ -66,6 +67,7 @@ export default function Home() {
 
   return (
     <div>
+      <Seo title="The Definitive Blockchain Knowledge Library" description="Learn blockchain, cryptocurrency, Web3, AI, decentralized finance, and emerging technology through thousands of expertly written educational resources." />
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #0f172a 1px, transparent 0)', backgroundSize: '32px 32px' }} />

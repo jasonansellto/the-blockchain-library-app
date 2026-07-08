@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { ChevronRight, Star, ExternalLink, BookOpen, FileText, Calendar, BookMarked, User } from 'lucide-react';
+import Seo from '@/components/Seo';
+import { buildBookSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 
 export default function BookDetail() {
   const { slug } = useParams();
@@ -29,11 +31,22 @@ export default function BookDetail() {
   if (loading) return <div className="flex justify-center py-32"><div className="w-8 h-8 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin" /></div>;
   if (!book) return <div className="container-tbl py-32 text-center"><h1 className="text-2xl font-bold text-slate-900 mb-3">Book not found</h1><Link to="/books" className="text-blue-600 font-medium">Browse books →</Link></div>;
 
+  const breadcrumbItems = [
+    { name: 'Home', url: '/' },
+    { name: 'Books', url: '/books' },
+    { name: book.title }
+  ];
+  const schemas = [
+    buildBookSchema(book, authors),
+    buildBreadcrumbSchema(breadcrumbItems)
+  ];
+
   return (
     <div>
+      <Seo title={book.title} description={book.description || book.subtitle} image={book.cover} type="book" schemas={schemas} />
       <div className="border-b border-slate-100 bg-slate-50">
         <div className="container-tbl py-3">
-          <nav className="flex items-center gap-1.5 text-sm text-slate-400">
+          <nav className="flex items-center gap-1.5 text-sm text-slate-400 flex-wrap">
             <Link to="/" className="hover:text-blue-600">Home</Link><ChevronRight className="w-3.5 h-3.5" />
             <Link to="/books" className="hover:text-blue-600">Books</Link><ChevronRight className="w-3.5 h-3.5" />
             <span className="text-slate-700 font-medium truncate">{book.title}</span>

@@ -4,6 +4,8 @@ import { base44 } from '@/api/base44Client';
 import { Loader2, Filter, BookOpen, ChevronDown } from 'lucide-react';
 import ArticleCard from '@/components/cards/ArticleCard';
 import DifficultyBadge from '@/components/DifficultyBadge';
+import Seo from '@/components/Seo';
+import { buildCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 
 export default function Library() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -18,6 +20,7 @@ export default function Library() {
   const [sort, setSort] = useState('-published_date');
   const [filteredCount, setFilteredCount] = useState(null);
   const [categoriesReady, setCategoriesReady] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => { fetchCategories(); }, []);
   useEffect(() => { if (categoriesReady) fetchArticles(); }, [category, difficulty, sort, categoriesReady]);
@@ -74,8 +77,14 @@ export default function Library() {
   const catName = (id) => categories.find(c => c.id === id)?.name;
   const updateCategory = (val) => { setCategory(val); setSearchParams(val ? { category: val } : {}); };
 
+  const schemas = [
+    buildCollectionPageSchema('Article Library', 'Thousands of expertly written articles covering blockchain, cryptocurrency, Web3, AI, and decentralized technology.', '/library'),
+    buildBreadcrumbSchema([{ name: 'Home', url: '/' }, { name: 'Library', url: '/library' }])
+  ];
+
   return (
     <div>
+      <Seo title="Article Library" description="Thousands of expertly written articles covering blockchain, cryptocurrency, Web3, AI, and decentralized technology — all interconnected through our knowledge graph." schemas={schemas} />
       <div className="border-b border-slate-100 bg-slate-50">
         <div className="container-tbl py-12">
           <div className="flex items-center gap-2 text-sm text-slate-400 mb-3">
@@ -87,9 +96,12 @@ export default function Library() {
       </div>
 
       <div className="container-tbl py-10">
+        <button onClick={() => setShowFilters(!showFilters)} className="lg:hidden flex items-center gap-2 px-4 py-2.5 mb-4 text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg">
+          <Filter className="w-4 h-4" /> Filters {showFilters ? '(Hide)' : '(Show)'}
+        </button>
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters sidebar */}
-          <aside className="lg:w-64 shrink-0 space-y-6">
+          <aside className={`lg:w-64 shrink-0 space-y-6 ${showFilters ? 'block' : 'hidden'} lg:block`}>
             <div className="bg-white rounded-xl border border-slate-200 p-5">
               <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900 mb-4"><Filter className="w-4 h-4 text-blue-600" />Filters</h3>
               <div className="space-y-5">

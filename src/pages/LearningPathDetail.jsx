@@ -4,6 +4,8 @@ import { base44 } from '@/api/base44Client';
 import { ChevronRight, Clock, Layers, GraduationCap, Play } from 'lucide-react';
 import DifficultyBadge from '@/components/DifficultyBadge';
 import LessonCard from '@/components/learn/LessonCard';
+import Seo from '@/components/Seo';
+import { buildCourseSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 
 export default function LearningPathDetail() {
   const { slug } = useParams();
@@ -113,8 +115,19 @@ export default function LearningPathDetail() {
   const progress = totalLessons ? Math.round((doneCount / totalLessons) * 100) : 0;
   const hasProgress = doneCount > 0;
 
+  const breadcrumbItems = [
+    { name: 'Home', url: '/' },
+    { name: 'Learn', url: '/learn' },
+    { name: path.title }
+  ];
+  const schemas = [
+    buildCourseSchema(path, null),
+    buildBreadcrumbSchema(breadcrumbItems)
+  ];
+
   return (
     <div>
+      <Seo title={path.title} description={path.description} image={path.cover_image} type="article" schemas={schemas} />
       {/* Hero with cover image */}
       <div className="relative border-b border-slate-100 overflow-hidden">
         {path.cover_image ? (

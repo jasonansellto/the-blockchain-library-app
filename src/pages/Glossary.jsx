@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Loader2, Search, Library } from 'lucide-react';
 import GlossaryCard from '@/components/cards/GlossaryCard';
+import Seo from '@/components/Seo';
+import { buildCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 
 const ALPHABET = '#ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
@@ -39,8 +41,14 @@ export default function Glossary() {
     });
   }, [terms, query, activeLetter, difficulty]);
 
+  const schemas = [
+    buildCollectionPageSchema('Blockchain Glossary', 'Clear, precise definitions for every blockchain, crypto, and Web3 term.', '/glossary'),
+    buildBreadcrumbSchema([{ name: 'Home', url: '/' }, { name: 'Glossary', url: '/glossary' }])
+  ];
+
   return (
     <div>
+      <Seo title="Blockchain Glossary" description="Clear, precise definitions for every blockchain, crypto, and Web3 term — linked to articles, books, and research for deeper learning." schemas={schemas} />
       <div className="border-b border-slate-100 bg-slate-50">
         <div className="container-tbl py-12">
           <div className="flex items-center gap-2 text-sm text-slate-400 mb-3"><span>Home</span><span>/</span><span className="text-slate-700 font-medium">Glossary</span></div>
