@@ -6,9 +6,9 @@ export default function Resources({ type }) {
   const configs = {
     tools: { icon: Wrench, title: 'Blockchain Tools', desc: 'Calculators, converters, and interactive utilities for blockchain practitioners and learners.', items: [
       { name: 'Gas Fee Calculator', desc: 'Estimate transaction costs across major networks.', status: 'Coming soon' },
-      { name: 'Hash Generator', desc: 'Generate SHA-256, Keccak-256, and other cryptographic hashes.', status: 'Coming soon' },
-      { name: 'Address Validator', desc: 'Verify blockchain addresses across multiple chains.', status: 'Coming soon' },
-      { name: 'Unit Converter', desc: 'Convert between wei, gwei, ether, satoshis, and bitcoin.', status: 'Coming soon' },
+      { name: 'Hash Generator', desc: 'Generate SHA-256, Keccak-256, and other cryptographic hashes.', status: 'Available', link: '/tools/hash-generator' },
+      { name: 'Address Validator', desc: 'Verify blockchain addresses across multiple chains.', status: 'Available', link: '/tools/address-validator' },
+      { name: 'Unit Converter', desc: 'Convert between wei, gwei, ether, satoshis, and bitcoin.', status: 'Available', link: '/tools/unit-converter' },
       { name: 'Mnemonic Generator', desc: 'Educational tool for understanding BIP39 seed phrases.', status: 'Coming soon' },
       { name: 'Block Explorer', desc: 'Search transactions, blocks, and addresses across chains.', status: 'Coming soon' },
     ]},

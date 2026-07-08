@@ -23,6 +23,9 @@ import SearchPage from '@/pages/SearchPage';
 import About from '@/pages/About';
 import Contact from '@/pages/Contact';
 import Resources from '@/pages/Resources';
+import UnitConverter from '@/pages/tools/UnitConverter';
+import HashGenerator from '@/pages/tools/HashGenerator';
+import AddressValidator from '@/pages/tools/AddressValidator';
 import DeveloperHub from '@/pages/DeveloperHub';
 import CodeSnippets from '@/pages/CodeSnippets';
 import CodeSnippetDetail from '@/pages/CodeSnippetDetail';
@@ -109,6 +112,9 @@ const AuthenticatedApp = () => {
         <Route path="/authors/:slug" element={<AuthorDetail />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/tools" element={<Resources type="tools" />} />
+        <Route path="/tools/unit-converter" element={<UnitConverter />} />
+        <Route path="/tools/hash-generator" element={<HashGenerator />} />
+        <Route path="/tools/address-validator" element={<AddressValidator />} />
         <Route path="/developers" element={<DeveloperHub />} />
         <Route path="/developers/snippets" element={<CodeSnippets />} />
         <Route path="/developers/snippets/:slug" element={<CodeSnippetDetail />} />
