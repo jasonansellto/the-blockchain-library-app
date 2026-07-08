@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { ChevronRight, Clock, Layers, GraduationCap, Play } from 'lucide-react';
 import DifficultyBadge from '@/components/DifficultyBadge';
@@ -14,8 +14,7 @@ export default function LearningPathDetail() {
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState({});
   const [authed, setAuthed] = useState(false);
-  const [expandedIndex, setExpandedIndex] = useState(null);
-  const lessonRefs = useRef([]);
+  const navigate = useNavigate();
 
   useEffect(() => { fetchPath(); }, [slug]);
 
@@ -77,34 +76,17 @@ export default function LearningPathDetail() {
     } catch (e) {}
   };
 
-  const resumeToLesson = () => {
+  const resumeToLesson = async () => {
     const sorted = (path.lessons || []).sort((a, b) => (a.order || 0) - (b.order || 0));
-    const firstIncompleteIdx = sorted.findIndex((lesson, i) => !completed[lesson.order ?? i]);
-    const idx = firstIncompleteIdx === -1 ? 0 : firstIncompleteIdx;
-    setExpandedIndex(idx);
-    setTimeout(() => lessonRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
-  };
-
-  const handleExpand = (index) => {
-    setExpandedIndex(prev => prev === index ? null : index);
-    setTimeout(() => lessonRefs.current[index]?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
-  };
-
-  const handleCompleteAndNext = (order, index) => {
-    if (!completed[order]) toggleComplete(order);
-    const lessons = (path.lessons || []).sort((a, b) => (a.order || 0) - (b.order || 0));
-    if (index < lessons.length - 1) {
-      setExpandedIndex(index + 1);
-      setTimeout(() => lessonRefs.current[index + 1]?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+    const firstIncomplete = sorted.find((lesson) => !completed[lesson.order]);
+    const target = firstIncomplete || sorted[0];
+    if (target?.article_id) {
+      try {
+        const art = await base44.entities.Article.get(target.article_id);
+        if (art?.slug) navigate(`/article/${art.slug}?path=${path.slug}&lesson=${target.order ?? 1}`);
+      } catch (e) {}
     }
   };
-
-  useEffect(() => {
-    if (!path || loading) return;
-    const sorted = (path.lessons || []).sort((a, b) => (a.order || 0) - (b.order || 0));
-    const firstIncompleteIdx = sorted.findIndex((lesson, i) => !completed[lesson.order ?? i]);
-    setExpandedIndex(firstIncompleteIdx === -1 ? 0 : firstIncompleteIdx);
-  }, [path, loading]);
 
   if (loading) return <div className="flex justify-center py-32"><div className="w-8 h-8 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin" /></div>;
   if (!path) return <div className="container-tbl py-32 text-center"><h1 className="text-2xl font-bold text-slate-900 mb-3">Learning path not found</h1><Link to="/learn" className="text-blue-600 font-medium">Browse paths →</Link></div>;
@@ -160,10 +142,10 @@ export default function LearningPathDetail() {
               <div className="h-full bg-gradient-to-r from-teal-400 to-blue-400 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
             </div>
           </div>
-          {hasProgress && progress < 100 && (
+          {totalLessons > 0 && progress < 100 && (
             <button onClick={resumeToLesson}
               className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-900 bg-white hover:bg-slate-100 rounded-lg transition-colors">
-              <Play className="w-4 h-4 fill-slate-900" /> Resume Learning
+              <Play className="w-4 h-4 fill-slate-900" /> {hasProgress ? 'Resume Learning' : 'Start Learning'}
             </button>
           )}
         </div>
@@ -175,17 +157,14 @@ export default function LearningPathDetail() {
           {sortedLessons.map((lesson, i) => (
             <LessonCard
               key={i}
-              ref={el => lessonRefs.current[i] = el}
               lesson={lesson}
               index={i}
               total={totalLessons}
               article={lesson.article_id ? articles[lesson.article_id] : null}
               isDone={!!completed[lesson.order ?? i]}
               authed={authed}
-              isExpanded={expandedIndex === i}
-              onExpand={handleExpand}
+              pathSlug={path.slug}
               onToggle={toggleComplete}
-              onCompleteAndNext={handleCompleteAndNext}
             />
           ))}
         </div>

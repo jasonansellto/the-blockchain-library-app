@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import ReactMarkdown from 'react-markdown';
 import { Clock, Calendar, ChevronRight, Lightbulb, HelpCircle, BookOpen, FileText, ExternalLink, Printer, Share2, ArrowRight, BookMarked } from 'lucide-react';
@@ -9,9 +9,13 @@ import NewsletterSignup from '@/components/NewsletterSignup';
 import ArticleCard from '@/components/cards/ArticleCard';
 import Seo from '@/components/Seo';
 import { buildArticleSchema, buildBreadcrumbSchema, buildFAQSchema } from '@/lib/seoSchemas';
+import LessonNav from '@/components/learn/LessonNav';
 
 export default function ArticleDetail() {
   const { slug } = useParams();
+  const [searchParams] = useSearchParams();
+  const pathSlug = searchParams.get('path');
+  const lessonOrder = searchParams.get('lesson');
   const [article, setArticle] = useState(null);
   const [related, setRelated] = useState([]);
   const [category, setCategory] = useState(null);
@@ -274,16 +278,20 @@ export default function ArticleDetail() {
               )}
             </div>
 
-            {/* Next lesson CTA */}
-            <div className="mt-12 p-6 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 text-white flex items-center justify-between gap-4">
-              <div>
-                <p className="text-xs text-teal-400 font-semibold uppercase tracking-wide mb-1">Keep learning</p>
-                <p className="text-lg font-bold">Explore more in {category?.name || 'this topic'}</p>
+            {/* Lesson navigation or topic CTA */}
+            {pathSlug && lessonOrder ? (
+              <LessonNav pathSlug={pathSlug} currentOrder={lessonOrder} />
+            ) : (
+              <div className="mt-12 p-6 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 text-white flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs text-teal-400 font-semibold uppercase tracking-wide mb-1">Keep learning</p>
+                  <p className="text-lg font-bold">Explore more in {category?.name || 'this topic'}</p>
+                </div>
+                <Link to={category ? `/library?category=${category.id}` : '/library'} className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-white text-slate-900 rounded-lg hover:bg-slate-100 transition-colors">
+                  Continue <ArrowRight className="w-4 h-4" />
+                </Link>
               </div>
-              <Link to={category ? `/library?category=${category.id}` : '/library'} className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-white text-slate-900 rounded-lg hover:bg-slate-100 transition-colors">
-                Continue <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
+            )}
           </article>
         </div>
       </div>

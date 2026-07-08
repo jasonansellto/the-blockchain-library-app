@@ -59,7 +59,7 @@ export default function Dashboard() {
   const completedCount = (p) => (p.completed_lesson_orders || []).length;
 
   return (
-    <div>
+    <div className="overflow-x-hidden">
       {/* Header */}
       <div className="border-b border-slate-100 bg-gradient-to-br from-slate-900 to-slate-800">
         <div className="container-tbl py-10">
@@ -69,7 +69,7 @@ export default function Dashboard() {
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">{user.full_name || 'Member'}</h1>
-              <p className="text-sm text-slate-400">{user.email}</p>
+              <p className="text-sm text-slate-400 truncate">{user.email}</p>
               <div className="flex items-center gap-2 mt-2">
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 capitalize">{user.role || 'member'}</span>
                 <span className="text-xs text-slate-500">Member since {new Date(user.created_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}</span>
@@ -85,18 +85,18 @@ export default function Dashboard() {
       {/* Stats bar */}
       <div className="border-b border-slate-100 bg-white">
         <div className="container-tbl py-6">
-          <div className="grid grid-cols-3 gap-4">
-            <Link to="/dashboard" onClick={() => setTab('bookmarks')} className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 hover:bg-blue-50 transition-colors">
-              <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center"><BookMarked className="w-5 h-5 text-blue-600" /></div>
-              <div><div className="text-2xl font-bold text-slate-900">{bookmarks.length}</div><div className="text-xs text-slate-400">Bookmarks</div></div>
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            <Link to="/dashboard" onClick={() => setTab('bookmarks')} className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl bg-slate-50 hover:bg-blue-50 transition-colors">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-blue-100 flex items-center justify-center shrink-0"><BookMarked className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" /></div>
+              <div className="text-center sm:text-left"><div className="text-lg sm:text-2xl font-bold text-slate-900">{bookmarks.length}</div><div className="text-[11px] sm:text-xs text-slate-400 leading-tight">Bookmarks</div></div>
             </Link>
-            <Link to="/learn" className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 hover:bg-teal-50 transition-colors">
-              <div className="w-10 h-10 rounded-lg bg-teal-100 flex items-center justify-center"><GraduationCap className="w-5 h-5 text-teal-600" /></div>
-              <div><div className="text-2xl font-bold text-slate-900">{progress.length}</div><div className="text-xs text-slate-400">Learning Paths</div></div>
+            <Link to="/learn" className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl bg-slate-50 hover:bg-teal-50 transition-colors">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-teal-100 flex items-center justify-center shrink-0"><GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-teal-600" /></div>
+              <div className="text-center sm:text-left"><div className="text-lg sm:text-2xl font-bold text-slate-900">{progress.length}</div><div className="text-[11px] sm:text-xs text-slate-400 leading-tight">Learning Paths</div></div>
             </Link>
-            <Link to="/history" className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 hover:bg-purple-50 transition-colors">
-              <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center"><Clock className="w-5 h-5 text-purple-600" /></div>
-              <div><div className="text-2xl font-bold text-slate-900">{history.length}</div><div className="text-xs text-slate-400">Recently Read</div></div>
+            <Link to="/history" className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl bg-slate-50 hover:bg-purple-50 transition-colors">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-purple-100 flex items-center justify-center shrink-0"><Clock className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" /></div>
+              <div className="text-center sm:text-left"><div className="text-lg sm:text-2xl font-bold text-slate-900">{history.length}</div><div className="text-[11px] sm:text-xs text-slate-400 leading-tight">Recently Read</div></div>
             </Link>
           </div>
         </div>
@@ -104,7 +104,7 @@ export default function Dashboard() {
 
       <div className="container-tbl py-10">
         {/* Tabs */}
-        <div className="flex items-center gap-1 mb-8 border-b border-slate-200">
+        <div className="flex items-center gap-1 mb-8 border-b border-slate-200 overflow-x-auto">
           {[
             { id: 'overview', label: 'Overview', icon: BookOpen },
             { id: 'bookmarks', label: 'Bookmarks', icon: BookMarked },
