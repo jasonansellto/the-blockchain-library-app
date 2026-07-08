@@ -4,7 +4,7 @@ import { ExternalLink } from 'lucide-react';
 
 export default function CategoryCard({ category, articleCount }) {
   return (
-    <Link to={`/library?category=${category.slug}`}
+    <Link to={`/topics/${category.slug}`}
       className="group block bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md hover:border-blue-200 transition-all duration-300">
       <div className="flex items-start justify-between mb-2">
         <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-50 to-teal-50 flex items-center justify-center text-lg">

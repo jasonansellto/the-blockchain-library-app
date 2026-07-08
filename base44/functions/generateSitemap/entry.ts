@@ -25,7 +25,7 @@ const SITEMAP_CONFIG = [
   { type: 'research', entity: 'ResearchPaper', urlPath: (i) => `/research/${i.slug}`, filter: {}, changefreq: 'yearly', priority: '0.6' },
   { type: 'authors', entity: 'Author', urlPath: (i) => `/authors/${i.slug}`, filter: {}, changefreq: 'monthly', priority: '0.5' },
   { type: 'learning-paths', entity: 'LearningPath', urlPath: (i) => `/learn/${i.slug}`, filter: {}, changefreq: 'weekly', priority: '0.9' },
-  { type: 'categories', entity: 'Category', urlPath: (i) => `/library?category=${i.slug}`, filter: {}, changefreq: 'monthly', priority: '0.4' },
+  { type: 'categories', entity: 'Category', urlPath: (i) => `/topics/${i.slug}`, filter: {}, changefreq: 'weekly', priority: '0.8' },
   { type: 'developers', entity: 'CodeSnippet', urlPath: (i) => `/developers/snippets/${i.slug}`, filter: {}, changefreq: 'monthly', priority: '0.6' }
 ];
 

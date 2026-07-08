@@ -41,6 +41,7 @@ import AdminLearningPaths from '@/pages/AdminLearningPaths';
 import AdminSeoDashboard from '@/pages/AdminSeoDashboard';
 import RoleRoute from '@/components/admin/RoleRoute';
 import ServeRaw from '@/pages/ServeRaw';
+import TopicHub from '@/pages/TopicHub';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -79,6 +80,7 @@ const AuthenticatedApp = () => {
         <Route path="/learn" element={<Learn />} />
         <Route path="/learn/:slug" element={<LearningPathDetail />} />
         <Route path="/library" element={<Library />} />
+        <Route path="/topics/:slug" element={<TopicHub />} />
         <Route path="/article/:slug" element={<ArticleDetail />} />
         <Route path="/glossary" element={<Glossary />} />
         <Route path="/glossary/:slug" element={<GlossaryDetail />} />
