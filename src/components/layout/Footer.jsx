@@ -79,9 +79,10 @@ export default function Footer() {
             © 2026 The Blockchain Library. Educational content for the decentralized world.
           </p>
           <div className="flex items-center gap-5 text-xs text-slate-500">
-            <Link to="/about" className="hover:text-slate-300">Privacy Policy</Link>
-            <Link to="/about" className="hover:text-slate-300">Terms of Use</Link>
-            <Link to="/about" className="hover:text-slate-300">Editorial Standards</Link>
+            <Link to="/privacy" className="hover:text-slate-300">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-slate-300">Terms &amp; Conditions</Link>
+            <Link to="/cookies" className="hover:text-slate-300">Cookie Policy</Link>
+            <Link to="/disclaimer" className="hover:text-slate-300">Disclaimer</Link>
           </div>
         </div>
       </div>

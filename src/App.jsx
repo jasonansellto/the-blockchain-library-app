@@ -49,6 +49,10 @@ import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
+import PrivacyPolicy from '@/pages/PrivacyPolicy';
+import Terms from '@/pages/Terms';
+import CookiePolicy from '@/pages/CookiePolicy';
+import Disclaimer from '@/pages/Disclaimer';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -114,6 +118,10 @@ const AuthenticatedApp = () => {
         <Route path="/news" element={<News />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/cookies" element={<CookiePolicy />} />
+        <Route path="/disclaimer" element={<Disclaimer />} />
         <Route path="/ai-assistant" element={<AIAssistant />} />
         <Route path="/newsletter" element={<NewsletterArchive />} />
         <Route path="/newsletter/:slug" element={<NewsletterDetail />} />
