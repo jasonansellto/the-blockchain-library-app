@@ -51,17 +51,18 @@ export default function Library() {
 
   const fetchArticles = async () => {
     setLoading(true);
+    const filter = buildFilter();
     try {
-      const filter = buildFilter();
-      const [res, countsRes] = await Promise.all([
-        base44.entities.Article.filter(filter, sort, PAGE_SIZE, 0),
-        base44.functions.invoke('getCounts', { article_filter: filter }),
-      ]);
+      const res = await base44.entities.Article.filter(filter, sort, PAGE_SIZE, 0);
       const arr = res.results || res || [];
       setArticles(arr);
       setHasMore(arr.length === PAGE_SIZE);
-      setFilteredCount((countsRes.data || countsRes || {}).filtered_articles ?? null);
     } catch (e) { console.error(e); } finally { setLoading(false); }
+
+    try {
+      const countsRes = await base44.functions.invoke('getCounts', { article_filter: filter });
+      setFilteredCount((countsRes.data || countsRes || {}).filtered_articles ?? null);
+    } catch (e) { console.error(e); }
   };
 
   const loadMore = async () => {

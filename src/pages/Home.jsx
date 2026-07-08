@@ -36,14 +36,13 @@ export default function Home() {
 
   const fetchData = async () => {
     try {
-      const [articles, books, research, paths, categories, authors, countsRes] = await Promise.all([
+      const [articles, books, research, paths, categories, authors] = await Promise.all([
         base44.entities.Article.filter({ status: 'published' }, '-published_date', 20),
         base44.entities.Book.list('-updated_date', 20),
         base44.entities.ResearchPaper.list('-updated_date', 20),
         base44.entities.LearningPath.list('-updated_date', 20),
         base44.entities.Category.list('-updated_date', 50),
         base44.entities.Author.filter({ is_featured: true }, '-updated_date', 6),
-        base44.functions.invoke('getCounts', {}),
       ]);
 
       const articlesArr = articles.results || articles || [];
@@ -52,7 +51,6 @@ export default function Home() {
       const pathsArr = paths.results || paths || [];
       const catsArr = categories.results || categories || [];
       const authorsArr = authors.results || authors || [];
-      const counts = countsRes.data || countsRes || {};
 
       setData({
         featuredArticles: articlesArr.filter(a => a.is_featured).slice(0, 3),
@@ -62,19 +60,19 @@ export default function Home() {
         featuredPaths: pathsArr.filter(p => p.is_featured).slice(0, 3).length ? pathsArr.filter(p => p.is_featured).slice(0, 3) : pathsArr.slice(0, 3),
         categories: catsArr.slice(0, 8),
         authors: authorsArr,
-        counts: {
-          articles: counts.articles ?? 0,
-          glossary: counts.glossary ?? 0,
-          books: counts.books ?? 0,
-          research: counts.research ?? 0,
-          paths: counts.paths ?? 0,
-        }
+        counts: {}
       });
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
+
+    try {
+      const countsRes = await base44.functions.invoke('getCounts', {});
+      const counts = countsRes.data || countsRes || {};
+      setData(prev => ({ ...prev, counts: { articles: counts.articles ?? 0, glossary: counts.glossary ?? 0, books: counts.books ?? 0, research: counts.research ?? 0, paths: counts.paths ?? 0 } }));
+    } catch (e) { console.error(e); }
   };
 
   const catName = (id) => data.categories.find(c => c.id === id)?.name;
