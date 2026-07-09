@@ -381,26 +381,28 @@ Return JSON: { "papers": [ {title, authors, year, url, research_type, collection
       }
       meta = collection ? { topic, collection } : { topic };
     } else if (action === 'import-priority') {
-      // Import a slice of the canonical priority list, enriching each with real
-      // metadata (authors/year/URL) via a web-search LLM, then annotate + persist.
+      // Import the NEXT un-imported slice of the canonical priority list. Already-
+      // archived papers are skipped BEFORE the enrich call (saves credits + time),
+      // so every click advances to fresh papers instead of re-processing the same
+      // first batch. Each entry is enriched with real metadata (authors/year/URL)
+      // via a web-search LLM, then annotated + persisted.
       const limit = Math.min(20, Math.max(1, parseInt(body.limit, 10) || 10));
-      const offset = Math.max(0, parseInt(body.offset, 10) || 0);
       const collectionFilter = String(body.collection || '').trim();
+
+      const exRes = await base44.asServiceRole.entities.ResearchPaper.filter({}, '-created_date', 1000);
+      const exArr: any[] = exRes.results || exRes || [];
+      const existingSlugs = new Set(exArr.map((p: any) => p.slug));
+
       const pool: any[] = collectionFilter
         ? PRIORITY_PAPERS.filter((p: any) => p.collection === collectionFilter)
         : PRIORITY_PAPERS;
-      const slice: any[] = pool.slice(offset, offset + limit);
+      const remaining: any[] = pool.filter((p: any) => !existingSlugs.has(slugify(p.title)));
+      const slice: any[] = remaining.slice(0, limit);
       if (!slice.length) {
         return Response.json({ action: 'import-priority', enriched: 0, created: 0, skipped: 0, papers: [], priorityTotal: PRIORITY_PAPERS.length, remaining: 0 });
       }
 
-      const exRes = await base44.asServiceRole.entities.ResearchPaper.filter({}, '-created_date', 1000);
-      const exArr: any[] = exRes.results || exRes || [];
-      const existingTitles = exArr.map((p: any) => p.title);
-
       const enrichPrompt = `You are a senior research librarian. For each real paper/standard below, find its REAL authors, publication year, and canonical source URL (arXiv abstract page, eprint.iacr.org, eips.ethereum.org, official project whitepaper PDF, or W3C/NIST/ISO page). Do NOT invent — if you cannot verify an entry, return it with empty authors, year 0, and url "". Echo the exact title, research_type, and collection given.
-
-Already in the library (skip if a title already matches one of these): ${existingTitles.length ? existingTitles.join(' | ') : '(none yet)'}
 
 Entries:
 ${slice.map((p: any, i: number) => `${i + 1}. Title: ${p.title}\n   Type: ${p.research_type}\n   Collection: ${p.collection}`).join('\n\n')}
@@ -431,8 +433,8 @@ Return JSON: { "papers": [ {title, authors, year, url, research_type, collection
         }
       });
 
-      candidates = ((enrichRes && enrichRes.papers) || []).filter((p: any) => p && p.title && p.url);
-      meta = { action: 'import-priority', enriched: candidates.length, priorityTotal: PRIORITY_PAPERS.length, remaining: Math.max(0, pool.length - offset - slice.length) };
+      candidates = ((enrichRes && enrichRes.papers) || []).filter((p: any) => p && p.title);
+      meta = { action: 'import-priority', enriched: candidates.length, priorityTotal: PRIORITY_PAPERS.length, remaining: Math.max(0, remaining.length - slice.length) };
     } else if (Array.isArray(customPapers) && customPapers.length) {
       candidates = customPapers;
       meta = { batch: 'custom' };
