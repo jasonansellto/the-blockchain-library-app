@@ -1,0 +1,35 @@
+// Curated research collections for The Blockchain Library.
+// Each collection has a target paper count driving the discovery UI.
+// "Original Research" is open-ended (target 0 -> shown as ∞).
+export const RESEARCH_COLLECTIONS = [
+  { name: 'Blockchain Fundamentals', target: 25, description: 'Core concepts, history, and introductory foundations of blockchain technology.' },
+  { name: 'Bitcoin', target: 20, description: 'Bitcoin protocol, UTXO model, mining, Lightning Network, and fee markets.' },
+  { name: 'Ethereum', target: 20, description: 'Ethereum protocol, the EVM, gas, and major EIPs shaping the chain.' },
+  { name: 'Consensus Mechanisms', target: 25, description: 'PoW, PoS, and BFT consensus protocols and their security analysis.' },
+  { name: 'Cryptography', target: 25, description: 'Foundational cryptography: hashes, signatures, VRFs, and secret sharing.' },
+  { name: 'Zero-Knowledge Proofs', target: 20, description: 'zk-SNARKs, zk-STARKs, recursive proofs, and zkEVM research.' },
+  { name: 'Layer-1 Architecture', target: 20, description: 'Base-layer blockchain design, state machines, and execution models.' },
+  { name: 'Layer-2 Scaling', target: 20, description: 'Rollups, payment channels, sharding, and off-chain scaling.' },
+  { name: 'Smart Contracts', target: 20, description: 'Contract languages, execution semantics, account abstraction, and standards.' },
+  { name: 'DeFi', target: 30, description: 'Decentralized exchanges, lending, stablecoins, AMMs, and MEV.' },
+  { name: 'NFTs & Digital Ownership', target: 15, description: 'Non-fungible tokens, royalty standards, and digital property.' },
+  { name: 'DAOs & Governance', target: 15, description: 'Decentralized governance, voting mechanisms, and treasury management.' },
+  { name: 'Stablecoins & CBDCs', target: 20, description: 'Stablecoin mechanisms, central bank digital currencies, and monetary design.' },
+  { name: 'Tokenization (RWA)', target: 20, description: 'Real-world asset tokenization and compliant on-chain representation.' },
+  { name: 'Enterprise Blockchain', target: 20, description: 'Permissioned ledgers, Hyperledger, Corda, and enterprise integration.' },
+  { name: 'Digital Identity', target: 15, description: 'Decentralized identifiers, verifiable credentials, and self-sovereign identity.' },
+  { name: 'Wallets & Account Abstraction', target: 15, description: 'Wallet security, key management, and account abstraction patterns.' },
+  { name: 'Blockchain Security', target: 30, description: 'Smart contract vulnerabilities, formal verification, bridges, and exploits.' },
+  { name: 'AI + Blockchain', target: 25, description: 'Decentralized AI, verifiable inference, AI provenance, and autonomous agents.' },
+  { name: 'Machine Economies', target: 15, description: 'Autonomous machine-to-machine economies and tokenized compute.' },
+  { name: 'IoT + Blockchain', target: 15, description: 'IoT provenance, device identity, and lightweight chain clients.' },
+  { name: 'DePIN', target: 15, description: 'Decentralized physical infrastructure networks and tokenized hardware.' },
+  { name: 'Supply Chain', target: 20, description: 'Provenance tracking, traceability, and trade finance on chain.' },
+  { name: 'Healthcare', target: 15, description: 'Medical records, clinical trial integrity, and health data portability.' },
+  { name: 'Government & Policy', target: 20, description: 'CBDC architecture, regulation, and public-sector blockchain adoption.' },
+  { name: 'Economics & Tokenomics', target: 20, description: 'Token design, network value capture, and sustainable economic models.' },
+  { name: 'Quantum Computing', target: 15, description: 'Post-quantum cryptography and quantum threats to blockchains.' },
+  { name: 'Internet Infrastructure', target: 20, description: 'Decentralized storage, naming, and web infrastructure.' },
+  { name: 'Standards & Specifications', target: 40, description: 'EIPs, BIPs, RFCs, W3C, ISO, and NIST standards and specifications.' },
+  { name: 'Original Research', target: 0, description: 'Original research papers authored by The Blockchain Library.' }
+];

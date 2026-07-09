@@ -35,6 +35,58 @@ const SEED_PAPERS = [
   { title: "Deterministic Execution and Fixed Gas Models for Enterprise Blockchain", authors: ["Jason Ansell"], year: 2024, url: "", collection: "Original Research", research_type: "paper", is_original_research: true }
 ];
 
+// Priority import list — canonical, high-value papers & standards to seed the
+// library first. Only the title/collection/type are hardcoded; real authors,
+// year, and source URL are resolved by a web-search LLM at import time.
+const PRIORITY_PAPERS: any[] = [
+  { title: "Bitcoin: A Peer-to-Peer Electronic Cash System", collection: "Bitcoin", research_type: "whitepaper" },
+  { title: "The Bitcoin Backbone Protocol", collection: "Bitcoin", research_type: "paper" },
+  { title: "Bitcoin-NG: A Scalable Blockchain Protocol", collection: "Bitcoin", research_type: "paper" },
+  { title: "The Bitcoin Lightning Network: Scalable Off-Chain Instant Payments", collection: "Bitcoin", research_type: "whitepaper" },
+  { title: "BIP 152: Compact Block Relay", collection: "Bitcoin", research_type: "standard" },
+  { title: "Ethereum: A Next-Generation Smart Contract and Decentralized Application Platform", collection: "Ethereum", research_type: "whitepaper" },
+  { title: "Ethereum: A Secure Decentralised Generalised Transaction Ledger (Yellow Paper)", collection: "Ethereum", research_type: "report" },
+  { title: "EIP-1559: Fee Market Change for ETH 1.0 Chain", collection: "Ethereum", research_type: "standard" },
+  { title: "EIP-4844: Shard Blob Transactions", collection: "Layer-2 Scaling", research_type: "standard" },
+  { title: "EIP-20: ERC-20 Token Standard", collection: "Standards & Specifications", research_type: "standard" },
+  { title: "EIP-721: Non-Fungible Token Standard", collection: "Standards & Specifications", research_type: "standard" },
+  { title: "EIP-1155: Multi Token Standard", collection: "Standards & Specifications", research_type: "standard" },
+  { title: "EIP-4626: Tokenized Vault Standard", collection: "Standards & Specifications", research_type: "standard" },
+  { title: "EIP-4337: Account Abstraction Using Alt Mempool", collection: "Smart Contracts", research_type: "standard" },
+  { title: "Practical Byzantine Fault Tolerance", collection: "Consensus Mechanisms", research_type: "paper" },
+  { title: "The Latest Gossip on BFT Consensus", collection: "Consensus Mechanisms", research_type: "report" },
+  { title: "Ouroboros: A Provably Secure Proof-of-Stake Blockchain Protocol", collection: "Consensus Mechanisms", research_type: "paper" },
+  { title: "HotStuff: BFT Consensus with Linearity and Responsiveness", collection: "Consensus Mechanisms", research_type: "paper" },
+  { title: "Casper the Friendly Finality Gadget", collection: "Consensus Mechanisms", research_type: "paper" },
+  { title: "The HoneyBadger of BFT Protocols", collection: "Consensus Mechanisms", research_type: "paper" },
+  { title: "Snowflake to Avalanche: A Novel Metastable Consensus Protocol Family for Cryptocurrencies", collection: "Consensus Mechanisms", research_type: "whitepaper" },
+  { title: "Pinocchio: Nearly Practical Verifiable Computation", collection: "Zero-Knowledge Proofs", research_type: "paper" },
+  { title: "Bulletproofs: Short Proofs for Confidential Transactions and More", collection: "Zero-Knowledge Proofs", research_type: "paper" },
+  { title: "Halo: Recursive Proof Composition without a Trusted Setup", collection: "Zero-Knowledge Proofs", research_type: "paper" },
+  { title: "Scalable, Transparent, and Post-Quantum Secure Zero-Knowledge Proofs", collection: "Zero-Knowledge Proofs", research_type: "paper" },
+  { title: "PLONK: Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge", collection: "Zero-Knowledge Proofs", research_type: "paper" },
+  { title: "Nova: Recursive Zero-Knowledge Arguments from Folding Schemes", collection: "Zero-Knowledge Proofs", research_type: "paper" },
+  { title: "Spartan: Efficient and General-Purpose zkSNARKs via Cycles of Elliptic Curves", collection: "Zero-Knowledge Proofs", research_type: "paper" },
+  { title: "Zerocash: Decentralized Anonymous Payments from Bitcoin", collection: "Zero-Knowledge Proofs", research_type: "paper" },
+  { title: "A Certified Digital Signature", collection: "Cryptography", research_type: "paper" },
+  { title: "Hashcash - A Denial of Service Counter-Measure", collection: "Cryptography", research_type: "paper" },
+  { title: "A Method for Obtaining Digital Signatures and Public-Key Cryptosystems", collection: "Cryptography", research_type: "paper" },
+  { title: "Elliptic Curve Cryptosystems", collection: "Cryptography", research_type: "paper" },
+  { title: "Short Signatures from the Weil Pairing", collection: "Cryptography", research_type: "paper" },
+  { title: "How to Share a Secret", collection: "Cryptography", research_type: "paper" },
+  { title: "Verifiable Random Functions", collection: "Cryptography", research_type: "paper" },
+  { title: "Uniswap V2 Core", collection: "DeFi", research_type: "whitepaper" },
+  { title: "Uniswap V3 Core", collection: "DeFi", research_type: "whitepaper" },
+  { title: "Aave: Protocol Whitepaper", collection: "DeFi", research_type: "whitepaper" },
+  { title: "Compound Protocol Whitepaper", collection: "DeFi", research_type: "whitepaper" },
+  { title: "The Dai Stablecoin System", collection: "Stablecoins & CBDCs", research_type: "whitepaper" },
+  { title: "Hyperledger Fabric: A Distributed Operating System for Permissioned Blockchains", collection: "Enterprise Blockchain", research_type: "paper" },
+  { title: "Corda: A Distributed Ledger", collection: "Enterprise Blockchain", research_type: "whitepaper" },
+  { title: "Decentralized Identifiers (DIDs) v1.0", collection: "Digital Identity", research_type: "standard" },
+  { title: "Verifiable Credentials Data Model 1.0", collection: "Digital Identity", research_type: "standard" },
+  { title: "NISTIR 8202: Blockchain Technology Overview", collection: "Government & Policy", research_type: "report" }
+];
+
 const BATCH_SIZE = 5;
 
 function slugify(text: string): string {
@@ -272,8 +324,10 @@ Deno.serve(async (req) => {
 
     if (action === 'discover') {
       // Discover NEW research beyond the seed set via a web-search-enabled LLM.
-      const topic = String(body.topic || '').trim() || 'blockchain and Web3';
+      const collection = String(body.collection || '').trim();
+      const topic = String(body.topic || '').trim() || (collection || 'blockchain and Web3');
       const count = Math.min(10, Math.max(1, parseInt(body.count, 10) || 5));
+      const collectionFocus = collection ? ` All papers MUST belong to the "${collection}" collection — set each paper's "collection" field to exactly "${collection}".` : '';
 
       const exRes = await base44.asServiceRole.entities.ResearchPaper.filter({}, '-created_date', 1000);
       const exArr: any[] = exRes.results || exRes || [];
@@ -281,7 +335,7 @@ Deno.serve(async (req) => {
 
       const discoverPrompt = `You are a senior blockchain research curator for The Blockchain Library, a premier educational knowledge platform.
 
-Topic focus: ${topic}
+Topic focus: ${topic}${collectionFocus}
 Already in the library (do NOT repeat any of these): ${existingTitles.length ? existingTitles.join(' | ') : '(none yet)'}
 
 Discover ${count} notable, REAL blockchain/Web3 research papers, whitepapers, EIPs/standards, or technical reports that are NOT already listed above. Prefer influential, citable works with real authors and real source URLs (arXiv, IACR ePrint, official EIP pages, project whitepapers). Include a mix of foundational and recent (2020-2024) work. Do NOT invent papers — every entry must be a real, verifiable publication.
@@ -325,7 +379,60 @@ Return JSON: { "papers": [ {title, authors, year, url, research_type, collection
       if (!candidates.length) {
         return Response.json({ error: 'Discovery returned no papers', raw: discRes }, { status: 500 });
       }
-      meta = { topic };
+      meta = collection ? { topic, collection } : { topic };
+    } else if (action === 'import-priority') {
+      // Import a slice of the canonical priority list, enriching each with real
+      // metadata (authors/year/URL) via a web-search LLM, then annotate + persist.
+      const limit = Math.min(20, Math.max(1, parseInt(body.limit, 10) || 10));
+      const offset = Math.max(0, parseInt(body.offset, 10) || 0);
+      const collectionFilter = String(body.collection || '').trim();
+      const pool: any[] = collectionFilter
+        ? PRIORITY_PAPERS.filter((p: any) => p.collection === collectionFilter)
+        : PRIORITY_PAPERS;
+      const slice: any[] = pool.slice(offset, offset + limit);
+      if (!slice.length) {
+        return Response.json({ action: 'import-priority', enriched: 0, created: 0, skipped: 0, papers: [], priorityTotal: PRIORITY_PAPERS.length, remaining: 0 });
+      }
+
+      const exRes = await base44.asServiceRole.entities.ResearchPaper.filter({}, '-created_date', 1000);
+      const exArr: any[] = exRes.results || exRes || [];
+      const existingTitles = exArr.map((p: any) => p.title);
+
+      const enrichPrompt = `You are a senior research librarian. For each real paper/standard below, find its REAL authors, publication year, and canonical source URL (arXiv abstract page, eprint.iacr.org, eips.ethereum.org, official project whitepaper PDF, or W3C/NIST/ISO page). Do NOT invent — if you cannot verify an entry, return it with empty authors, year 0, and url "". Echo the exact title, research_type, and collection given.
+
+Already in the library (skip if a title already matches one of these): ${existingTitles.length ? existingTitles.join(' | ') : '(none yet)'}
+
+Entries:
+${slice.map((p: any, i: number) => `${i + 1}. Title: ${p.title}\n   Type: ${p.research_type}\n   Collection: ${p.collection}`).join('\n\n')}
+
+Return JSON: { "papers": [ {title, authors, year, url, research_type, collection}, ... ] } — one entry per input, same order.`;
+      const enrichRes: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        prompt: enrichPrompt,
+        add_context_from_internet: true,
+        model: 'gemini_3_flash',
+        response_json_schema: {
+          type: "object",
+          properties: {
+            papers: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  authors: { type: "array", items: { type: "string" } },
+                  year: { type: "number" },
+                  url: { type: "string" },
+                  research_type: { type: "string" },
+                  collection: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      candidates = ((enrichRes && enrichRes.papers) || []).filter((p: any) => p && p.title && p.url);
+      meta = { action: 'import-priority', enriched: candidates.length, priorityTotal: PRIORITY_PAPERS.length, remaining: Math.max(0, pool.length - offset - slice.length) };
     } else if (Array.isArray(customPapers) && customPapers.length) {
       candidates = customPapers;
       meta = { batch: 'custom' };
