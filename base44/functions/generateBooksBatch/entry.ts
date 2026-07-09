@@ -501,29 +501,62 @@ Return JSON: { "results": [ { "title": "...", "cover_url": "https://..." } ] } �
       }
       const results: any[] = [];
       const updates: any[] = [];
+      const noIsbnBooks: any[] = [];
       for (const b of targets) {
-        let isbn13 = '';
         // Use the stored ISBN when it's a 978 (reliable, no network needed).
-        // Title-based lookup (isbnsearch/Open Library) is too unreliable for
-        // buy-link generation — it returns wrong editions or unrelated matches —
-        // so books without a stored 978 ISBN are left without a buy-link rather
-        // than risking an incorrect one.
         if (b.isbn && String(b.isbn).length === 13 && String(b.isbn).startsWith('978')) {
-          isbn13 = String(b.isbn);
-        }
-        if (isbn13) {
-          const isbn10 = isbn13To10(isbn13);
+          const isbn10 = isbn13To10(String(b.isbn));
           if (isbn10) {
-            const upd: any = { id: b.id, amazon_link: `https://www.amazon.com/dp/${isbn10}?tag=${AFFILIATE_TAG}` };
-            updates.push(upd);
-            results.push({ title: b.title, isbn: isbn13, status: 'restored' });
+            updates.push({ id: b.id, amazon_link: `https://www.amazon.com/dp/${isbn10}?tag=${AFFILIATE_TAG}` });
+            results.push({ title: b.title, isbn: String(b.isbn), status: 'restored' });
           } else {
             results.push({ title: b.title, status: 'no_isbn10' });
           }
         } else {
-          results.push({ title: b.title, status: 'no_isbn' });
+          noIsbnBooks.push(b);
         }
       }
+
+      // Second pass: for books without a stored ISBN, discover the real ISBN-13
+      // via web search, derive the ISBN-10 (a valid Amazon ASIN), and build the
+      // buy-link. Mirrors the ISBN-discovery pass used by fix-covers.
+      if (noIsbnBooks.length) {
+        const isbnPrompt = `You are a bibliographic data librarian. For each book below, find its REAL ISBN-13 (the 13-digit 978-prefixed ISBN for the most common print edition). Search the web (Open Library, Amazon, publisher sites). Return ONLY verified ISBNs — if you cannot verify one, return isbn "". Do NOT invent numbers.
+Books: ${JSON.stringify(noIsbnBooks.map((b) => ({ title: b.title, author: (b.author_ids?.[0]) || '' })))}
+Return JSON: { "results": [ { "title": "...", "isbn": "978..." } ] } — one entry per input, same titles.`;
+        try {
+          const isbnRes: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
+            prompt: isbnPrompt,
+            add_context_from_internet: true,
+            model: 'gemini_3_flash',
+            response_json_schema: {
+              type: 'object',
+              properties: {
+                results: {
+                  type: 'array',
+                  items: { type: 'object', properties: { title: { type: 'string' }, isbn: { type: 'string' } } }
+                }
+              }
+            }
+          });
+          const found: any[] = (isbnRes?.results || []).filter((r: any) => r.isbn && /^\d{13}$/.test(String(r.isbn)));
+          const resolved = new Set<string>();
+          for (const r of found) {
+            const b = noIsbnBooks.find((x) => x.title === r.title);
+            if (!b) continue;
+            const isbn10 = isbn13To10(r.isbn);
+            if (isbn10) {
+              updates.push({ id: b.id, amazon_link: `https://www.amazon.com/dp/${isbn10}?tag=${AFFILIATE_TAG}`, isbn: r.isbn });
+              results.push({ title: b.title, isbn: r.isbn, status: 'discovered' });
+              resolved.add(b.title);
+            }
+          }
+          for (const b of noIsbnBooks) {
+            if (!resolved.has(b.title)) results.push({ title: b.title, status: 'no_isbn' });
+          }
+        } catch (_e) { /* ISBN discovery is best-effort */ }
+      }
+
       if (updates.length) {
         await base44.asServiceRole.entities.Book.bulkUpdate(updates);
       }
