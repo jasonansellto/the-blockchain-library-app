@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
       const lastmod = new Date().toISOString();
       let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
       for (const c of SITEMAP_CONFIG) {
-        xml += `  <sitemap><loc>${SITE_URL}/sitemaps/${c.type}.xml</loc><lastmod>${lastmod}</lastmod></sitemap>\n`;
+        xml += `  <sitemap><loc>${SITE_URL}/functions/generateSitemap?type=${c.type}</loc><lastmod>${lastmod}</lastmod></sitemap>\n`;
       }
       xml += '</sitemapindex>';
       return req.method === 'GET'

@@ -20,6 +20,10 @@ function fmtPct(ctr) {
 function fmtPos(p) {
   return Number(p || 0).toFixed(1);
 }
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
 function truncatePath(url) {
   try {
     const u = new URL(url);
@@ -237,46 +241,70 @@ export default function SearchConsolePanel() {
             </div>
           </div>
 
-          {/* Sitemaps — submit / delete (write access) */}
-          <div className="bg-slate-50/60 rounded-xl border border-slate-200 p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Link2 className="w-4 h-4 text-slate-400" />
-              <h4 className="text-sm font-bold text-slate-900">Sitemaps</h4>
-            </div>
+          {/* Indexing health summary */}
+          <div className="flex items-center gap-4 flex-wrap text-sm bg-slate-50 rounded-lg border border-slate-200 px-4 py-2.5">
+            <span className="text-xs font-medium text-slate-400 uppercase tracking-wide">Indexing health</span>
+            <span className="font-semibold text-slate-900">{fmtNum(data.sitemaps.reduce((a, s) => a + (s.discoveredPages || 0), 0))} discovered pages</span>
+            <span className="font-semibold text-slate-900">{data.sitemaps.length} sitemap{data.sitemaps.length === 1 ? '' : 's'}</span>
+            {data.sitemaps.filter((s) => s.isErrors || s.errors > 0).length > 0 && (
+              <span className="font-semibold text-rose-600">{data.sitemaps.filter((s) => s.isErrors || s.errors > 0).length} with errors</span>
+            )}
+          </div>
 
-            <form onSubmit={(e) => { e.preventDefault(); submitSitemap(); }} className="flex items-center gap-2 mb-4">
+          {/* Add a new sitemap */}
+          <div className="bg-white rounded-xl border border-slate-200 p-5">
+            <h4 className="text-sm font-semibold text-slate-700 mb-3">Add a new sitemap</h4>
+            <form onSubmit={(e) => { e.preventDefault(); submitSitemap(); }} className="flex items-center gap-2">
               <input type="url" value={newSitemap} onChange={(e) => setNewSitemap(e.target.value)}
-                placeholder="https://www.theblockchainlibrary.com/sitemap.xml"
-                className="flex-1 px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                placeholder="Enter sitemap URL (e.g. https://www.theblockchainlibrary.com/sitemap.xml)"
+                className="flex-1 px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white" />
               <button type="submit" disabled={submitting || !newSitemap.trim()}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50">
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Submit
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold tracking-wide text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} SUBMIT
               </button>
             </form>
-
+            <div className="mt-3 flex items-center gap-2 text-xs flex-wrap">
+              <span className="text-slate-400">Comprehensive (all content):</span>
+              <code className="text-slate-600 bg-slate-50 px-2 py-0.5 rounded">https://theblockchainlibrary.com/functions/generateSitemap?type=index</code>
+              <button type="button" onClick={() => setNewSitemap('https://theblockchainlibrary.com/functions/generateSitemap?type=index')}
+                className="text-blue-600 font-medium hover:underline">Use this</button>
+            </div>
             {actionMsg && (
-              <div className={`mb-3 text-xs px-3 py-2 rounded-lg ${actionMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
+              <div className={`mt-3 text-xs px-3 py-2 rounded-lg ${actionMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
                 {actionMsg.text}
               </div>
             )}
+          </div>
 
+          {/* Submitted sitemaps */}
+          <div className="bg-white rounded-xl border border-slate-200 p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-semibold text-slate-700">Submitted sitemaps</h4>
+              <span className="text-xs text-slate-400">{data.sitemaps.length} sitemap{data.sitemaps.length === 1 ? '' : 's'}</span>
+            </div>
             {data.sitemaps.length ? (
               <Table
-                headers={['Path', 'Last Submitted', 'Status', 'Errors', 'Indexed', '']}
+                headers={['Sitemap', 'Type', 'Submitted', 'Last read', 'Status', 'Pages', 'Videos', '']}
                 rows={data.sitemaps}
                 renderRow={(s) => {
-                  const status = s.isPending ? 'Pending' : (s.errors > 0 ? 'Errors' : (s.warnings > 0 ? 'Warnings' : 'OK'));
-                  const statusColor = s.isPending ? 'text-amber-600' : (s.errors > 0 ? 'text-rose-600' : (s.warnings > 0 ? 'text-amber-600' : 'text-emerald-600'));
+                  const hasErr = s.isErrors || s.errors > 0;
+                  const status = hasErr ? "Couldn't fetch" : (s.isPending ? 'Pending' : (s.warnings > 0 ? 'Warnings' : 'Success'));
+                  const statusColor = hasErr ? 'text-rose-600' : (s.isPending ? 'text-amber-600' : (s.warnings > 0 ? 'text-amber-600' : 'text-emerald-600'));
+                  const statusBg = hasErr ? 'bg-rose-50' : (s.isPending ? 'bg-amber-50' : (s.warnings > 0 ? 'bg-amber-50' : 'bg-emerald-50'));
                   return (
                     <tr key={s.path} className="border-b border-slate-100 last:border-0">
-                      <td className="py-2 pr-4 text-slate-700 font-medium max-w-[280px] truncate" title={s.path}>
+                      <td className="py-2.5 pr-4 text-slate-700 font-medium max-w-[280px] truncate" title={s.path}>
                         <span className="inline-flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-slate-400" />{s.path}</span>
                       </td>
-                      <td className="py-2 pr-4 text-slate-600">{s.lastSubmitted ? new Date(s.lastSubmitted).toLocaleDateString() : '—'}</td>
-                      <td className={`py-2 pr-4 font-medium ${statusColor}`}>{status}</td>
-                      <td className="py-2 pr-4 text-slate-600">{s.errors}</td>
-                      <td className="py-2 pr-4 text-slate-600">{s.indexed !== undefined ? fmtNum(s.indexed) : '—'}</td>
-                      <td className="py-2 text-right">
+                      <td className="py-2.5 pr-4 text-slate-600 text-xs">{s.isSitemapsIndex ? 'Sitemap index' : 'Sitemap'}</td>
+                      <td className="py-2.5 pr-4 text-slate-600 text-xs">{fmtDate(s.lastSubmitted)}</td>
+                      <td className="py-2.5 pr-4 text-slate-600 text-xs">{fmtDate(s.lastDownloaded)}</td>
+                      <td className="py-2.5 pr-4">
+                        <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${statusBg} ${statusColor}`}>{status}</span>
+                      </td>
+                      <td className="py-2.5 pr-4 text-slate-600 text-xs">{s.discoveredPages || 0}</td>
+                      <td className="py-2.5 pr-4 text-slate-600 text-xs">{s.discoveredVideos || 0}</td>
+                      <td className="py-2.5 text-right">
                         <button onClick={() => deleteSitemap(s.path)} disabled={deletingPath === s.path}
                           className="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-rose-600 transition-colors disabled:opacity-50">
                           {deletingPath === s.path ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}

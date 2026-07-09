@@ -125,15 +125,22 @@ Deno.serve(async (req) => {
     let sitemaps: any[] = [];
     if (sitemapsRes.ok) {
       const smd: any = await sitemapsRes.json();
-      sitemaps = (smd.sitemap || []).map((s: any) => ({
-        path: s.path,
-        lastSubmitted: s.lastSubmitted,
-        submitted: s.submitted,
-        isPending: s.isPending,
-        errors: s.errors || 0,
-        warnings: s.warnings || 0,
-        indexed: s.indexed
-      }));
+      sitemaps = (smd.sitemap || []).map((s: any) => {
+        const web = (s.contents || []).find((c: any) => c.type === 'web');
+        const video = (s.contents || []).find((c: any) => c.type === 'video');
+        return {
+          path: s.path,
+          lastSubmitted: s.lastSubmitted,
+          lastDownloaded: s.lastDownloaded,
+          isPending: s.isPending,
+          isErrors: s.isErrors,
+          isSitemapsIndex: s.isSitemapsIndex,
+          errors: s.errors || 0,
+          warnings: s.warnings || 0,
+          discoveredPages: web?.submitted || 0,
+          discoveredVideos: video?.submitted || 0
+        };
+      });
     }
 
     return Response.json({
