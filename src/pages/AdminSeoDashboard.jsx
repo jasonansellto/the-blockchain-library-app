@@ -5,6 +5,7 @@ import Seo from '@/components/Seo';
 import ResearchBatchPanel from '@/components/admin/ResearchBatchPanel';
 import ResearchCollectionsPanel from '@/components/admin/ResearchCollectionsPanel';
 import BooksBatchPanel from '@/components/admin/BooksBatchPanel';
+import SearchConsolePanel from '@/components/admin/SearchConsolePanel';
 
 export default function AdminSeoDashboard() {
   const [data, setData] = useState(null);
@@ -86,6 +87,7 @@ export default function AdminSeoDashboard() {
         <ResearchCollectionsPanel />
         <ResearchBatchPanel />
         <BooksBatchPanel />
+        <SearchConsolePanel />
 
         {!data ? (
           <div className="text-center py-20">
