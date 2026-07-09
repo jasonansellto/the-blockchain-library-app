@@ -1,0 +1,45 @@
+{
+  "name": "News Archive Import",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "news_archive_import",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "archive_news": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "archiveNews",
+            "args": {}
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Archive news stories",
+            "description": "Fetch RSS feeds and save new items"
+          }
+        }
+      }
+    ]
+  },
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 */6 * * *",
+      "one_time_date": null,
+      "timezone": "America/Toronto",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "description": "Fetches crypto news RSS feeds and archives new stories into the NewsItem entity every 6 hours, deduplicating by link."
+}
