@@ -18,6 +18,7 @@ const resourceItems = [
   { label: 'News & Insights', path: '/news' },
   { label: 'Newsletter', path: '/newsletter' },
   { label: 'AI Assistant', path: '/ai-assistant' },
+  { label: 'Open Access Libraries', path: '/resources/open-access' },
 ];
 
 const secondaryItems = [

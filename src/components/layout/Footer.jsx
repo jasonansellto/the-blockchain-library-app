@@ -20,6 +20,7 @@ const footerSections = [
       { label: 'Tools', path: '/tools' },
       { label: 'News & Insights', path: '/news' },
       { label: 'AI Assistant', path: '/ai-assistant' },
+      { label: 'Open Access Libraries', path: '/resources/open-access' },
       { label: 'Categories', path: '/library' },
     ],
   },
