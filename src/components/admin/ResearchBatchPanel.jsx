@@ -11,6 +11,11 @@ export default function ResearchBatchPanel() {
   const [results, setResults] = useState({});
   const [error, setError] = useState(null);
 
+  const [discoverTopic, setDiscoverTopic] = useState('');
+  const [discoverCount, setDiscoverCount] = useState(5);
+  const [discovering, setDiscovering] = useState(false);
+  const [discoverResult, setDiscoverResult] = useState(null);
+
   useEffect(() => { checkExisting(); }, []);
 
   const checkExisting = async () => {
@@ -41,6 +46,22 @@ export default function ResearchBatchPanel() {
     }
   };
 
+  const discover = async () => {
+    setDiscovering(true); setDiscoverResult(null); setError(null);
+    try {
+      const res = await base44.functions.invoke('generateResearchBatch', {
+        action: 'discover',
+        topic: discoverTopic.trim() || 'blockchain and Web3',
+        count: Number(discoverCount) || 5
+      });
+      setDiscoverResult(res.data || res);
+      await checkExisting();
+    } catch (e) {
+      setError(e.response?.data?.error || e.message || 'Discovery failed');
+    }
+    setDiscovering(false);
+  };
+
   const batchState = (b) => {
     if (running === b) return 'running';
     if (results[b]) return results[b].created > 0 ? 'done' : 'skipped';
@@ -56,7 +77,7 @@ export default function ResearchBatchPanel() {
             <h2 className="text-lg font-bold text-slate-900">Research Database Generator</h2>
           </div>
           <p className="text-sm text-slate-400 mt-1">
-            AI-generates annotated research entries from a curated seed of 30 canonical papers, whitepapers &amp; standards.
+            AI-generates annotated research entries from a curated seed of 30 canonical papers, whitepapers &amp; standards — or discover new ones below.
             Runs in {TOTAL_BATCHES} batches of {BATCH_SIZE}. Each entry is cross-linked to related glossary terms &amp; articles.
           </p>
         </div>
@@ -97,6 +118,47 @@ export default function ResearchBatchPanel() {
             </div>
           );
         })}
+      </div>
+
+      <div className="mt-6 rounded-lg border border-teal-200 p-4 bg-teal-50/40">
+        <div className="flex items-center gap-2 mb-2">
+          <FlaskConical className="w-4 h-4 text-teal-600" />
+          <h3 className="text-sm font-bold text-slate-900">Discover New Research</h3>
+        </div>
+        <p className="text-xs text-slate-500 mb-3">
+          Fetches <strong>new</strong> papers, whitepapers &amp; EIPs beyond the seed set — a web-search-enabled LLM finds real, citable works not already in the library, then annotates &amp; cross-links each one.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input type="text" value={discoverTopic} onChange={(e) => setDiscoverTopic(e.target.value)} placeholder="Topic (optional): zero-knowledge proofs, rollups, DeFi, oracles…" disabled={discovering || running !== null}
+            className="flex-1 px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-60" />
+          <select value={discoverCount} onChange={(e) => setDiscoverCount(Number(e.target.value))} disabled={discovering || running !== null}
+            className="px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-60">
+            {[3, 5, 8, 10].map((n) => <option key={n} value={n}>{n} papers</option>)}
+          </select>
+          <button onClick={discover} disabled={discovering || running !== null}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors disabled:opacity-60">
+            {discovering ? <Loader2 className="w-4 h-4 animate-spin" /> : <FlaskConical className="w-4 h-4" />}
+            {discovering ? 'Discovering...' : 'Discover'}
+          </button>
+        </div>
+        {discoverResult && !discoverResult.error && (
+          <div className="mt-3 bg-teal-50 border border-teal-100 rounded-lg p-3">
+            <p className="text-sm text-teal-800 mb-2">
+              Discovered &amp; annotated <strong>{discoverResult.created}</strong> new paper{discoverResult.created === 1 ? '' : 's'}{discoverResult.skipped ? ` · ${discoverResult.skipped} already in library` : ''}{discoverResult.topic ? ` for "${discoverResult.topic}"` : ''}.
+            </p>
+            {discoverResult.papers?.length > 0 && (
+              <div className="space-y-1 max-h-40 overflow-y-auto">
+                {discoverResult.papers.map((p, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs">
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${p.related_glossary + p.related_articles > 0 ? 'bg-teal-500' : 'bg-slate-300'}`} />
+                    <span className="text-slate-600 truncate flex-1">{p.title}</span>
+                    <span className="text-slate-400 shrink-0 font-mono">{p.internal_id}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {error && (

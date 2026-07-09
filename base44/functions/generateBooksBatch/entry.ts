@@ -3,10 +3,12 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 // Book importer & enrichment tool for The Blockchain Library.
 // Actions:
 //   - fix-affiliate-links : retag all Amazon links with the affiliate ID
-//   - fix-covers          : replace broken/LLM-hallucinated cover URLs with
-//                           reliable covers from the Google Books API (+ ISBN)
+//   - fix-covers          : replace broken/missing cover URLs with reliable
+//                           covers (and ISBNs) from Open Library
 //   - fix-ratings         : look up real Amazon ratings for books missing them
+//   - fix-amazon-links    : recover amazon.com buy-links from stored 978 ISBNs
 //   - import-category     : bulk import top books from a given Amazon category URL
+//   - import-isbn-search  : discover & import real books from Open Library search
 //   - (default)           : generate a batch from Amazon Bitcoin & Crypto bestsellers
 const BATCH_SIZE = 5;
 const TOTAL_BATCHES = 5;
@@ -38,9 +40,10 @@ function amazonUrl(asin: string): string {
 }
 
 // Reliable cover + ISBN from Open Library (free, lenient rate limits).
-// LLM-generated m.media-amazon.com cover URLs frequently 404, and the Google
-// Books API rate-limits (429) the server IP — so every imported book gets its
-// cover from Open Library instead.
+// Returns the ISBN even when no cover image is available, so buy-links can still
+// be recovered downstream. The Google Books API rate-limits (429) the server IP
+// and LLM-generated m.media-amazon.com cover URLs frequently 404, so Open Library
+// is the authoritative source for every imported book.
 async function openLibraryCover(title: string, author: string): Promise<{ cover: string; isbn: string }> {
   // Try title+author first, then title-only (catches multi-author books and
   // minor author-name mismatches).
@@ -54,9 +57,11 @@ async function openLibraryCover(title: string, author: string): Promise<{ cover:
       if (!r.ok) continue;
       const data: any = await r.json();
       const doc = data?.docs?.[0];
-      if (doc && doc.cover_i) {
-        const isbnArr: any[] = doc.isbn || [];
-        return { cover: `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`, isbn: isbnArr[0] || '' };
+      if (doc) {
+        const isbnArr: string[] = (doc.isbn || []).map(String);
+        const isbn = isbnArr.find((i) => i.length === 13 && i.startsWith('978')) || isbnArr[0] || '';
+        const cover = doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg` : '';
+        return { cover, isbn };
       }
     } catch (_e) {
       continue;
@@ -112,7 +117,7 @@ async function ensureCategories(usedCats: string[], base44: any): Promise<Record
 }
 
 // Build & persist Book entities from LLM-generated book data.
-// Fetches a reliable cover + ISBN from Google Books for each title.
+// Fetches a reliable cover + ISBN from Open Library for each title.
 async function persistNewBooks(generated: any[], existingArr: any[], base44: any): Promise<{ entries: any[]; skipped: number }> {
   const existingSlugs = new Set(existingArr.map((b) => b.slug));
   const newBooks = generated.filter((b) => b && b.title && !existingSlugs.has(slugify(b.title)));
@@ -197,38 +202,16 @@ const BOOKS_JSON_SCHEMA = {
   }
 };
 
-// ---- ISBN Search import (isbnsearch.org) ----
-// Reliable book discovery: real ISBNs, real covers, real publishers.
-// The ISBN-10 doubles as a valid Amazon ASIN, so amazon.com /dp/ links always
-// resolve — no more hallucinated-ASIN 404s.
+// Shared browser headers for scraping Amazon product pages (covers / ratings).
 const BROWSER_HEADERS: Record<string, string> = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
   'Accept-Language': 'en-US,en;q=0.9'
 };
 
-function decodeEntities(s: string): string {
-  return String(s)
-    .replace(/&#0*(\d+);/g, (_m, n) => String.fromCharCode(parseInt(n, 10)))
-    .replace(/&#x([0-9a-fA-F]+);/g, (_m, h) => String.fromCharCode(parseInt(h, 16)))
-    .replace(/&amp;/g, '&')
-    .replace(/&apos;/g, "'")
-    .replace(/&quot;/g, '"')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&nbsp;/g, ' ');
-}
-
-// "Last, First" -> "First Last"; takes the first author when multiple are listed.
-function cleanAuthor(raw: string): string {
-  const first = raw.split(/\s+-\s+/)[0].trim();
-  const commaM = first.match(/^([^,]+),\s*(.+)$/);
-  return commaM ? `${commaM[2].trim()} ${commaM[1].trim()}` : first;
-}
-
 // Derive the ISBN-10 from a 978-prefixed ISBN-13 (the ISBN-10 is a valid Amazon
 // ASIN). 979-prefixed ISBN-13s have no ISBN-10 equivalent — those books use a
-// separate B0... ASIN on Amazon which isbnsearch does not expose, so we return
+// separate B0... ASIN on Amazon which Open Library does not expose, so we return
 // '' and skip building an amazon link for them (avoids 404 buy-links).
 function isbn13To10(isbn13: string): string {
   if (!isbn13 || !isbn13.startsWith('978')) return '';
@@ -239,55 +222,6 @@ function isbn13To10(isbn13: string): string {
   const check = (11 - (sum % 11)) % 11;
   const checkChar = check === 10 ? 'X' : String(check);
   return core + checkChar;
-}
-
-// Parse one isbnsearch.org search-results HTML page into book records.
-// Anchors each book on its cover image (one per result, at the start of the
-// block), then captures title / author / ISBN-13 / ISBN-10 forward to the next
-// cover — robust whether results are <li> or <div> wrapped.
-function parseIsbnSearch(html: string): any[] {
-  const coverRe = /m\.media-amazon\.com\/images\/I\/([A-Za-z0-9+_]+)\._S[A-Z]/g;
-  const coverMatches = [...html.matchAll(coverRe)];
-  const books: any[] = [];
-  for (let i = 0; i < coverMatches.length; i++) {
-    const start = coverMatches[i].index || 0;
-    const end = i + 1 < coverMatches.length ? (coverMatches[i + 1].index || 0) : html.length;
-    const block = html.slice(start, end);
-    const titleM = block.match(/<h2[^>]*>\s*<a[^>]*>([^<]+)<\/a>/);
-    const isbn13M = block.match(/ISBN-13:\s*([\dX]{10,13})/);
-    const authorM = block.match(/Authors?:\s*([^<\n]+)/);
-    const isbn10M = block.match(/ISBN-10:\s*([\dX]{10})/);
-    if (!titleM || !isbn13M) continue;
-    const authorRaw = authorM ? decodeEntities(authorM[1]).trim() : '';
-    books.push({
-      isbn13: isbn13M[1],
-      isbn10: isbn10M ? isbn10M[1] : '',
-      coverId: coverMatches[i][1],
-      title: decodeEntities(titleM[1]).trim(),
-      author: cleanAuthor(authorRaw)
-    });
-  }
-  return books;
-}
-
-// Fetch the isbnsearch.org detail page for publisher / year / binding.
-async function fetchIsbnDetail(isbn13: string): Promise<{ publisher: string; pubYear: number | null; binding: string }> {
-  try {
-    const r = await fetch(`https://isbnsearch.org/isbn/${isbn13}`, { redirect: 'follow' });
-    if (!r.ok) return { publisher: '', pubYear: null, binding: 'Paperback' };
-    const html = await r.text();
-    const text = html.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ');
-    const pm = text.match(/Publisher:\s*([^\n]+)/);
-    const ym = text.match(/Published:\s*(\d{4})/);
-    const bm = text.match(/Binding:\s*([^\n]+)/);
-    return {
-      publisher: pm ? pm[1].trim() : '',
-      pubYear: ym ? parseInt(ym[1], 10) : null,
-      binding: bm ? bm[1].trim() : 'Paperback'
-    };
-  } catch (_e) {
-    return { publisher: '', pubYear: null, binding: 'Paperback' };
-  }
 }
 
 // Scrape the real Amazon average rating for a book (ISBN-10 or ISBN-13 as ASIN).
@@ -331,7 +265,7 @@ Deno.serve(async (req) => {
       return Response.json({ action: 'fix-affiliate-links', updated: updates.length, total: books.length });
     }
 
-    // ---- Action: fix broken/missing covers via Google Books API ----
+    // ---- Action: fix broken/missing covers via Open Library ----
     if (body.action === 'fix-covers') {
       const res = await base44.asServiceRole.entities.Book.filter({}, '-created_date', 1000);
       const books: any[] = res.results || res || [];
@@ -509,10 +443,10 @@ Return JSON: { "books": [ {...}, ... ] } — up to ${limit} entries, no duplicat
       });
     }
 
-    // ---- Action: import from isbnsearch.org (reliable ISBN-based discovery) ----
+    // ---- Action: import from Open Library search (reliable ISBN-based discovery) ----
     if (body.action === 'import-isbn-search') {
       const term = String(body.term || '').trim();
-      const pages = Math.min(5, Math.max(1, parseInt(body.pages, 10) || 1));
+      const limit = Math.min(40, Math.max(5, parseInt(body.limit, 10) || 20));
       if (!term) {
         return Response.json({ error: 'term is required' }, { status: 400 });
       }
@@ -530,21 +464,41 @@ Return JSON: { "books": [ {...}, ... ] } — up to ${limit} entries, no duplicat
       });
       const existingSlugs = new Set(existingArr.map((b) => b.slug));
 
-      // 1. Fetch + parse the search page(s)
+      // Open Library search — authoritative ISBNs, covers, authors, years, publishers.
       const found: any[] = [];
-      for (let p = 1; p <= pages; p++) {
-        const url = `https://isbnsearch.org/search?s=${encodeURIComponent(term)}${p > 1 ? `&p=${p}` : ''}`;
-        try {
-          const r = await fetch(url, { redirect: 'follow' });
-          if (!r.ok) continue;
-          const html = await r.text();
-          found.push(...parseIsbnSearch(html));
-        } catch (_e) { continue; }
+      try {
+        const r = await fetch(
+          `https://openlibrary.org/search.json?q=${encodeURIComponent(term)}&limit=${limit * 3}&fields=title,author_name,first_publish_year,publisher,isbn,cover_i`,
+          { redirect: 'follow' }
+        );
+        if (!r.ok) {
+          return Response.json({ error: `Open Library search failed (${r.status})` }, { status: 502 });
+        }
+        const data: any = await r.json();
+        for (const doc of data?.docs || []) {
+          const isbnArr: string[] = (doc.isbn || []).map(String);
+          const isbn13 = isbnArr.find((i) => i.length === 13 && i.startsWith('978')) || isbnArr.find((i) => i.length === 13) || '';
+          if (!isbn13) continue;
+          const isbn10 = isbnArr.find((i) => i.length === 10) || isbn13To10(isbn13) || '';
+          found.push({
+            isbn13,
+            isbn10,
+            cover_i: doc.cover_i || null,
+            title: String(doc.title || '').trim(),
+            author: (doc.author_name || [])[0] || '',
+            year: doc.first_publish_year || null,
+            publisher: (doc.publisher || [])[0] || ''
+          });
+        }
+      } catch (e: any) {
+        return Response.json({ error: 'Open Library search error: ' + e.message }, { status: 502 });
       }
 
-      // 2. Dedup by ISBN-13 (primary) + slug
+      // Dedup within found by ISBN-13, then against existing records + slug.
+      const seenIsbn = new Set<string>();
       const newBooks = found.filter((b) => {
-        if (!b.isbn13) return false;
+        if (!b.isbn13 || seenIsbn.has(b.isbn13)) return false;
+        seenIsbn.add(b.isbn13);
         if (existingIds.has(b.isbn13)) return false;
         if (b.isbn10 && existingIds.has(b.isbn10)) return false;
         const d10 = isbn13To10(b.isbn13);
@@ -553,14 +507,15 @@ Return JSON: { "books": [ {...}, ... ] } — up to ${limit} entries, no duplicat
         return true;
       });
       const skipped = found.length - newBooks.length;
+      const toCreate = newBooks.slice(0, limit);
 
-      if (!newBooks.length) {
-        return Response.json({ action: 'import-isbn-search', term, pages, found: found.length, created: 0, skipped, books: [] });
+      if (!toCreate.length) {
+        return Response.json({ action: 'import-isbn-search', term, found: found.length, created: 0, skipped, books: [] });
       }
 
-      // 3. One LLM call for neutral educational descriptions
+      // One LLM call for neutral educational descriptions.
       const descPrompt = `You are a senior book curator for The Blockchain Library. Write a 2-3 sentence neutral, educational description for each of these books based on its title and author. Be factual and concise.
-Books: ${JSON.stringify(newBooks.map((b) => ({ isbn13: b.isbn13, title: b.title, author: b.author })))}
+Books: ${JSON.stringify(toCreate.map((b) => ({ isbn13: b.isbn13, title: b.title, author: b.author })))}
 Return JSON: { "descriptions": [{ "isbn13": "...", "description": "..." }] } — one entry per book, using the same isbn13 values.`;
       const descMap: Record<string, string> = {};
       try {
@@ -579,27 +534,27 @@ Return JSON: { "descriptions": [{ "isbn13": "...", "description": "..." }] } —
         (descRes?.descriptions || []).forEach((d: any) => { descMap[d.isbn13] = d.description; });
       } catch (_e) { /* descriptions optional */ }
 
-      // 4. Ensure categories (use the search term as the category name)
+      // Ensure categories (use the search term as the category name)
       const catByName = await ensureCategories([term], base44);
       const categoryId = (catByName[term.toLowerCase()] || {}).id || null;
 
-      // 5. Compute next internal_id
+      // Compute next internal_id
       let maxNum = 0;
       existingArr.forEach((b) => {
         const m = b.internal_id && String(b.internal_id).match(/(\d+)$/);
         if (m) { const n = parseInt(m[1], 10); if (n > maxNum) maxNum = n; }
       });
 
-      // 6. Enrich each book: detail page + Amazon rating + cover + link
+      // Enrich each book: cover + amazon link (ISBN-10 as ASIN) + live Amazon rating
       const entries: any[] = [];
-      for (const b of newBooks) {
-        const detail = await fetchIsbnDetail(b.isbn13);
+      for (const b of toCreate) {
         const asin = b.isbn10 || isbn13To10(b.isbn13);
         const rating = await fetchAmazonRating(asin);
         await new Promise((resolve) => setTimeout(resolve, 350));
         maxNum += 1;
         const internalId = `BOOK-${String(maxNum).padStart(6, '0')}`;
-        const cover = b.coverId ? `https://m.media-amazon.com/images/I/${b.coverId}._SL500_.jpg` : '';
+        let cover = b.cover_i ? `https://covers.openlibrary.org/b/id/${b.cover_i}-L.jpg` : '';
+        if (!cover && asin) cover = await amazonCover(amazonUrl(asin));
         const desc = descMap[b.isbn13] || '';
         entries.push({
           title: b.title,
@@ -610,9 +565,9 @@ Return JSON: { "descriptions": [{ "isbn13": "...", "description": "..." }] } —
           isbn: b.isbn13,
           amazon_link: asin ? `https://www.amazon.com/dp/${asin}?tag=${AFFILIATE_TAG}` : '',
           amazon_kindle_link: '',
-          formats: [detail.binding || 'Paperback'],
-          publisher: detail.publisher,
-          publication_year: detail.pubYear,
+          formats: ['Paperback'],
+          publisher: b.publisher,
+          publication_year: b.year,
           author_ids: b.author ? [b.author] : [],
           rating,
           pages: null,
@@ -625,7 +580,7 @@ Return JSON: { "descriptions": [{ "isbn13": "...", "description": "..." }] } —
           internal_id: internalId,
           seo_title: `${b.title} — Book | The Blockchain Library`,
           seo_description: (desc || b.title).slice(0, 160),
-          citation: `${b.author || 'Unknown'} (${detail.pubYear || 'n.d.'}). ${b.title}. ${detail.publisher || ''}. ISBN ${b.isbn13}.`
+          citation: `${b.author || 'Unknown'} (${b.year || 'n.d.'}). ${b.title}. ${b.publisher || ''}. ISBN ${b.isbn13}.`
         });
       }
 
@@ -636,7 +591,6 @@ Return JSON: { "descriptions": [{ "isbn13": "...", "description": "..." }] } —
       return Response.json({
         action: 'import-isbn-search',
         term,
-        pages,
         found: found.length,
         created: entries.length,
         skipped,

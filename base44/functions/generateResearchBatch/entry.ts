@@ -77,42 +77,23 @@ function buildBibtex(p: any): string {
   return s;
 }
 
-Deno.serve(async (req) => {
-  try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user || !['admin', 'editor'].includes(user.role)) {
-      return Response.json({ error: 'Admin or editor access required' }, { status: 403 });
-    }
+// Shared pipeline: annotate a batch of candidate papers via LLM, cross-link to
+// glossary + articles, ensure categories, and persist ResearchPaper entries.
+// candidates: [{ title, authors, year, url, research_type, collection, is_original_research? }]
+async function annotateAndPersist(candidates: any[], base44: any, model?: string): Promise<{ created: number; skipped: number; papers: any[] }> {
+  // Skip papers that already exist (by slug)
+  const existingRes = await base44.asServiceRole.entities.ResearchPaper.filter({}, '-created_date', 1000);
+  const existingArr: any[] = existingRes.results || existingRes || [];
+  const existingSlugs = new Set(existingArr.map((p: any) => p.slug));
+  const newPapers = candidates.filter((p: any) => p && p.title && !existingSlugs.has(slugify(p.title)));
+  const skipped = candidates.length - newPapers.length;
 
-    const body = await req.json().catch(() => ({}));
-    const { batch = 1, papers: customPapers, model } = body;
+  if (!newPapers.length) {
+    return { created: 0, skipped, papers: [] };
+  }
 
-    let toProcess: any[];
-    if (Array.isArray(customPapers) && customPapers.length) {
-      toProcess = customPapers;
-    } else {
-      const b = Math.max(1, parseInt(batch, 10) || 1);
-      toProcess = SEED_PAPERS.slice((b - 1) * BATCH_SIZE, b * BATCH_SIZE);
-    }
-
-    if (!toProcess.length) {
-      return Response.json({ message: 'No papers to process in this batch', created: 0 });
-    }
-
-    // Skip papers that already exist (by slug)
-    const existingRes = await base44.asServiceRole.entities.ResearchPaper.filter({}, '-created_date', 1000);
-    const existingArr: any[] = existingRes.results || existingRes || [];
-    const existingSlugs = new Set(existingArr.map((p: any) => p.slug));
-    const newPapers = toProcess.filter((p: any) => !existingSlugs.has(slugify(p.title)));
-    const skipped = toProcess.length - newPapers.length;
-
-    if (!newPapers.length) {
-      return Response.json({ message: 'All papers in this batch already exist', created: 0, skipped });
-    }
-
-    // Generate annotations via LLM (one call for the batch)
-    const prompt = `You are a senior blockchain research curator for The Blockchain Library, a premier educational knowledge platform.
+  // Generate annotations via LLM (one call for the batch)
+  const prompt = `You are a senior blockchain research curator for The Blockchain Library, a premier educational knowledge platform.
 
 For each of the ${newPapers.length} papers below, produce an authoritative annotation and structured metadata. Be accurate, neutral, and educational — do not hype.
 
@@ -133,148 +114,233 @@ For EACH paper provide ALL fields:
 
 Return JSON: { "papers": [ {title, abstract, key_findings, difficulty, tags, key_concepts}, ... ] } — one entry per paper, same order.`;
 
-    const llmResponse: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          papers: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                title: { type: "string" },
-                abstract: { type: "string" },
-                key_findings: { type: "array", items: { type: "string" } },
-                difficulty: { type: "string" },
-                tags: { type: "array", items: { type: "string" } },
-                key_concepts: { type: "array", items: { type: "string" } }
+  const llmResponse: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
+    prompt,
+    response_json_schema: {
+      type: "object",
+      properties: {
+        papers: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              title: { type: "string" },
+              abstract: { type: "string" },
+              key_findings: { type: "array", items: { type: "string" } },
+              difficulty: { type: "string" },
+              tags: { type: "array", items: { type: "string" } },
+              key_concepts: { type: "array", items: { type: "string" } }
+            }
+          }
+        }
+      }
+    },
+    ...(model ? { model } : {})
+  });
+
+  const generated: any[] = (llmResponse && llmResponse.papers) || [];
+  if (!generated.length) {
+    throw new Error('LLM returned no papers');
+  }
+
+  // Load glossary + published articles for related-link matching
+  const [gRes, aRes] = await Promise.all([
+    base44.asServiceRole.entities.GlossaryTerm.filter({}, '-updated_date', 500),
+    base44.asServiceRole.entities.Article.filter({ status: 'published' }, '-updated_date', 500)
+  ]);
+  const glossaryArr: any[] = gRes.results || gRes || [];
+  const articlesArr: any[] = aRes.results || aRes || [];
+
+  function matchRelated(keywords: string[], items: any[], max: number): string[] {
+    const kw = keywords.map((k) => String(k).toLowerCase().trim()).filter((k) => k.length > 2);
+    const matched: string[] = [];
+    for (const item of items) {
+      const title = String(item.title || '').toLowerCase();
+      const itemTags = (item.tags || item.related_terms || []).map((t: any) => String(t).toLowerCase());
+      const hit = kw.some((k) =>
+        k === title ||
+        (k.length > 3 && (title.includes(k) || k.includes(title))) ||
+        itemTags.includes(k)
+      );
+      if (hit && item.slug) {
+        matched.push(item.slug);
+        if (matched.length >= max) break;
+      }
+    }
+    return matched;
+  }
+
+  // Ensure categories exist for collections used in this batch
+  const usedCollections = [...new Set(newPapers.map((p: any) => p.collection))];
+  const catRes = await base44.asServiceRole.entities.Category.list('sort_order', 200);
+  const catArr: any[] = catRes.results || catRes || [];
+  const catByName: Record<string, any> = {};
+  catArr.forEach((c: any) => { catByName[c.name.toLowerCase()] = c; });
+  const catsToCreate: any[] = [];
+  usedCollections.forEach((name) => {
+    if (!catByName[name.toLowerCase()] && !catsToCreate.find((c) => c.name === name)) {
+      catsToCreate.push({ name, slug: slugify(name), sort_order: 100 });
+    }
+  });
+  if (catsToCreate.length) {
+    const createdCats = await base44.asServiceRole.entities.Category.bulkCreate(catsToCreate);
+    (createdCats.results || createdCats || []).forEach((c: any) => { catByName[c.name.toLowerCase()] = c; });
+  }
+
+  // Compute next sequential RES-XXXXXX id
+  let maxNum = 0;
+  existingArr.forEach((p: any) => {
+    if (p.internal_id) {
+      const m = p.internal_id.match(/-(\d+)$/);
+      if (m) { const n = parseInt(m[1], 10); if (n > maxNum) maxNum = n; }
+    }
+  });
+
+  // Index generated by slug for reliable matching
+  const genMap: Record<string, any> = {};
+  generated.forEach((g, i) => { if (g && g.title) genMap[slugify(g.title)] = { g, i }; });
+
+  const entries = newPapers.map((seed: any, idx: number) => {
+    const key = slugify(seed.title);
+    const gen: any = (genMap[key] && genMap[key].g) || generated[idx] || generated[0] || {};
+    const keywords = [...(gen.tags || []), ...(gen.key_concepts || [])];
+    const relatedGlossary = matchRelated(keywords, glossaryArr, 6);
+    const relatedArticles = matchRelated(keywords, articlesArr, 5);
+    maxNum += 1;
+    const internalId = `RES-${String(maxNum).padStart(6, '0')}`;
+    const abstract = gen.abstract || '';
+    return {
+      title: seed.title,
+      slug: key,
+      authors: seed.authors || [],
+      abstract,
+      key_findings: (gen.key_findings || []).slice(0, 5),
+      tags: (gen.tags || []).slice(0, 8),
+      difficulty: ['beginner', 'intermediate', 'advanced', 'expert'].includes(gen.difficulty) ? gen.difficulty : 'intermediate',
+      research_type: seed.research_type || 'paper',
+      is_original_research: !!seed.is_original_research,
+      is_featured: true,
+      visibility: 'public',
+      status: 'published',
+      category_id: (catByName[(seed.collection || '').toLowerCase()] || {}).id || null,
+      related_glossary: relatedGlossary,
+      related_articles: relatedArticles,
+      publication: inferPublication(seed.url, seed.research_type),
+      publication_date: seed.year ? `${seed.year}-01-01` : null,
+      doi: null,
+      pdf_url: seed.url || null,
+      citation: buildCitation(seed),
+      bibtex: buildBibtex(seed),
+      seo_title: `${seed.title} — Research Annotation | The Blockchain Library`,
+      seo_description: (abstract || seed.title).slice(0, 160),
+      internal_id: internalId,
+      language: 'en',
+      downloads: 0,
+      citations_count: 0
+    };
+  });
+
+  await base44.asServiceRole.entities.ResearchPaper.bulkCreate(entries);
+
+  return {
+    created: entries.length,
+    skipped,
+    papers: entries.map((e) => ({
+      title: e.title,
+      slug: e.slug,
+      internal_id: e.internal_id,
+      collection: usedCollections.find((c) => catByName[c.toLowerCase()] && catByName[c.toLowerCase()].id === e.category_id) || null,
+      related_glossary: e.related_glossary.length,
+      related_articles: e.related_articles.length
+    }))
+  };
+}
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user || !['admin', 'editor'].includes(user.role)) {
+      return Response.json({ error: 'Admin or editor access required' }, { status: 403 });
+    }
+
+    const body = await req.json().catch(() => ({}));
+    const { batch = 1, papers: customPapers, model, action } = body;
+
+    let candidates: any[];
+    let meta: Record<string, any> = {};
+
+    if (action === 'discover') {
+      // Discover NEW research beyond the seed set via a web-search-enabled LLM.
+      const topic = String(body.topic || '').trim() || 'blockchain and Web3';
+      const count = Math.min(10, Math.max(1, parseInt(body.count, 10) || 5));
+
+      const exRes = await base44.asServiceRole.entities.ResearchPaper.filter({}, '-created_date', 1000);
+      const exArr: any[] = exRes.results || exRes || [];
+      const existingTitles = exArr.map((p: any) => p.title);
+
+      const discoverPrompt = `You are a senior blockchain research curator for The Blockchain Library, a premier educational knowledge platform.
+
+Topic focus: ${topic}
+Already in the library (do NOT repeat any of these): ${existingTitles.length ? existingTitles.join(' | ') : '(none yet)'}
+
+Discover ${count} notable, REAL blockchain/Web3 research papers, whitepapers, EIPs/standards, or technical reports that are NOT already listed above. Prefer influential, citable works with real authors and real source URLs (arXiv, IACR ePrint, official EIP pages, project whitepapers). Include a mix of foundational and recent (2020-2024) work. Do NOT invent papers — every entry must be a real, verifiable publication.
+
+For EACH provide:
+- title: exact paper/whitepaper/standard title
+- authors: array of author names (as strings)
+- year: 4-digit publication year as a number
+- url: real source URL (PDF or canonical page); "" only if genuinely none
+- research_type: one of "paper", "whitepaper", "report", "standard", "preprint", "thesis"
+- collection: a topic bucket, e.g. "Consensus Mechanisms", "Zero Knowledge", "DeFi", "Oracles", "Layer 2", "Privacy", "Interoperability", "DAOs", "Stablecoins & CBDC", "Storage", "Smart Contracts", "Original Research"
+
+Return JSON: { "papers": [ {title, authors, year, url, research_type, collection}, ... ] } — exactly ${count} entries, none already in the library.`;
+
+      const discRes: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        prompt: discoverPrompt,
+        add_context_from_internet: true,
+        model: 'gemini_3_flash',
+        response_json_schema: {
+          type: "object",
+          properties: {
+            papers: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  authors: { type: "array", items: { type: "string" } },
+                  year: { type: "number" },
+                  url: { type: "string" },
+                  research_type: { type: "string" },
+                  collection: { type: "string" }
+                }
               }
             }
           }
         }
-      },
-      ...(model ? { model } : {})
-    });
+      });
 
-    const generated: any[] = (llmResponse && llmResponse.papers) || [];
-    if (!generated.length) {
-      return Response.json({ error: 'LLM returned no papers', raw: llmResponse }, { status: 500 });
+      candidates = (discRes && discRes.papers) || [];
+      if (!candidates.length) {
+        return Response.json({ error: 'Discovery returned no papers', raw: discRes }, { status: 500 });
+      }
+      meta = { topic };
+    } else if (Array.isArray(customPapers) && customPapers.length) {
+      candidates = customPapers;
+      meta = { batch: 'custom' };
+    } else {
+      const b = Math.max(1, parseInt(batch, 10) || 1);
+      candidates = SEED_PAPERS.slice((b - 1) * BATCH_SIZE, b * BATCH_SIZE);
+      meta = { batch: b, totalSeed: SEED_PAPERS.length };
     }
 
-    // Load glossary + published articles for related-link matching
-    const [gRes, aRes] = await Promise.all([
-      base44.asServiceRole.entities.GlossaryTerm.filter({}, '-updated_date', 500),
-      base44.asServiceRole.entities.Article.filter({ status: 'published' }, '-updated_date', 500)
-    ]);
-    const glossaryArr: any[] = gRes.results || gRes || [];
-    const articlesArr: any[] = aRes.results || aRes || [];
-
-    function matchRelated(keywords: string[], items: any[], max: number): string[] {
-      const kw = keywords.map((k) => String(k).toLowerCase().trim()).filter((k) => k.length > 2);
-      const matched: string[] = [];
-      for (const item of items) {
-        const title = String(item.title || '').toLowerCase();
-        const itemTags = (item.tags || item.related_terms || []).map((t: any) => String(t).toLowerCase());
-        const hit = kw.some((k) =>
-          k === title ||
-          (k.length > 3 && (title.includes(k) || k.includes(title))) ||
-          itemTags.includes(k)
-        );
-        if (hit && item.slug) {
-          matched.push(item.slug);
-          if (matched.length >= max) break;
-        }
-      }
-      return matched;
+    if (!candidates.length) {
+      return Response.json({ message: 'No papers to process in this batch', created: 0, skipped: 0, ...meta });
     }
 
-    // Ensure categories exist for collections used in this batch
-    const usedCollections = [...new Set(newPapers.map((p: any) => p.collection))];
-    const catRes = await base44.asServiceRole.entities.Category.list('sort_order', 200);
-    const catArr: any[] = catRes.results || catRes || [];
-    const catByName: Record<string, any> = {};
-    catArr.forEach((c: any) => { catByName[c.name.toLowerCase()] = c; });
-    const catsToCreate: any[] = [];
-    usedCollections.forEach((name) => {
-      if (!catByName[name.toLowerCase()] && !catsToCreate.find((c) => c.name === name)) {
-        catsToCreate.push({ name, slug: slugify(name), sort_order: 100 });
-      }
-    });
-    if (catsToCreate.length) {
-      const createdCats = await base44.asServiceRole.entities.Category.bulkCreate(catsToCreate);
-      (createdCats.results || createdCats || []).forEach((c: any) => { catByName[c.name.toLowerCase()] = c; });
-    }
-
-    // Compute next sequential RES-XXXXXX id
-    let maxNum = 0;
-    existingArr.forEach((p: any) => {
-      if (p.internal_id) {
-        const m = p.internal_id.match(/-(\d+)$/);
-        if (m) { const n = parseInt(m[1], 10); if (n > maxNum) maxNum = n; }
-      }
-    });
-
-    // Index generated by slug for reliable matching
-    const genMap: Record<string, any> = {};
-    generated.forEach((g, i) => { if (g && g.title) genMap[slugify(g.title)] = { g, i }; });
-
-    const entries = newPapers.map((seed: any, idx: number) => {
-      const key = slugify(seed.title);
-      const gen: any = (genMap[key] && genMap[key].g) || generated[idx] || generated[0] || {};
-      const keywords = [...(gen.tags || []), ...(gen.key_concepts || [])];
-      const relatedGlossary = matchRelated(keywords, glossaryArr, 6);
-      const relatedArticles = matchRelated(keywords, articlesArr, 5);
-      maxNum += 1;
-      const internalId = `RES-${String(maxNum).padStart(6, '0')}`;
-      const abstract = gen.abstract || '';
-      return {
-        title: seed.title,
-        slug: key,
-        authors: seed.authors || [],
-        abstract,
-        key_findings: (gen.key_findings || []).slice(0, 5),
-        tags: (gen.tags || []).slice(0, 8),
-        difficulty: ['beginner', 'intermediate', 'advanced', 'expert'].includes(gen.difficulty) ? gen.difficulty : 'intermediate',
-        research_type: seed.research_type || 'paper',
-        is_original_research: !!seed.is_original_research,
-        is_featured: true,
-        visibility: 'public',
-        status: 'published',
-        category_id: (catByName[(seed.collection || '').toLowerCase()] || {}).id || null,
-        related_glossary: relatedGlossary,
-        related_articles: relatedArticles,
-        publication: inferPublication(seed.url, seed.research_type),
-        publication_date: seed.year ? `${seed.year}-01-01` : null,
-        doi: null,
-        pdf_url: seed.url || null,
-        citation: buildCitation(seed),
-        bibtex: buildBibtex(seed),
-        seo_title: `${seed.title} — Research Annotation | The Blockchain Library`,
-        seo_description: (abstract || seed.title).slice(0, 160),
-        internal_id: internalId,
-        language: 'en',
-        downloads: 0,
-        citations_count: 0
-      };
-    });
-
-    await base44.asServiceRole.entities.ResearchPaper.bulkCreate(entries);
-
-    return Response.json({
-      created: entries.length,
-      skipped,
-      batch: Array.isArray(customPapers) ? 'custom' : batch,
-      totalSeed: SEED_PAPERS.length,
-      papers: entries.map((e) => ({
-        title: e.title,
-        slug: e.slug,
-        internal_id: e.internal_id,
-        collection: usedCollections.find((c) => catByName[c.toLowerCase()] && catByName[c.toLowerCase()].id === e.category_id) || null,
-        related_glossary: e.related_glossary.length,
-        related_articles: e.related_articles.length
-      }))
-    });
+    const result = await annotateAndPersist(candidates, base44, model);
+    return Response.json({ ...result, ...meta });
   } catch (error) {
     return Response.json({ error: error.message, stack: error.stack }, { status: 500 });
   }

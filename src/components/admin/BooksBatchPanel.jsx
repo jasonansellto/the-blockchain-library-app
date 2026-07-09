@@ -26,7 +26,7 @@ export default function BooksBatchPanel() {
   const [catResult, setCatResult] = useState(null);
 
   const [isbnTerm, setIsbnTerm] = useState('');
-  const [isbnPages, setIsbnPages] = useState(1);
+  const [isbnLimit, setIsbnLimit] = useState(20);
   const [importingIsbn, setImportingIsbn] = useState(false);
   const [isbnResult, setIsbnResult] = useState(null);
 
@@ -124,14 +124,14 @@ export default function BooksBatchPanel() {
   };
 
   const importIsbn = async () => {
-    if (!isbnTerm.trim()) { setError('Enter a search term (e.g. blockchain, bitcoin, web3).'); return; }
+    if (!isbnTerm.trim()) { setError('Enter a search term (e.g. blockchain, bitcoin, web3, ai).'); return; }
     setImportingIsbn(true); setIsbnResult(null); setError(null);
     try {
-      const res = await base44.functions.invoke('generateBooksBatch', { action: 'import-isbn-search', term: isbnTerm.trim(), pages: Number(isbnPages) || 1 });
+      const res = await base44.functions.invoke('generateBooksBatch', { action: 'import-isbn-search', term: isbnTerm.trim(), limit: Number(isbnLimit) || 20 });
       setIsbnResult(res.data || res);
       await checkExisting();
     } catch (e) {
-      setError(e.response?.data?.error || e.message || 'ISBN import failed');
+      setError(e.response?.data?.error || e.message || 'Open Library import failed');
     }
     setImportingIsbn(false);
   };
@@ -153,7 +153,7 @@ export default function BooksBatchPanel() {
         </div>
         <p className="text-sm text-slate-400 mt-1 max-w-2xl">
           AI-curates top Bitcoin &amp; Crypto books from Amazon bestsellers (tag <code className="text-xs bg-slate-100 px-1 rounded">whemusliv-20</code>).
-          Covers are fetched from Google Books for reliability. Uses a web-search-enabled LLM for real ASINs &amp; ratings.
+          Covers &amp; ISBNs are fetched from Open Library for reliability. Uses a web-search-enabled LLM for real ASINs &amp; ratings.
         </p>
       </div>
 
@@ -290,17 +290,17 @@ export default function BooksBatchPanel() {
       <div className="mt-6 rounded-lg border border-emerald-200 p-4 bg-emerald-50/40">
         <div className="flex items-center gap-2 mb-2">
           <BookMarked className="w-4 h-4 text-emerald-600" />
-          <h3 className="text-sm font-bold text-slate-900">Import from ISBN Search (Recommended)</h3>
+          <h3 className="text-sm font-bold text-slate-900">Import from Open Library (Recommended)</h3>
         </div>
         <p className="text-xs text-slate-500 mb-3">
-          Searches <code className="bg-slate-100 px-1 rounded">isbnsearch.org</code> for real ISBNs, covers, publishers, and years — then builds amazon.com links (ISBN-10 as ASIN) and pulls live Amazon ratings. No hallucinated ASINs.
+          Searches <code className="bg-slate-100 px-1 rounded">openlibrary.org</code> for real ISBNs, covers, publishers, and years — then builds amazon.com links (ISBN-10 as ASIN) and pulls live Amazon ratings. Reliable, no hallucinated ASINs.
         </p>
         <div className="flex flex-col sm:flex-row gap-2">
           <input type="text" value={isbnTerm} onChange={(e) => setIsbnTerm(e.target.value)} placeholder="Search term: blockchain, bitcoin, cryptocurrency, web3, ai" disabled={busy}
             className="flex-1 px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60" />
-          <select value={isbnPages} onChange={(e) => setIsbnPages(Number(e.target.value))} disabled={busy}
+          <select value={isbnLimit} onChange={(e) => setIsbnLimit(Number(e.target.value))} disabled={busy}
             className="px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60">
-            {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n} page{n !== 1 ? 's' : ''}</option>)}
+            {[10, 20, 30, 40].map((n) => <option key={n} value={n}>{n} books</option>)}
           </select>
           <button onClick={importIsbn} disabled={busy || !isbnTerm.trim()}
             className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-60">
