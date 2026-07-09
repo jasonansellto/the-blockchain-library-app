@@ -70,6 +70,42 @@ async function openLibraryCover(title: string, author: string): Promise<{ cover:
   return { cover: '', isbn: '' };
 }
 
+// Direct cover lookup by ISBN via the Open Library Books API. More reliable than
+// title search when a book already has a stored ISBN (the exact edition is
+// pinned). Returns the large cover URL, or '' if Open Library has no cover.
+async function openLibraryCoverByIsbn(isbn: string): Promise<string> {
+  if (!isbn) return '';
+  const key = `ISBN:${isbn}`;
+  try {
+    const r = await fetch(`https://openlibrary.org/api/books?bibkeys=${encodeURIComponent(key)}&format=json&jscmd=data`, { redirect: 'follow' });
+    if (!r.ok) return '';
+    const data: any = await r.json();
+    const cover = data?.[key]?.cover;
+    if (cover) return cover.large || cover.medium || '';
+    return '';
+  } catch (_e) {
+    return '';
+  }
+}
+
+// Verify a cover URL returns a usable image (not a 1x1 placeholder or 404/captcha).
+// Used to decide whether an existing cover is actually broken, and before trusting
+// LLM-sourced cover URLs (which frequently 404).
+async function verifyImageUrl(url: string): Promise<boolean> {
+  if (!url) return false;
+  try {
+    const r = await fetch(url, { method: 'HEAD', redirect: 'follow' });
+    if (!r.ok) return false;
+    const ct = (r.headers.get('content-type') || '').toLowerCase();
+    if (!ct.startsWith('image')) return false;
+    const cl = parseInt(r.headers.get('content-length') || '0', 10);
+    if (cl && cl < 1500) return false;
+    return true;
+  } catch (_e) {
+    return false;
+  }
+}
+
 // Fallback: fetch the Amazon product page and extract the real cover image URL
 // (og:image / hiRes / large). Used when Open Library has no match.
 async function amazonCover(link: string): Promise<string> {
@@ -224,6 +260,20 @@ function isbn13To10(isbn13: string): string {
   return core + checkChar;
 }
 
+// Derive an ISBN-13 from a 978-convertible ISBN-10. Book ASINs on Amazon ARE the
+// ISBN-10, so this recovers the canonical ISBN-13 (for storage + cover lookup)
+// from a stored amazon_link when no ISBN was persisted.
+function isbn10To13(isbn10: string): string {
+  if (!isbn10 || isbn10.length !== 10) return '';
+  const core = isbn10.slice(0, 9);
+  if (!/^\d{9}$/.test(core)) return '';
+  const base = '978' + core;
+  let sum = 0;
+  for (let i = 0; i < 12; i++) sum += parseInt(base[i], 10) * (i % 2 === 0 ? 1 : 3);
+  const check = (10 - (sum % 10)) % 10;
+  return base + check;
+}
+
 // Scrape the real Amazon average rating for a book (ISBN-10 or ISBN-13 as ASIN).
 async function fetchAmazonRating(asin: string): Promise<number> {
   try {
@@ -269,18 +319,111 @@ Deno.serve(async (req) => {
     if (body.action === 'fix-covers') {
       const res = await base44.asServiceRole.entities.Book.filter({}, '-created_date', 1000);
       const books: any[] = res.results || res || [];
-      const targets = books.filter((b) => !b.cover || String(b.cover).includes('m.media-amazon.com'));
+      // Targets: books with no cover, OR whose current cover fails verification
+      // (404 / non-image / tiny placeholder). Working covers are left untouched, so
+      // re-runs only touch genuinely broken covers. Open Library covers are stable
+      // and skipped to avoid needless HEAD checks.
+      const targets: any[] = [];
+      for (const b of books) {
+        if (!b.cover) { targets.push(b); continue; }
+        if (!String(b.cover).includes('covers.openlibrary.org') && !(await verifyImageUrl(b.cover))) {
+          targets.push(b);
+        }
+      }
       const updates: any[] = [];
+      const stillMissing: any[] = [];
       for (const b of targets) {
         const author = (b.author_ids?.[0]) || '';
-        let { cover, isbn } = await openLibraryCover(b.title, author);
+        // ISBN-based lookup pins the exact edition (most reliable). When no ISBN is
+        // stored, derive one from the amazon_link ASIN (book ASINs are ISBN-10s).
+        let lookupIsbn = b.isbn || '';
+        let asinIsbn13 = '';
+        if (!lookupIsbn && b.amazon_link) {
+          const am = String(b.amazon_link).match(/\/dp\/([A-Z0-9]{10})(?:\?|$)/);
+          if (am && /^\d{9}[0-9X]$/.test(am[1])) {
+            lookupIsbn = am[1];
+            asinIsbn13 = isbn10To13(am[1]);
+          }
+        }
+        let cover = lookupIsbn ? await openLibraryCoverByIsbn(lookupIsbn) : '';
+        let newIsbn = '';
+        if (!cover) { const ol = await openLibraryCover(b.title, author); cover = ol.cover; newIsbn = ol.isbn; }
         if (!cover && b.amazon_link) cover = await amazonCover(b.amazon_link);
         if (cover) {
           const upd: any = { id: b.id, cover };
-          if (isbn) upd.isbn = isbn;
+          if (asinIsbn13 && !b.isbn) upd.isbn = asinIsbn13;
+          else if (newIsbn && !b.isbn) upd.isbn = newIsbn;
           updates.push(upd);
+        } else if (!b.isbn) {
+          // Coverless and no ISBN to look up — candidate for LLM ISBN discovery.
+          stillMissing.push(b);
         }
       }
+
+      // Second pass: for books still without a cover AND without an ISBN, use a
+      // web-search LLM to discover the real ISBN-13, then fetch the cover by ISBN.
+      if (stillMissing.length) {
+        const isbnPrompt = `You are a bibliographic data librarian. For each book below, find its REAL ISBN-13 (the 13-digit 978-prefixed ISBN for the most common print edition). Search the web (Open Library, Amazon, publisher sites). Return ONLY verified ISBNs — if you cannot verify one, return isbn "". Do NOT invent numbers.
+Books: ${JSON.stringify(stillMissing.map((b) => ({ title: b.title, author: (b.author_ids?.[0]) || '' })))}
+Return JSON: { "results": [ { "title": "...", "isbn": "978..." } ] } — one entry per input, same titles.`;
+        try {
+          const isbnRes: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
+            prompt: isbnPrompt,
+            add_context_from_internet: true,
+            model: 'gemini_3_flash',
+            response_json_schema: {
+              type: 'object',
+              properties: {
+                results: {
+                  type: 'array',
+                  items: { type: 'object', properties: { title: { type: 'string' }, isbn: { type: 'string' } } }
+                }
+              }
+            }
+          });
+          const found: any[] = (isbnRes?.results || []).filter((r: any) => r.isbn && /^\d{13}$/.test(String(r.isbn)));
+          for (const r of found) {
+            const b = stillMissing.find((x) => x.title === r.title);
+            if (!b) continue;
+            const cover = await openLibraryCoverByIsbn(r.isbn);
+            if (cover) updates.push({ id: b.id, cover, isbn: r.isbn });
+          }
+        } catch (_e) { /* ISBN discovery is best-effort */ }
+      }
+
+      // Third pass: for books still without a cover, ask the LLM for a direct,
+      // stable cover image URL (Open Library / publisher / Goodreads). Store it
+      // only if the URL is verified to return a real image (avoids 404s).
+      const stillMissing2 = stillMissing.filter((b) => !updates.find((u) => u.id === b.id));
+      if (stillMissing2.length) {
+        const coverPrompt = `You are a bibliographic data librarian. For each book below, find a direct, stable cover image URL. Prefer Open Library cover URLs (https://covers.openlibrary.org/b/id/{ID}-L.jpg) or publisher / Goodreads / Wiley / Penguin cover images. The URL MUST point directly to an image file (JPG/PNG), not a product page. Do NOT use m.media-amazon.com URLs (they 404). If you cannot find a verified image URL, return cover_url "".
+Books: ${JSON.stringify(stillMissing2.map((b) => ({ title: b.title, author: (b.author_ids?.[0]) || '' })))}
+Return JSON: { "results": [ { "title": "...", "cover_url": "https://..." } ] } — one entry per input, same titles.`;
+        try {
+          const coverRes: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
+            prompt: coverPrompt,
+            add_context_from_internet: true,
+            model: 'gemini_3_flash',
+            response_json_schema: {
+              type: 'object',
+              properties: {
+                results: {
+                  type: 'array',
+                  items: { type: 'object', properties: { title: { type: 'string' }, cover_url: { type: 'string' } } }
+                }
+              }
+            }
+          });
+          for (const r of (coverRes?.results || [])) {
+            const b = stillMissing2.find((x) => x.title === r.title);
+            if (!b || !r.cover_url) continue;
+            if (await verifyImageUrl(r.cover_url)) {
+              updates.push({ id: b.id, cover: r.cover_url });
+            }
+          }
+        } catch (_e) { /* cover discovery is best-effort */ }
+      }
+
       if (updates.length) {
         await base44.asServiceRole.entities.Book.bulkUpdate(updates);
       }
