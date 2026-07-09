@@ -1,0 +1,66 @@
+{
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create"
+      ],
+      "entity_name": "Article"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "new_article_enrichment",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "wait_for_edits": {
+          "wait": "PT1H",
+          "then": "generate_faqs",
+          "x-base44": {
+            "title": "Wait 1 hour for final edits",
+            "description": "Grace period for editors"
+          }
+        }
+      },
+      {
+        "generate_faqs": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "generateArticleFaqs",
+            "args": {
+              "article_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "enrich_glossary",
+          "x-base44": {
+            "title": "Generate article FAQs",
+            "description": "Auto-FAQ for the new article"
+          }
+        }
+      },
+      {
+        "enrich_glossary": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "generateGlossaryBatch",
+            "args": {
+              "article_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Enrich glossary if complex terms",
+            "description": "Generate missing term definitions"
+          }
+        }
+      }
+    ]
+  },
+  "name": "New Article Enrichment",
+  "description": "When a new Article is created, wait 1 hour for final edits, generate FAQs for it, then scan it for complex terms and generate glossary definitions for any that are missing."
+}

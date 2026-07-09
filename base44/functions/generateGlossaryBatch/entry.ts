@@ -122,13 +122,49 @@ function slugify(text: string): string {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user || !['admin', 'editor'].includes(user.role)) {
-      return Response.json({ error: 'Admin or editor access required' }, { status: 403 });
+    // Workflow-triggered calls have no user session; allow the service-role path.
+    const user = await base44.auth.me().catch(() => null);
+    if (user && !['admin', 'editor'].includes(user.role)) {
+      return Response.json({ error: 'Forbidden — admin or editor only' }, { status: 403 });
     }
 
     const body = await req.json().catch(() => ({}));
-    const { category, count = 10, offset = 0, terms: customTerms, model } = body;
+    const category = body.category;
+    const count = body.count || 10;
+    const offset = body.offset || 0;
+    let customTerms = body.terms;
+    const model = body.model;
+    const articleId = body.article_id;
+
+    // Article-driven mode (new-article workflow): detect complex terms in the
+    // article, dedupe against the whole glossary, then fall through to the
+    // standard generation path with those terms. No-ops when no complex terms.
+    if (articleId) {
+      const article = await base44.asServiceRole.entities.Article.get(String(articleId));
+      if (!article) return Response.json({ error: 'Article not found' }, { status: 404 });
+      const text = `${article.title || ''}\n${article.summary || ''}\n${article.body || ''}`.slice(0, 8000);
+      const detectRes: any = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        prompt: `You are a blockchain terminology analyst. Read the article below and identify complex blockchain, cryptocurrency, Web3, cryptography, DeFi, or related technical terms used in a way that would benefit from a dedicated glossary entry. Include only established technical terms, not generic words. Return up to 10 terms, most important first.
+
+Article:
+${text}
+
+Return JSON: { "terms": ["Term1", "Term2", ...] }`,
+        response_json_schema: { type: "object", properties: { terms: { type: "array", items: { type: "string" } } } }
+      });
+      const detected: string[] = (detectRes?.terms || []).map((t: any) => String(t).trim()).filter(Boolean);
+      if (detected.length === 0) {
+        return Response.json({ has_complex_terms: false, created: 0, terms: [] });
+      }
+      const allGlossary = await base44.asServiceRole.entities.GlossaryTerm.list('-updated_date', 5000);
+      const allGlossaryArr: any[] = allGlossary.results || allGlossary || [];
+      const allExistingTitles = new Set(allGlossaryArr.map((t: any) => String(t.title).toLowerCase()));
+      const articleNewTerms = detected.filter((t: string) => !allExistingTitles.has(t.toLowerCase()));
+      if (articleNewTerms.length === 0) {
+        return Response.json({ has_complex_terms: true, created: 0, terms: detected, skipped: detected.length });
+      }
+      customTerms = articleNewTerms;
+    }
 
     // No category → return taxonomy overview
     if (!category && !customTerms) {

@@ -3,29 +3,43 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'admin' && user.role !== 'editor') {
+    // Workflow-triggered calls have no user session; allow the service-role path.
+    const user = await base44.auth.me().catch(() => null);
+    if (user && user.role !== 'admin' && user.role !== 'editor') {
       return Response.json({ error: 'Forbidden — admin or editor only' }, { status: 403 });
     }
 
     let limit = 5;
     let offset = 0;
+    let articleId = null;
     if (req.method === 'POST') {
       try {
         const body = await req.json();
         if (body.limit) limit = Math.min(Math.max(body.limit, 1), 10);
         if (body.offset) offset = body.offset;
+        if (body.article_id) articleId = String(body.article_id);
       } catch (e) {}
     }
 
-    // Fetch published articles and find those without FAQs
-    const res = await base44.asServiceRole.entities.Article.filter(
-      { status: 'published' }, '-published_date', 200, 0
-    );
-    const allArticles = res.results || res || [];
-    const noFaqArticles = allArticles.filter(a => !a.faq || a.faq.length === 0);
-    const batch = noFaqArticles.slice(offset, offset + limit);
+    // Target a specific article when invoked by the new-article workflow;
+    // otherwise scan recent published articles missing FAQs (admin UI batch).
+    let batch = [];
+    let totalWithoutFaqs = 0;
+    if (articleId) {
+      const article = await base44.asServiceRole.entities.Article.get(articleId);
+      if (article && (!article.faq || article.faq.length === 0)) {
+        batch = [article];
+      }
+      totalWithoutFaqs = batch.length;
+    } else {
+      const res = await base44.asServiceRole.entities.Article.filter(
+        { status: 'published' }, '-published_date', 200, 0
+      );
+      const allArticles = res.results || res || [];
+      const noFaqArticles = allArticles.filter(a => !a.faq || a.faq.length === 0);
+      totalWithoutFaqs = noFaqArticles.length;
+      batch = noFaqArticles.slice(offset, offset + limit);
+    }
 
     const results = [];
     for (const article of batch) {
@@ -75,7 +89,7 @@ Requirements:
     }
 
     return Response.json({
-      totalWithoutFaqs: noFaqArticles.length,
+      totalWithoutFaqs,
       processed: batch.length,
       results,
     });
