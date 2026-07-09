@@ -5,20 +5,10 @@ import BookCard from '@/components/cards/BookCard';
 import Seo from '@/components/Seo';
 import { buildCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 
-const SERIES_TABS = [
-  { key: 'all', label: 'All Books' },
-  { key: 'featured', label: 'Featured Titles' },
-  { key: 'Mastering Crypto', label: 'Mastering Crypto Series' },
-  { key: 'Protocol Zero', label: 'Protocol Zero Series' },
-  { key: 'The Adventures of The Crypto Kid & Lucy', label: "Kids & Educational" },
-  { key: 'french', label: 'French Titles' },
-];
-
 export default function Books() {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
 
   useEffect(() => { fetchBooks(); }, []);
 
@@ -30,15 +20,12 @@ export default function Books() {
   };
 
   const filtered = books.filter(b => {
-    if (activeTab === 'featured' && !b.is_featured) return false;
-    if (activeTab === 'french' && b.language !== 'French') return false;
-    if (['Mastering Crypto', 'Protocol Zero', 'The Adventures of The Crypto Kid & Lucy'].includes(activeTab) && b.series !== activeTab) return false;
     if (!query) return true;
     return b.title.toLowerCase().includes(query.toLowerCase()) || (b.subtitle || '').toLowerCase().includes(query.toLowerCase()) || (b.publisher || '').toLowerCase().includes(query.toLowerCase());
   });
 
-  // All Books view (no search): mix every title together by rating descending.
-  const displayBooks = (activeTab === 'all' && !query)
+  // Default view (no search): mix every title together by rating descending.
+  const displayBooks = !query
     ? [...filtered].sort((a, b) => (b.rating || 0) - (a.rating || 0))
     : filtered;
 
@@ -63,14 +50,6 @@ export default function Books() {
           <input type="text" value={query} onChange={(e) => setQuery(e.target.value)}
             placeholder="Search books..."
             className="w-full pl-12 pr-4 py-3 text-base bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div className="flex flex-wrap gap-2 mb-8">
-          {SERIES_TABS.map(tab => (
-            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === tab.key ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:border-blue-200 hover:text-blue-600'}`}>
-              {tab.label}
-            </button>
-          ))}
         </div>
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-blue-600 animate-spin" /></div>

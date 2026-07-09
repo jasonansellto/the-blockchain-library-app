@@ -36,7 +36,7 @@ function applyAffiliateTag(url: string): string {
 }
 
 function amazonUrl(asin: string): string {
-  return `https://www.amazon.ca/dp/${asin}?tag=${AFFILIATE_TAG}`;
+  return `https://www.amazon.com/dp/${asin}?tag=${AFFILIATE_TAG}`;
 }
 
 // Reliable cover + ISBN from Open Library (free, lenient rate limits).
