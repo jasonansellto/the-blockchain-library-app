@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import {
   Loader2, AlertCircle, RefreshCw, MousePointerClick, Eye,
-  TrendingUp, MapPin, Search as SearchIcon, Link2, FileText
+  TrendingUp, MapPin, Search as SearchIcon, Link2, FileText, Trash2, Plus
 } from 'lucide-react';
 
 const RANGE_OPTIONS = [
@@ -69,6 +69,10 @@ export default function SearchConsolePanel() {
   const [days, setDays] = useState(28);
   const [siteUrl, setSiteUrl] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [newSitemap, setNewSitemap] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [deletingPath, setDeletingPath] = useState(null);
+  const [actionMsg, setActionMsg] = useState(null);
 
   const fetchData = useCallback(async (selectedDays, selectedSite) => {
     setLoading(!data);
@@ -94,6 +98,39 @@ export default function SearchConsolePanel() {
   useEffect(() => { fetchData(days, siteUrl); /* eslint-disable-next-line */ }, []);
 
   const handleRefresh = () => fetchData(days, siteUrl);
+
+  const submitSitemap = async () => {
+    const feedpath = newSitemap.trim();
+    if (!feedpath) return;
+    setSubmitting(true); setActionMsg(null);
+    try {
+      const res = await base44.functions.invoke('searchConsoleData', { action: 'submit-sitemap', feedpath, siteUrl });
+      const d = res.data || res;
+      if (d.error) throw new Error(d.error);
+      setActionMsg({ type: 'success', text: `Sitemap submitted: ${feedpath}` });
+      setNewSitemap('');
+      await fetchData(days, siteUrl);
+    } catch (e) {
+      setActionMsg({ type: 'error', text: e.message || 'Submit failed' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const deleteSitemap = async (feedpath) => {
+    setDeletingPath(feedpath); setActionMsg(null);
+    try {
+      const res = await base44.functions.invoke('searchConsoleData', { action: 'delete-sitemap', feedpath, siteUrl });
+      const d = res.data || res;
+      if (d.error) throw new Error(d.error);
+      setActionMsg({ type: 'success', text: `Sitemap removed: ${feedpath}` });
+      await fetchData(days, siteUrl);
+    } catch (e) {
+      setActionMsg({ type: 'error', text: e.message || 'Delete failed' });
+    } finally {
+      setDeletingPath(null);
+    }
+  };
   const handleDays = (d) => { setDays(d); fetchData(d, siteUrl); };
   const handleSite = (s) => { setSiteUrl(s); fetchData(days, s); };
 
@@ -200,15 +237,32 @@ export default function SearchConsolePanel() {
             </div>
           </div>
 
-          {/* Sitemaps */}
-          {data.sitemaps.length > 0 && (
-            <div className="bg-slate-50/60 rounded-xl border border-slate-200 p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Link2 className="w-4 h-4 text-slate-400" />
-                <h4 className="text-sm font-bold text-slate-900">Sitemaps</h4>
+          {/* Sitemaps — submit / delete (write access) */}
+          <div className="bg-slate-50/60 rounded-xl border border-slate-200 p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Link2 className="w-4 h-4 text-slate-400" />
+              <h4 className="text-sm font-bold text-slate-900">Sitemaps</h4>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); submitSitemap(); }} className="flex items-center gap-2 mb-4">
+              <input type="url" value={newSitemap} onChange={(e) => setNewSitemap(e.target.value)}
+                placeholder="https://www.theblockchainlibrary.com/sitemap.xml"
+                className="flex-1 px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <button type="submit" disabled={submitting || !newSitemap.trim()}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50">
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Submit
+              </button>
+            </form>
+
+            {actionMsg && (
+              <div className={`mb-3 text-xs px-3 py-2 rounded-lg ${actionMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
+                {actionMsg.text}
               </div>
+            )}
+
+            {data.sitemaps.length ? (
               <Table
-                headers={['Path', 'Last Submitted', 'Status', 'Errors', 'Indexed']}
+                headers={['Path', 'Last Submitted', 'Status', 'Errors', 'Indexed', '']}
                 rows={data.sitemaps}
                 renderRow={(s) => {
                   const status = s.isPending ? 'Pending' : (s.errors > 0 ? 'Errors' : (s.warnings > 0 ? 'Warnings' : 'OK'));
@@ -221,13 +275,19 @@ export default function SearchConsolePanel() {
                       <td className="py-2 pr-4 text-slate-600">{s.lastSubmitted ? new Date(s.lastSubmitted).toLocaleDateString() : '—'}</td>
                       <td className={`py-2 pr-4 font-medium ${statusColor}`}>{status}</td>
                       <td className="py-2 pr-4 text-slate-600">{s.errors}</td>
-                      <td className="py-2 text-slate-600">{s.indexed !== undefined ? fmtNum(s.indexed) : '—'}</td>
+                      <td className="py-2 pr-4 text-slate-600">{s.indexed !== undefined ? fmtNum(s.indexed) : '—'}</td>
+                      <td className="py-2 text-right">
+                        <button onClick={() => deleteSitemap(s.path)} disabled={deletingPath === s.path}
+                          className="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-rose-600 transition-colors disabled:opacity-50">
+                          {deletingPath === s.path ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                        </button>
+                      </td>
                     </tr>
                   );
                 }}
               />
-            </div>
-          )}
+            ) : <p className="text-sm text-slate-400 py-2">No sitemaps submitted yet.</p>}
+          </div>
         </div>
       ) : null}
     </div>

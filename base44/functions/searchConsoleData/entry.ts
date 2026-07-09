@@ -51,6 +51,25 @@ Deno.serve(async (req) => {
     }
 
     const sitePath = encodeURIComponent(siteUrl);
+
+    // ---- Write actions: sitemap management (requires webmasters write scope) ----
+    if (body.action === 'submit-sitemap' || body.action === 'delete-sitemap') {
+      const feedpath = String(body.feedpath || '').trim();
+      if (!feedpath) {
+        return Response.json({ error: 'feedpath (sitemap URL) is required' }, { status: 400 });
+      }
+      const feedPathEncoded = encodeURIComponent(feedpath);
+      const smUrl = `${GSC_API}/sites/${sitePath}/sitemaps/${feedPathEncoded}`;
+      const writeRes = body.action === 'submit-sitemap'
+        ? await fetch(smUrl, { method: 'PUT', headers })
+        : await fetch(smUrl, { method: 'DELETE', headers });
+      if (!writeRes.ok) {
+        const errText = await writeRes.text().catch(() => '');
+        return Response.json({ error: `Search Console ${body.action} failed (${writeRes.status})`, details: errText }, { status: writeRes.status });
+      }
+      return Response.json({ action: body.action, siteUrl, feedpath, success: true });
+    }
+
     const analyticsBody = (dimensions: string[], rowLimit: number) => ({
       startDate,
       endDate,
