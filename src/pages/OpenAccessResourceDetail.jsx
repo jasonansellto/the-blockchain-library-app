@@ -2,11 +2,11 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronRight, ExternalLink, ArrowLeft, Check, Target } from 'lucide-react';
 import Seo from '@/components/Seo';
-import { openAccessResources, badgeStyles } from '@/lib/openAccessResources';
+import { openAccessResources, blockchainResources, badgeStyles } from '@/lib/openAccessResources';
 
 export default function OpenAccessResourceDetail() {
   const { slug } = useParams();
-  const resource = openAccessResources.find((r) => r.slug === slug);
+  const resource = openAccessResources.find((r) => r.slug === slug) || blockchainResources.find((r) => r.slug === slug);
 
   if (!resource) {
     return (
