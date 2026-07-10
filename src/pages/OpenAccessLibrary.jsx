@@ -13,7 +13,7 @@ const CATEGORY_DESCRIPTIONS = {
 };
 
 export default function OpenAccessLibrary() {
-  const [tab, setTab] = useState('general');
+  const [tab, setTab] = useState('blockchain');
 
   const description = 'A curated directory of free, publicly available knowledge archives — alongside a hand-picked set of blockchain documentation, protocol, and developer hubs — for finding open-access books, papers, and authoritative Web3 references.';
   const schemas = [
@@ -61,18 +61,18 @@ export default function OpenAccessLibrary() {
         {/* Tab switcher */}
         <div className="flex items-center gap-1 sm:gap-2 mb-8 border-b border-slate-200 overflow-x-auto">
           <button
-            onClick={() => setTab('general')}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${tab === 'general' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
-          >
-            <Library className="w-4 h-4" /> General Libraries
-            <span className="ml-1 text-xs font-normal text-slate-400">{openAccessResources.length}</span>
-          </button>
-          <button
             onClick={() => setTab('blockchain')}
             className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${tab === 'blockchain' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
           >
             <Boxes className="w-4 h-4" /> Blockchain Resources
             <span className="ml-1 text-xs font-normal text-slate-400">{blockchainResources.length}</span>
+          </button>
+          <button
+            onClick={() => setTab('general')}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${tab === 'general' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+          >
+            <Library className="w-4 h-4" /> General Libraries
+            <span className="ml-1 text-xs font-normal text-slate-400">{openAccessResources.length}</span>
           </button>
         </div>
 
