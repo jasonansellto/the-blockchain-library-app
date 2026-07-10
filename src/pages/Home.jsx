@@ -100,8 +100,9 @@ export default function Home() {
     <div>
       <Seo title="The Definitive Blockchain Knowledge Library" description="Learn blockchain, cryptocurrency, Web3, AI, decentralized finance, and emerging technology through thousands of expertly written educational resources." />
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
+      <section className="relative overflow-hidden bg-gradient-to-b from-blue-50/70 via-slate-50 to-white border-b border-slate-100">
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #0f172a 1px, transparent 0)', backgroundSize: '32px 32px' }} />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[480px] bg-gradient-to-b from-blue-100/50 to-transparent blur-3xl rounded-full pointer-events-none" />
         <NeuralGraph className="opacity-60" />
         <div className="container-tbl relative py-20 sm:py-28 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold mb-6 animate-fade-in">
@@ -119,13 +120,13 @@ export default function Home() {
             <SearchBar size="lg" />
           </div>
           <div className="flex flex-wrap items-center justify-center gap-3 animate-slide-up" style={{ animationDelay: '0.3s' }}>
-            <Link to="/learn" className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm">
+            <Link to="/learn" className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
               Start Learning <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link to="/library" className="inline-flex items-center px-6 py-3 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors">
+            <Link to="/library" className="inline-flex items-center px-6 py-3 text-sm font-semibold text-slate-700 bg-white/80 backdrop-blur-sm hover:bg-white border border-slate-200 rounded-lg transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5">
               Browse Library
             </Link>
-            <Link to="/glossary" className="inline-flex items-center px-6 py-3 text-sm font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-lg transition-colors">
+            <Link to="/glossary" className="inline-flex items-center px-6 py-3 text-sm font-semibold text-teal-700 bg-teal-50/80 backdrop-blur-sm hover:bg-teal-100 border border-teal-200 rounded-lg transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5">
               Explore Glossary
             </Link>
           </div>
