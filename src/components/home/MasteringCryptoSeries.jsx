@@ -32,10 +32,10 @@ export default function MasteringCryptoSeries() {
               <Sparkles className="w-3.5 h-3.5" /> The Mastering Crypto Series
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2">
-              From your first Bitcoin to mastering Web3 &amp; DeFi
+              Master Cryptocurrency With Confidence
             </h2>
             <p className="text-slate-500 text-sm sm:text-base leading-relaxed">
-              A five-part beginner-friendly series that takes you from blockchain basics to seed-phrase security, Web3, and decentralized finance — built for readers who want to truly understand crypto, not just trade it.
+              Whether you're completely new to cryptocurrency or looking to deepen your understanding of blockchain technology, Mastering Crypto provides the knowledge, resources, and guidance you need to navigate the digital economy with confidence.
             </p>
           </div>
           <div className="hidden lg:inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 shrink-0">
