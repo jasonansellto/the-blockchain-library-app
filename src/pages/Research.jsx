@@ -47,6 +47,11 @@ export default function Research() {
     return true;
   });
 
+  // Pin the Deterministic Execution paper to the top (only when it matches the filter).
+  const pinnedResearchSlug = 'deterministic-execution-fixed-cost-transaction-models';
+  const pinnedPaper = filtered.find((p) => p.slug === pinnedResearchSlug);
+  const ordered = pinnedPaper ? [pinnedPaper, ...filtered.filter((p) => p.slug !== pinnedResearchSlug)] : filtered;
+
   const schemas = [
     buildCollectionPageSchema('Blockchain Research Database', 'Academic papers, whitepapers, EIPs, and industry reports on blockchain and decentralized technology — each AI-annotated and cross-linked to glossary terms and articles.', '/research', filtered.slice(0, 10).map((p) => ({ name: p.title, url: `/research/${p.slug}` }))),
     buildBreadcrumbSchema([{ name: 'Home', url: '/' }, { name: 'Research', url: '/research' }])
@@ -110,9 +115,9 @@ export default function Research() {
           <div className="text-center py-20"><FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" /><p className="text-slate-400">No research papers found.</p></div>
         ) : (
           <>
-            <p className="text-sm text-slate-500 mb-6">{filtered.length} papers</p>
+            <p className="text-sm text-slate-500 mb-6">{ordered.length} papers</p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filtered.map((p) => <ResearchCard key={p.id} paper={p} />)}
+              {ordered.map((p) => <ResearchCard key={p.id} paper={p} />)}
             </div>
           </>
         )}

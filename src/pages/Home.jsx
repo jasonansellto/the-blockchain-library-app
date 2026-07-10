@@ -41,21 +41,52 @@ export default function Home() {
 
   const fetchData = async () => {
     try {
-      const [articles, books, research, paths, categories, authors] = await Promise.all([
+      const pinnedResearchSlug = 'deterministic-execution-fixed-cost-transaction-models';
+      const [articles, books, allBooks, research, pinnedResearchRes, paths, categories, authors] = await Promise.all([
         base44.entities.Article.filter({ status: 'published' }, '-published_date', 20),
         base44.entities.Book.filter({ is_featured: true }, '-updated_date', 20),
+        base44.entities.Book.list('-updated_date', 100),
         base44.entities.ResearchPaper.list('-updated_date', 20),
+        base44.entities.ResearchPaper.filter({ slug: pinnedResearchSlug }),
         base44.entities.LearningPath.list('-updated_date', 20),
         base44.entities.Category.list('-updated_date', 50),
-        base44.entities.Author.filter({ is_featured: true }, '-updated_date', 6),
+        base44.entities.Author.list('-updated_date', 50),
       ]);
 
       const articlesArr = articles.results || articles || [];
       const booksArr = books.results || books || [];
+      const allBooksArr = allBooks.results || allBooks || [];
       const researchArr = research.results || research || [];
       const pathsArr = paths.results || paths || [];
       const catsArr = categories.results || categories || [];
       const authorsArr = authors.results || authors || [];
+
+      // Featured Authors: Jason Ansell always first, then fill with other book
+      // authors (display-only — no detail page when no info exists for them).
+      const realAuthors = [...authorsArr].sort((a, b) => (/jason ansell/i.test(a.name) ? -1 : /jason ansell/i.test(b.name) ? 1 : 0));
+      const seenAuthorNames = new Set(realAuthors.map((a) => a.name.toLowerCase()));
+      const fillerAuthors = [];
+      for (const b of allBooksArr) {
+        for (const aid of (b.author_ids || [])) {
+          const name = String(aid).trim();
+          if (!name || /^[0-9a-f]{24}$/i.test(name) || seenAuthorNames.has(name.toLowerCase())) continue;
+          seenAuthorNames.add(name.toLowerCase());
+          fillerAuthors.push({ name, hasPage: false });
+          if (fillerAuthors.length >= 6) break;
+        }
+        if (fillerAuthors.length >= 6) break;
+      }
+      const authorsList = [
+        ...realAuthors.map((a) => ({ id: a.id, name: a.name, slug: a.slug, photo: a.photo, expertise: (a.expertise_areas || [])[0], hasPage: true })),
+        ...fillerAuthors
+      ].slice(0, 6);
+
+      // Featured Research: the pinned Deterministic Execution paper is fetched
+      // explicitly (it ranks low by update date), then 2 other featured papers.
+      const researchFeatured = researchArr.filter((r) => r.is_featured);
+      const researchSrc = researchFeatured.length ? researchFeatured : researchArr;
+      const pinnedResearch = (pinnedResearchRes.results || pinnedResearchRes || [])[0] || null;
+      const featuredResearchList = [pinnedResearch, ...researchSrc.filter((r) => r.slug !== pinnedResearchSlug)].filter(Boolean).slice(0, 3);
       const articleCatIds = new Set(articlesArr.map(a => a.category_id).filter(Boolean));
       const catPriority = ['blockchain', 'cryptocurrency', 'web3', 'technology'];
       const catDeprio = ['money', 'affiliate'];
@@ -76,10 +107,10 @@ export default function Home() {
         featuredArticles: articlesArr.filter(a => a.is_featured).slice(0, 3),
         latestArticles: articlesArr.slice(0, 6),
         featuredBooks: booksArr.slice(0, 4),
-        featuredResearch: researchArr.filter(r => r.is_featured).slice(0, 3).length ? researchArr.filter(r => r.is_featured).slice(0, 3) : researchArr.slice(0, 3),
+        featuredResearch: featuredResearchList,
         featuredPaths: pathsArr.filter(p => p.is_featured).slice(0, 3).length ? pathsArr.filter(p => p.is_featured).slice(0, 3) : pathsArr.slice(0, 3),
         categories: sortedCats.slice(0, 8),
-        authors: authorsArr,
+        authors: authorsList,
         counts: {}
       });
     } catch (err) {
@@ -243,17 +274,24 @@ export default function Home() {
           <section>
             <SectionHeader title="Featured Authors" subtitle="Experts writing accurate, neutral, well-referenced content" link="/authors" linkLabel="All authors" icon={Users} />
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {data.authors.map(a => (
-                <Link key={a.id} to={`/authors/${a.slug}`} className="group text-center">
-                  <div className="w-20 h-20 rounded-full mx-auto mb-3 overflow-hidden bg-slate-100 ring-2 ring-slate-100 group-hover:ring-blue-200 transition-all">
-                    {a.photo ? <img src={a.photo} alt={a.name} className="w-full h-full object-cover" /> : (
-                      <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-slate-400">{a.name?.[0]}</div>
-                    )}
-                  </div>
-                  <p className="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">{a.name}</p>
-                  <p className="text-xs text-slate-400 line-clamp-1">{a.expertise_areas?.[0]}</p>
-                </Link>
-              ))}
+              {data.authors.map(a => {
+                const inner = (
+                  <>
+                    <div className="w-20 h-20 rounded-full mx-auto mb-3 overflow-hidden bg-slate-100 ring-2 ring-slate-100 group-hover:ring-blue-200 transition-all">
+                      {a.photo ? <img src={a.photo} alt={a.name} className="w-full h-full object-cover" /> : (
+                        <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-slate-400">{a.name?.[0]}</div>
+                      )}
+                    </div>
+                    <p className="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">{a.name}</p>
+                    {a.expertise ? <p className="text-xs text-slate-400 line-clamp-1">{a.expertise}</p> : null}
+                  </>
+                );
+                return a.hasPage ? (
+                  <Link key={a.id || a.name} to={`/authors/${a.slug}`} className="group text-center">{inner}</Link>
+                ) : (
+                  <div key={a.name} className="group text-center">{inner}</div>
+                );
+              })}
             </div>
           </section>
         )}
