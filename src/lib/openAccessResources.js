@@ -358,6 +358,26 @@ export const blockchainResources = [
       "Integrating Cardano wallets and explorer data into apps",
     ],
   },
+  {
+    slug: "vector-smart-chain",
+    name: "Vector Smart Chain",
+    type: "Blockchain Foundations",
+    emoji: "🟢",
+    url: "https://vectorsmartgas.com",
+    tagline: "The official hub for Vector Smart Chain — a high-performance, EVM-compatible Layer-1 network.",
+    description: "Vector Smart Chain (VSC) is an EVM-compatible Layer-1 blockchain designed for high throughput, low-cost transactions, and seamless interoperability with the broader Ethereum ecosystem. The official site brings together network overviews, validator and staking resources, wallet guidance, and developer documentation for deploying smart contracts and dapps. For anyone evaluating emerging EVM chains for performance, tooling compatibility, or deployment, it is the primary reference for the VSC network and its roadmap.",
+    highlights: [
+      "EVM compatibility for porting Solidity contracts and Ethereum tooling",
+      "Low fees and high-throughput network architecture",
+      "Validator, staking, and wallet guidance",
+      "Developer documentation for deploying contracts and dapps",
+    ],
+    bestFor: [
+      "Evaluating an emerging EVM-compatible Layer-1 for deployment",
+      "Learning how VSC positions on performance and interoperability",
+      "Finding validators, wallets, and network resources in one place",
+    ],
+  },
 
   // ── DeFi Protocols ──
   {
