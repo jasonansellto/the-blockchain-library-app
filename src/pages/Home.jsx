@@ -74,7 +74,7 @@ export default function Home() {
       setData({
         featuredArticles: articlesArr.filter(a => a.is_featured).slice(0, 3),
         latestArticles: articlesArr.slice(0, 6),
-        featuredBooks: booksArr.filter(b => b.is_featured).slice(0, 4).length ? booksArr.filter(b => b.is_featured).slice(0, 4) : booksArr.slice(0, 4),
+        featuredBooks: booksArr.filter(b => b.is_featured).slice(0, 4),
         featuredResearch: researchArr.filter(r => r.is_featured).slice(0, 3).length ? researchArr.filter(r => r.is_featured).slice(0, 3) : researchArr.slice(0, 3),
         featuredPaths: pathsArr.filter(p => p.is_featured).slice(0, 3).length ? pathsArr.filter(p => p.is_featured).slice(0, 3) : pathsArr.slice(0, 3),
         categories: sortedCats.slice(0, 8),
