@@ -187,6 +187,18 @@ export default function Home() {
       </section>
 
       <div className="container-tbl py-16 space-y-20">
+        {/* Featured Books */}
+        {data.featuredBooks.length > 0 && (
+          <section>
+            <Reveal>
+              <SectionHeader title="Featured Books" subtitle="Curated reading from leading blockchain authors" link="/books" linkLabel="All books" icon={BookMarked} />
+            </Reveal>
+            <StaggerGroup className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {data.featuredBooks.map(b => <BookCard key={b.id} book={b} />)}
+            </StaggerGroup>
+          </section>
+        )}
+
         {/* Featured Learning Paths */}
         {data.featuredPaths.length > 0 && (
           <section>
@@ -238,18 +250,6 @@ export default function Home() {
         {/* Latest News */}
         {(newsLoading || news.length > 0) && (
           <LatestNewsWidget items={news} loading={newsLoading} />
-        )}
-
-        {/* Featured Books */}
-        {data.featuredBooks.length > 0 && (
-          <section>
-            <Reveal>
-              <SectionHeader title="Featured Books" subtitle="Curated reading from leading blockchain authors" link="/books" linkLabel="All books" icon={BookMarked} />
-            </Reveal>
-            <StaggerGroup className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {data.featuredBooks.map(b => <BookCard key={b.id} book={b} />)}
-            </StaggerGroup>
-          </section>
         )}
 
         {/* Mastering Crypto Series */}
