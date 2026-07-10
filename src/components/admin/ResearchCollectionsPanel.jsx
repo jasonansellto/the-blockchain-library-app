@@ -68,6 +68,18 @@ export default function ResearchCollectionsPanel() {
     setRunning(null);
   };
 
+  const importBri = async () => {
+    setRunning('bri'); setError(null); setResult(null);
+    try {
+      const res = await base44.functions.invoke('generateResearchBatch', { action: 'import-bri', limit: 15 });
+      setResult({ bri: true, ...(res.data || res) });
+      await fetchCounts();
+    } catch (e) {
+      setError(e.response?.data?.error || e.message || 'BRI import failed');
+    }
+    setRunning(null);
+  };
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6 mb-8">
       <div className="flex items-start justify-between mb-4 gap-4 flex-wrap">
@@ -80,11 +92,18 @@ export default function ResearchCollectionsPanel() {
             A curated research library spanning blockchain, cryptography, AI, distributed systems, finance, identity &amp; internet infrastructure. Discover real, citable papers per collection toward each target.
           </p>
         </div>
-        <button onClick={importPriority} disabled={running !== null}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-60 shrink-0">
-          {running === 'priority' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-          {running === 'priority' ? 'Importing priority…' : 'Import Priority Batch'}
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button onClick={importBri} disabled={running !== null}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors disabled:opacity-60">
+            {running === 'bri' ? <Loader2 className="w-4 h-4 animate-spin" /> : <FlaskConical className="w-4 h-4" />}
+            {running === 'bri' ? 'Importing BRI…' : 'Import BRI Research'}
+          </button>
+          <button onClick={importPriority} disabled={running !== null}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-60">
+            {running === 'priority' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            {running === 'priority' ? 'Importing priority…' : 'Import Priority Batch'}
+          </button>
+        </div>
       </div>
 
       <div className="flex items-center gap-3 mb-5 text-sm flex-wrap">
@@ -146,10 +165,11 @@ export default function ResearchCollectionsPanel() {
       {result && !result.error && (
         <div className="mt-4 bg-teal-50 border border-teal-100 rounded-lg p-3 text-sm">
           <p className="text-teal-800 mb-1">
-            {result.priority ? 'Priority import:' : `Collection "${result.collection}":`}
+            {result.priority ? 'Priority import:' : result.bri ? 'Blockchain Research Institute:' : `Collection "${result.collection}":`}
             {' '}created <strong>{result.created}</strong>{result.skipped ? ` · ${result.skipped} already in library` : ''}
             {result.enriched != null ? ` · ${result.enriched} verified` : ''}
-            {result.remaining != null ? ` · ${result.remaining} priority entries remaining` : ''}.
+            {result.discovered != null ? ` · ${result.discovered} discovered` : ''}
+            {result.remaining != null ? ` · ${result.remaining} remaining` : ''}.
           </p>
           {result.papers?.length > 0 && (
             <div className="space-y-1 max-h-40 overflow-y-auto mt-2">

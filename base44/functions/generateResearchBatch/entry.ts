@@ -111,6 +111,7 @@ function inferPublication(url: string, research_type: string): string {
   if (url.includes('arxiv.org')) return 'arXiv preprint';
   if (url.includes('eprint.iacr.org')) return 'IACR ePrint Archive';
   if (url.includes('bitcoin.org')) return 'Bitcoin Whitepaper';
+  if (url.includes('blockchainresearchinstitute.org')) return 'Blockchain Research Institute';
   return typeLabel(research_type);
 }
 
@@ -435,6 +436,63 @@ Return JSON: { "papers": [ {title, authors, year, url, research_type, collection
 
       candidates = ((enrichRes && enrichRes.papers) || []).filter((p: any) => p && p.title);
       meta = { action: 'import-priority', enriched: candidates.length, priorityTotal: PRIORITY_PAPERS.length, remaining: Math.max(0, remaining.length - slice.length) };
+    } else if (action === 'import-bri') {
+      // Import whitepapers from the Blockchain Research Institute research
+      // library. Fetches the live listing, extracts project titles + URLs, and
+      // feeds a slice through the standard annotation + persistence pipeline.
+      const limit = Math.min(20, Math.max(1, parseInt(body.limit, 10) || 10));
+
+      const resp = await fetch('https://www.blockchainresearchinstitute.org/research-library/', {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BlockchainLibraryBot/1.0)' }
+      });
+      const html = await resp.text();
+
+      // Extract every project link + its link text (the paper title).
+      const linkRe = /<a[^>]*href="(https:\/\/www\.blockchainresearchinstitute\.org\/project\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+      const all: { slug: string; url: string; title: string }[] = [];
+      let lm: RegExpExecArray | null;
+      while ((lm = linkRe.exec(html)) !== null) {
+        const url = lm[1];
+        const slugMatch = url.match(/\/project\/([^/]+)\//);
+        const slug = slugMatch ? slugMatch[1] : '';
+        if (!slug) continue;
+        const title = lm[2]
+          .replace(/<[^>]+>/g, '')
+          .replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"')
+          .replace(/&#39;|&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+          .trim();
+        all.push({ slug, url, title });
+      }
+      // Dedupe by slug, prefer the link with the longest non-empty text (the
+      // title link beats the thumbnail-image link for the same project).
+      const bySlug: Record<string, { slug: string; url: string; title: string }> = {};
+      for (const a of all) {
+        if (!bySlug[a.slug] || a.title.length > bySlug[a.slug].title.length) {
+          bySlug[a.slug] = a;
+        }
+      }
+      const projects = Object.values(bySlug).filter((p) => p.title);
+
+      // Skip papers already imported (by slug)
+      const exRes = await base44.asServiceRole.entities.ResearchPaper.filter({}, '-created_date', 2000);
+      const exArr: any[] = exRes.results || exRes || [];
+      const existingSlugs = new Set(exArr.map((p: any) => p.slug));
+      const remaining = projects.filter((p) => !existingSlugs.has(slugify(p.title)));
+      const slice = remaining.slice(0, limit);
+      if (!slice.length) {
+        return Response.json({ action: 'import-bri', discovered: projects.length, remaining: 0, created: 0, skipped: 0, papers: [] });
+      }
+
+      candidates = slice.map((p) => ({
+        title: p.title,
+        authors: [],
+        year: null,
+        url: p.url,
+        research_type: 'whitepaper',
+        collection: 'Blockchain Research Institute',
+        is_original_research: false
+      }));
+      meta = { action: 'import-bri', discovered: projects.length, remaining: Math.max(0, remaining.length - slice.length) };
     } else if (Array.isArray(customPapers) && customPapers.length) {
       candidates = customPapers;
       meta = { batch: 'custom' };
