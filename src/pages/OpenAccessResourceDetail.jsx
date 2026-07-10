@@ -28,7 +28,7 @@ export default function OpenAccessResourceDetail() {
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: '/' },
-        { '@type': 'ListItem', position: 2, name: 'Resources', item: '/tools' },
+        { '@type': 'ListItem', position: 2, name: 'Resources', item: '/resources' },
         { '@type': 'ListItem', position: 3, name: 'Open Access Libraries', item: '/resources/open-access' },
         { '@type': 'ListItem', position: 4, name },
       ],
@@ -53,7 +53,7 @@ export default function OpenAccessResourceDetail() {
           <nav className="flex items-center gap-1.5 text-sm text-slate-400 mb-4 flex-wrap">
             <Link to="/" className="hover:text-blue-600">Home</Link>
             <ChevronRight className="w-3.5 h-3.5" />
-            <Link to="/tools" className="hover:text-blue-600">Resources</Link>
+            <Link to="/resources" className="hover:text-blue-600">Resources</Link>
             <ChevronRight className="w-3.5 h-3.5" />
             <Link to="/resources/open-access" className="hover:text-blue-600">Open Access Libraries</Link>
             <ChevronRight className="w-3.5 h-3.5" />

@@ -22,7 +22,7 @@ export default function OpenAccessLibrary() {
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: '/' },
-        { '@type': 'ListItem', position: 2, name: 'Resources', item: '/tools' },
+        { '@type': 'ListItem', position: 2, name: 'Resources', item: '/resources' },
         { '@type': 'ListItem', position: 3, name: 'Open Access Libraries' },
       ],
     },
@@ -46,7 +46,7 @@ export default function OpenAccessLibrary() {
           <nav className="flex items-center gap-1.5 text-sm text-slate-400 mb-3 flex-wrap">
             <Link to="/" className="hover:text-blue-600">Home</Link>
             <ChevronRight className="w-3.5 h-3.5" />
-            <Link to="/tools" className="hover:text-blue-600">Resources</Link>
+            <Link to="/resources" className="hover:text-blue-600">Resources</Link>
             <ChevronRight className="w-3.5 h-3.5" />
             <span className="text-slate-700 font-medium">Open Access Libraries</span>
           </nav>

@@ -23,6 +23,7 @@ import SearchPage from '@/pages/SearchPage';
 import About from '@/pages/About';
 import Contact from '@/pages/Contact';
 import Resources from '@/pages/Resources';
+import ResourcesHub from '@/pages/ResourcesHub';
 import UnitConverter from '@/pages/tools/UnitConverter';
 import HashGenerator from '@/pages/tools/HashGenerator';
 import AddressValidator from '@/pages/tools/AddressValidator';
@@ -113,6 +114,7 @@ const AuthenticatedApp = () => {
         <Route path="/authors" element={<Authors />} />
         <Route path="/authors/:slug" element={<AuthorDetail />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/resources" element={<ResourcesHub />} />
         <Route path="/tools" element={<Resources type="tools" />} />
         <Route path="/tools/unit-converter" element={<UnitConverter />} />
         <Route path="/tools/hash-generator" element={<HashGenerator />} />

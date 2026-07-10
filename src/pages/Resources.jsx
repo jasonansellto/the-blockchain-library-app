@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Wrench, Code2, Newspaper, ArrowRight } from 'lucide-react';
+import { Wrench, Code2, Newspaper, ArrowRight, ChevronRight } from 'lucide-react';
 
 export default function Resources({ type }) {
   const configs = {
@@ -36,7 +36,13 @@ export default function Resources({ type }) {
     <div>
       <div className="border-b border-slate-100 bg-slate-50">
         <div className="container-tbl py-12">
-          <div className="flex items-center gap-2 text-sm text-slate-400 mb-3"><span>Home</span><span>/</span><span className="text-slate-700 font-medium">{config.title}</span></div>
+          <nav className="flex items-center gap-1.5 text-sm text-slate-400 mb-3 flex-wrap">
+            <Link to="/" className="hover:text-blue-600">Home</Link>
+            <ChevronRight className="w-3.5 h-3.5" />
+            <Link to="/resources" className="hover:text-blue-600">Resources</Link>
+            <ChevronRight className="w-3.5 h-3.5" />
+            <span className="text-slate-700 font-medium">{config.title}</span>
+          </nav>
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-3">{config.title}</h1>
           <p className="text-slate-500 max-w-2xl">{config.desc}</p>
         </div>
