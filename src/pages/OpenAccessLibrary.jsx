@@ -82,7 +82,9 @@ export default function OpenAccessLibrary() {
               <Link key={r.slug} to={`/resources/open-access/${r.slug}`}
                 className="p-6 bg-white border border-slate-200 rounded-xl flex flex-col card-premium hover:border-blue-200 group">
                 <div className="flex items-start justify-between mb-3">
-                  <span className="text-3xl leading-none" aria-hidden="true">{r.emoji}</span>
+                  <span className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
+                  <img src={`https://www.google.com/s2/favicons?domain=${new URL(r.url).hostname}&sz=128`} alt={`${r.name} logo`} loading="lazy" className="w-6 h-6 object-contain" />
+                </span>
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ring-1 ring-inset uppercase tracking-wide ${badgeStyles[r.type]}`}>{r.type}</span>
                 </div>
                 <h3 className="font-bold text-slate-900 tracking-tight mb-2 text-lg">{r.name}</h3>
