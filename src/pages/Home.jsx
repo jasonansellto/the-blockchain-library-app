@@ -42,7 +42,7 @@ export default function Home() {
     try {
       const [articles, books, research, paths, categories, authors] = await Promise.all([
         base44.entities.Article.filter({ status: 'published' }, '-published_date', 20),
-        base44.entities.Book.list('-updated_date', 20),
+        base44.entities.Book.filter({ is_featured: true }, '-updated_date', 20),
         base44.entities.ResearchPaper.list('-updated_date', 20),
         base44.entities.LearningPath.list('-updated_date', 20),
         base44.entities.Category.list('-updated_date', 50),
@@ -74,7 +74,7 @@ export default function Home() {
       setData({
         featuredArticles: articlesArr.filter(a => a.is_featured).slice(0, 3),
         latestArticles: articlesArr.slice(0, 6),
-        featuredBooks: booksArr.filter(b => b.is_featured).slice(0, 4),
+        featuredBooks: booksArr.slice(0, 4),
         featuredResearch: researchArr.filter(r => r.is_featured).slice(0, 3).length ? researchArr.filter(r => r.is_featured).slice(0, 3) : researchArr.slice(0, 3),
         featuredPaths: pathsArr.filter(p => p.is_featured).slice(0, 3).length ? pathsArr.filter(p => p.is_featured).slice(0, 3) : pathsArr.slice(0, 3),
         categories: sortedCats.slice(0, 8),
