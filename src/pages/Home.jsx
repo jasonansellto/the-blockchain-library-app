@@ -6,6 +6,7 @@ import SearchBar from '@/components/SearchBar';
 import NewsletterSignup from '@/components/NewsletterSignup';
 import ArticleCard from '@/components/cards/ArticleCard';
 import BookCard from '@/components/cards/BookCard';
+import MasteringCryptoSeries from '@/components/home/MasteringCryptoSeries';
 import ResearchCard from '@/components/cards/ResearchCard';
 import LearningPathCard from '@/components/cards/LearningPathCard';
 import CategoryCard from '@/components/cards/CategoryCard';
@@ -219,6 +220,11 @@ export default function Home() {
             </StaggerGroup>
           </section>
         )}
+
+        {/* Mastering Crypto Series */}
+        <Reveal>
+          <MasteringCryptoSeries />
+        </Reveal>
 
         {/* Featured Research */}
         {data.featuredResearch.length > 0 && (
