@@ -1,9 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, ArrowRight, Wrench, Code2, Newspaper, Library, Mail, Sparkles } from 'lucide-react';
+import { ChevronRight, ArrowRight, Wrench, Code2, Newspaper, Library, Mail, Sparkles, Boxes } from 'lucide-react';
 import Seo from '@/components/Seo';
 
 const SECTIONS = [
+  { icon: Boxes, name: 'Blockchain Resource Directory', desc: 'The largest curated Web3 resource directory — 100+ sites across protocols, dev tools, standards, research labs, security, analytics, and AI, with filters, search, and a connected knowledge graph.', link: '/resources/blockchain', linkLabel: 'Browse the directory' },
   { icon: Wrench, name: 'Blockchain Tools', desc: 'Calculators, converters, and interactive utilities for blockchain practitioners and learners.', link: '/tools', linkLabel: 'Explore tools' },
   { icon: Code2, name: 'Developer Hub', desc: 'Code examples, an RPC directory, SDK references, and API documentation for building on-chain.', link: '/developers', linkLabel: 'Open developer hub' },
   { icon: Library, name: 'Open Access Libraries', desc: 'A curated directory of free knowledge archives alongside authoritative blockchain documentation.', link: '/resources/open-access', linkLabel: 'Browse libraries' },

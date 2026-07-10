@@ -1,0 +1,202 @@
+{
+  "name": "BlockchainResource",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string"
+    },
+    "logo_url": {
+      "type": "string"
+    },
+    "tagline": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Layer 1",
+        "Layer 2",
+        "Developer Documentation",
+        "Standards",
+        "Research Labs",
+        "AI + Blockchain",
+        "Security",
+        "Analytics",
+        "Explorers",
+        "Wallets",
+        "Infrastructure",
+        "DeFi Protocols"
+      ],
+      "default": "Developer Documentation"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced",
+        "developer",
+        "research"
+      ],
+      "default": "intermediate"
+    },
+    "editorial_rating": {
+      "type": "number",
+      "default": 4
+    },
+    "editorial_label": {
+      "type": "string"
+    },
+    "resource_type": {
+      "type": "string",
+      "enum": [
+        "docs",
+        "research",
+        "security",
+        "tool",
+        "standard",
+        "learning",
+        "explorer",
+        "analytics",
+        "infrastructure",
+        "wallet"
+      ],
+      "default": "docs"
+    },
+    "is_official": {
+      "type": "boolean",
+      "default": false
+    },
+    "official_org": {
+      "type": "string"
+    },
+    "api_availability": {
+      "type": "object",
+      "properties": {
+        "api": {
+          "type": "boolean"
+        },
+        "sdk": {
+          "type": "boolean"
+        },
+        "open_source": {
+          "type": "boolean"
+        }
+      }
+    },
+    "last_checked": {
+      "type": "string",
+      "format": "date"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "related_resources": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "featured_note": {
+      "type": "string"
+    },
+    "related_glossary": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "related_articles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "related_books": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "related_research": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "seo_title": {
+      "type": "string"
+    },
+    "seo_description": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "slug",
+    "url",
+    "category"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "editor"
+          }
+        }
+      ]
+    },
+    "read": null,
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "editor"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "editor"
+          }
+        }
+      ]
+    }
+  }
+}

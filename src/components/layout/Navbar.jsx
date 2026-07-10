@@ -14,6 +14,7 @@ const navItems = [
 
 const resourceItems = [
   { label: 'All Resources', path: '/resources' },
+  { label: 'Blockchain Directory', path: '/resources/blockchain' },
   { label: 'Tools', path: '/tools' },
   { label: 'Developers', path: '/developers' },
   { label: 'News & Insights', path: '/news' },
