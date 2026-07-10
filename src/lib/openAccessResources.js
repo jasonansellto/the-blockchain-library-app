@@ -363,6 +363,7 @@ export const blockchainResources = [
     name: "Vector Smart Chain",
     type: "Blockchain Foundations",
     emoji: "🟢",
+    icon: "https://media.base44.com/images/public/6a4cfcf76d7d1bf88148c979/a429415c7_vsc-icon.png",
     url: "https://vectorsmartgas.com",
     tagline: "The official hub for Vector Smart Chain — a high-performance, EVM-compatible Layer-1 network.",
     description: "Vector Smart Chain (VSC) is an EVM-compatible Layer-1 blockchain designed for high throughput, low-cost transactions, and seamless interoperability with the broader Ethereum ecosystem. The official site brings together network overviews, validator and staking resources, wallet guidance, and developer documentation for deploying smart contracts and dapps. For anyone evaluating emerging EVM chains for performance, tooling compatibility, or deployment, it is the primary reference for the VSC network and its roadmap.",
