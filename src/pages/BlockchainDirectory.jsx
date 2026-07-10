@@ -134,7 +134,7 @@ export default function BlockchainDirectory() {
           <Link to={`/resources/blockchain/${featured.slug}`} className="block mb-10 p-6 sm:p-8 bg-gradient-to-br from-blue-50 to-teal-50 border border-blue-100 rounded-2xl card-premium group">
             <div className="flex flex-col sm:flex-row items-start gap-5">
               <span className="w-14 h-14 rounded-xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
-                <img src={favicon(featured.url)} alt={`${featured.name} logo`} className="w-8 h-8 object-contain" />
+                <img src={featured.logo_url || favicon(featured.url)} alt={`${featured.name} logo`} className="w-8 h-8 object-contain" />
               </span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2">

@@ -44,7 +44,7 @@ export default function BlockchainDirectoryCard({ resource }) {
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3 min-w-0">
           <span className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
-            <img src={favicon(url)} alt={`${name} logo`} loading="lazy" className="w-6 h-6 object-contain" />
+            <img src={resource.logo_url || favicon(url)} alt={`${name} logo`} loading="lazy" className="w-6 h-6 object-contain" />
           </span>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">

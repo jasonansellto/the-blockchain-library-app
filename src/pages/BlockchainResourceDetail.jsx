@@ -130,7 +130,7 @@ export default function BlockchainResourceDetail() {
           </nav>
           <div className="flex items-start gap-4">
             <span className="w-14 h-14 rounded-xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
-              <img src={favicon(url)} alt={`${name} logo`} className="w-8 h-8 object-contain" />
+              <img src={resource.logo_url || favicon(url)} alt={`${name} logo`} className="w-8 h-8 object-contain" />
             </span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-2">
