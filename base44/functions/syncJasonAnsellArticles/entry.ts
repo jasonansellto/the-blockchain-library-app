@@ -19,6 +19,22 @@ const stripCdata = (s) => s.replace(/^<!\[CDATA\[/, '').replace(/\]\]>$/, '');
 const decodeEntities = (s) => s.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
 const textFromHtml = (html) => decodeEntities(html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
 
+// Fetch a post's og:image — the WP RSS feed carries no image tags, so the
+// featured image must be pulled from the article page itself.
+const getOgImage = async (url) => {
+  try {
+    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (!res.ok) return '';
+    const html = await res.text();
+    const headEnd = html.indexOf('</head>');
+    const head = headEnd === -1 ? html : html.slice(0, headEnd + 7);
+    const tag = head.match(/<meta[^>]+og:image[^>]*>/i);
+    if (!tag) return '';
+    const c = tag[0].match(/content=["']([^"']+)["']/i);
+    return c ? c[1] : '';
+  } catch (_e) { return ''; }
+};
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -112,6 +128,7 @@ Deno.serve(async (req) => {
 
     const articles = [];
     for (const it of newItems) {
+      if (!it.featuredImage) it.featuredImage = await getOgImage(it.link);
       let body = turndown.turndown(it.contentHtml).trim();
       if (body.length > 50000) body = body.slice(0, 50000) + '\n\n*[Article truncated]*';
       articles.push({
