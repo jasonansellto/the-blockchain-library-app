@@ -52,7 +52,8 @@
       "enum": [
         "beginner",
         "intermediate",
-        "advanced"
+        "advanced",
+        "expert"
       ],
       "default": "beginner"
     },
