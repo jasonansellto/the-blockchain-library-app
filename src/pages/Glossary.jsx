@@ -15,8 +15,10 @@ export default function Glossary() {
   const [activeLetter, setActiveLetter] = useState('');
   const [difficulty, setDifficulty] = useState('');
   const [subcategory, setSubcategory] = useState('');
+  const [visibleCount, setVisibleCount] = useState(12);
 
   useEffect(() => { fetchData(); }, []);
+  useEffect(() => { setVisibleCount(12); }, [query, activeLetter, difficulty, subcategory]);
 
   const fetchData = async () => {
     try {
@@ -111,10 +113,17 @@ export default function Glossary() {
           </div>
         ) : (
           <>
-            <p className="text-sm text-slate-500 mb-6">{filtered.length} terms</p>
+            <p className="text-sm text-slate-500 mb-6">{Math.min(visibleCount, filtered.length)} of {filtered.length} terms</p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map(t => <GlossaryCard key={t.id} term={t} />)}
+              {filtered.slice(0, visibleCount).map(t => <GlossaryCard key={t.id} term={t} />)}
             </div>
+            {filtered.length > visibleCount && (
+              <div className="flex justify-center mt-8">
+                <button onClick={() => setVisibleCount((c) => c + 12)} className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors shadow-sm">
+                  Load more <span className="text-slate-400 font-normal">({filtered.length - visibleCount} remaining)</span>
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>
