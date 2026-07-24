@@ -21,7 +21,7 @@ export default function Glossary() {
   const fetchData = async () => {
     try {
       const [termsRes, catsRes] = await Promise.all([
-        base44.entities.GlossaryTerm.list('title', 500),
+        base44.entities.GlossaryTerm.list('title', 2000),
         base44.entities.Category.list('-updated_date', 50),
       ]);
       setTerms(termsRes.results || termsRes || []);
