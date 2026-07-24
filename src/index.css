@@ -209,3 +209,10 @@
     @apply bg-background text-foreground font-body;
   }
 }
+
+/* Subtle custom scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; background-clip: content-box; }
+* { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }

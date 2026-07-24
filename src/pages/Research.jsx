@@ -12,8 +12,10 @@ export default function Research() {
   const [query, setQuery] = useState('');
   const [type, setType] = useState('');
   const [collection, setCollection] = useState('');
+  const [visibleCount, setVisibleCount] = useState(12);
 
   useEffect(() => { fetchPapers(); fetchCategories(); }, []);
+  useEffect(() => { setVisibleCount(12); }, [query, type, collection]);
 
   const fetchPapers = async () => {
     try {
@@ -115,10 +117,17 @@ export default function Research() {
           <div className="text-center py-20"><FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" /><p className="text-slate-400">No research papers found.</p></div>
         ) : (
           <>
-            <p className="text-sm text-slate-500 mb-6">{ordered.length} papers</p>
+            <p className="text-sm text-slate-500 mb-6">{Math.min(visibleCount, ordered.length)} of {ordered.length} papers</p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {ordered.map((p) => <ResearchCard key={p.id} paper={p} />)}
+              {ordered.slice(0, visibleCount).map((p) => <ResearchCard key={p.id} paper={p} />)}
             </div>
+            {ordered.length > visibleCount && (
+              <div className="flex justify-center mt-8">
+                <button onClick={() => setVisibleCount((c) => c + 12)} className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors shadow-sm">
+                  Load more <span className="text-slate-400 font-normal">({ordered.length - visibleCount} remaining)</span>
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>
