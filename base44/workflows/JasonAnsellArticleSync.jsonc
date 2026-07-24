@@ -1,0 +1,45 @@
+{
+  "name": "Jason Ansell Article Sync",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "jason_ansell_article_sync",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "sync_articles": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "syncJasonAnsellArticles",
+            "args": {}
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Sync Jason Ansell articles",
+            "description": "Pull new posts from jasonansell.ca RSS and import them"
+          }
+        }
+      }
+    ]
+  },
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 9 * * *",
+      "one_time_date": null,
+      "timezone": "America/Toronto",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "description": "Pulls new articles from jasonansell.ca every day at 9am (Toronto) via the site's RSS feed and imports them as published Article entities, deduplicating by slug."
+}
