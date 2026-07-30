@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Loader2, BookMarked, Search } from 'lucide-react';
 import BookCard from '@/components/cards/BookCard';
+import FeaturedBookBanner from '@/components/books/FeaturedBookBanner';
 import Seo from '@/components/Seo';
 import { buildCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 
@@ -29,6 +30,10 @@ export default function Books() {
     ? [...filtered].sort((a, b) => (b.rating || 0) - (a.rating || 0))
     : filtered;
 
+  const featuredBook = !query
+    ? books.find(b => b.is_featured && b.publication_year && b.publication_year >= new Date().getFullYear())
+    : null;
+
   const schemas = [
     buildCollectionPageSchema('Blockchain & Crypto Book Library', 'A curated reading list of the best books on blockchain, crypto, and Web3.', '/books', books.slice(0, 10).map(b => ({ name: b.title, url: `/books/${b.slug}` }))),
     buildBreadcrumbSchema([{ name: 'Home', url: '/' }, { name: 'Books', url: '/books' }])
@@ -45,6 +50,7 @@ export default function Books() {
         </div>
       </div>
       <div className="container-tbl py-10">
+        {featuredBook && <FeaturedBookBanner book={featuredBook} />}
         <div className="relative max-w-md mb-6">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
           <input type="text" value={query} onChange={(e) => setQuery(e.target.value)}
