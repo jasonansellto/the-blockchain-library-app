@@ -129,25 +129,49 @@ export function buildBookSchema(book, authors) {
     "@context": "https://schema.org",
     "@type": "Book",
     "name": book.title,
-    "description": book.description || book.subtitle || '',
+    "description": book.short_description || book.description || book.subtitle || '',
     "url": `${SITE_URL}/books/${book.slug}`,
     "author": (authors || []).map(a => ({ "@type": "Person", "name": a.name })),
     "publisher": { "@type": "Organization", "name": book.publisher || SITE_NAME },
     "inLanguage": book.language || 'en'
   };
   if (book.subtitle) schema.alternativeHeadline = book.subtitle;
-  if (book.isbn) schema.isbn = book.isbn;
-  if (book.publication_year) schema.datePublished = String(book.publication_year);
+  const primaryIsbn = book.isbn_ebook || book.isbn;
+  if (primaryIsbn) schema.isbn = primaryIsbn;
+  if (book.publication_date) schema.datePublished = book.publication_date;
+  else if (book.publication_year) schema.datePublished = String(book.publication_year);
   if (book.pages) schema.numberOfPages = book.pages;
   if (book.cover) schema.image = book.cover;
+  if (book.tags?.length) schema.keywords = book.tags.join(', ');
   if (book.rating > 0 && book.reviews?.length > 0) {
     schema.aggregateRating = { "@type": "AggregateRating", "ratingValue": book.rating, "bestRating": 5, "ratingCount": book.reviews.length };
   }
+  // Editions / work examples
+  const editions = [];
+  if (book.isbn_ebook) editions.push({ "@type": "Book", "isbn": book.isbn_ebook, "bookFormat": "https://schema.org/EBook" });
+  if (book.isbn_paperback) editions.push({ "@type": "Book", "isbn": book.isbn_paperback, "bookFormat": "https://schema.org/Paperback" });
+  if (book.isbn_hardcover) editions.push({ "@type": "Book", "isbn": book.isbn_hardcover, "bookFormat": "https://schema.org/HardCover" });
+  if (book.isbn_audiobook) editions.push({ "@type": "Book", "isbn": book.isbn_audiobook, "bookFormat": "https://schema.org/Audiobook" });
+  if (!editions.length && book.isbn) editions.push({ "@type": "Book", "isbn": book.isbn, "bookFormat": "https://schema.org/Paperback" });
+  if (editions.length) schema.workExample = editions;
+  // sameAs
+  const sameAs = [];
+  if (book.official_website) sameAs.push(book.official_website);
+  if (book.google_books_url) sameAs.push(book.google_books_url);
+  if (book.publisher_page) sameAs.push(book.publisher_page);
+  if (sameAs.length) schema.sameAs = sameAs;
+  // Offers
+  const a = book.access_links || {};
   const offers = [];
-  if (book.amazon_link) offers.push({ "@type": "Offer", "url": book.amazon_link, "availability": "https://schema.org/InStock", "seller": { "@type": "Organization", "name": "Amazon" } });
-  if (book.amazon_kindle_link) offers.push({ "@type": "Offer", "url": book.amazon_kindle_link, "availability": "https://schema.org/InStock", "seller": { "@type": "Organization", "name": "Amazon Kindle" } });
-  if (offers.length > 0) schema.offers = offers;
-  if (book.isbn) schema.workExample = { "@type": "Book", "isbn": book.isbn, "bookFormat": "https://schema.org/Paperback" };
+  if (a.kindle_url) offers.push({ "@type": "Offer", "url": a.kindle_url, "availability": "https://schema.org/InStock", "seller": { "@type": "Organization", "name": "Amazon Kindle" } });
+  if (a.paperback_url) offers.push({ "@type": "Offer", "url": a.paperback_url, "availability": "https://schema.org/InStock", "seller": { "@type": "Organization", "name": "Amazon" } });
+  if (a.hardcover_url) offers.push({ "@type": "Offer", "url": a.hardcover_url, "availability": "https://schema.org/InStock", "seller": { "@type": "Organization", "name": "Amazon" } });
+  if (a.audible_url) offers.push({ "@type": "Offer", "url": a.audible_url, "availability": "https://schema.org/InStock", "seller": { "@type": "Organization", "name": "Audible" } });
+  if (!offers.length) {
+    if (book.amazon_link) offers.push({ "@type": "Offer", "url": book.amazon_link, "availability": "https://schema.org/InStock", "seller": { "@type": "Organization", "name": "Amazon" } });
+    if (book.amazon_kindle_link) offers.push({ "@type": "Offer", "url": book.amazon_kindle_link, "availability": "https://schema.org/InStock", "seller": { "@type": "Organization", "name": "Amazon Kindle" } });
+  }
+  if (offers.length) schema.offers = offers;
   return schema;
 }
 

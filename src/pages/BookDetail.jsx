@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ChevronRight, Star, ExternalLink, BookOpen, FileText, Calendar, BookMarked, User } from 'lucide-react';
+import { ChevronRight, Star, BookOpen, FileText, Calendar, BookMarked, User, Sparkles, ListChecks, Tag } from 'lucide-react';
 import Seo from '@/components/Seo';
 import { buildBookSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 import CitationBox from '@/components/CitationBox';
 import GeoSummary from '@/components/GeoSummary';
+import ChapterOverview from '@/components/books/ChapterOverview';
+import BookAccessSection from '@/components/books/BookAccessSection';
+import BookEditions from '@/components/books/BookEditions';
+
+const CURRENT_YEAR = new Date().getFullYear();
 
 export default function BookDetail() {
   const { slug } = useParams();
@@ -24,9 +29,6 @@ export default function BookDetail() {
       const b = books[0];
       setBook(b);
       if (b.author_ids?.length) {
-        // author_ids may be Author entity IDs (existing books) OR plain author-name
-        // strings (imported books). Resolve IDs to full records; fall back to a
-        // synthetic {name} so imported books still display their author.
         const aus = await Promise.all(b.author_ids.map(async (id) => {
           try { return await base44.entities.Author.get(id); }
           catch { return { name: id, slug: null }; }
@@ -39,6 +41,7 @@ export default function BookDetail() {
   if (loading) return <div className="flex justify-center py-32"><div className="w-8 h-8 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin" /></div>;
   if (!book) return <div className="container-tbl py-32 text-center"><h1 className="text-2xl font-bold text-slate-900 mb-3">Book not found</h1><Link to="/books" className="text-blue-600 font-medium">Browse books →</Link></div>;
 
+  const isNewRelease = book.publication_year && book.publication_year >= CURRENT_YEAR;
   const breadcrumbItems = [
     { name: 'Home', url: '/' },
     { name: 'Books', url: '/books' },
@@ -51,8 +54,8 @@ export default function BookDetail() {
 
   return (
     <div>
-      <Seo title={book.title} description={book.description || book.subtitle} image={book.cover} type="book" schemas={schemas} />
-      <GeoSummary type="Book" title={book.title} summary={book.description || book.subtitle} keyConcepts={book.tags || []} relatedLinks={authors.map(a => ({ title: a.name, type: 'Author', url: `/authors/${a.slug}` }))} />
+      <Seo title={book.seo_title || book.title} description={book.seo_description || book.short_description || book.description} image={book.cover} type="book" schemas={schemas} />
+      <GeoSummary type="Book" title={book.title} summary={book.short_description || book.description || book.subtitle} keyConcepts={book.tags || []} relatedLinks={authors.map(a => ({ title: a.name, type: 'Author', url: `/authors/${a.slug}` }))} />
       <div className="border-b border-slate-100 bg-slate-50">
         <div className="container-tbl py-3">
           <nav className="flex items-center gap-1.5 text-sm text-slate-400 flex-wrap">
@@ -68,30 +71,24 @@ export default function BookDetail() {
           {/* Cover */}
           <div className="md:col-span-1">
             <div className="aspect-[3/4] rounded-xl overflow-hidden bg-slate-100 shadow-lg">
-              {book.cover ? <img src={book.cover} alt={book.title} className="w-full h-full object-cover" /> : (
+              {book.cover ? (
+                <img src={book.cover} alt={`Cover of ${book.title}${authors[0] ? ` by ${authors[0].name}` : ''}, featuring Bitcoin and artificial intelligence imagery.`} className="w-full h-full object-cover" />
+              ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200"><BookMarked className="w-16 h-16 text-slate-300" /></div>
               )}
             </div>
-            <div className="mt-4 space-y-2">
-              {book.amazon_link && (
-                <a href={book.amazon_link} target="_blank" rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
-                  <ExternalLink className="w-4 h-4" /> Buy Paperback
-                </a>
-              )}
-              {book.amazon_kindle_link && (
-                <a href={book.amazon_kindle_link} target="_blank" rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200">
-                  <ExternalLink className="w-4 h-4" /> Buy Kindle
-                </a>
-              )}
-            </div>
+            <BookAccessSection book={book} compact />
           </div>
 
           {/* Details */}
           <div className="md:col-span-2">
+            {isNewRelease && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-blue-600 px-3 py-1 rounded-full mb-3">
+                <Sparkles className="w-3.5 h-3.5" /> New Release
+              </span>
+            )}
             {book.series && (
-              <span className="inline-block text-xs font-semibold text-blue-700 bg-blue-50 px-3 py-1 rounded-full mb-3">{book.series}{book.reading_order ? ` · Book ${book.reading_order}` : ''}</span>
+              <span className="inline-block text-xs font-semibold text-blue-700 bg-blue-50 px-3 py-1 rounded-full mb-3 ml-1">{book.series}{book.reading_order ? ` · Book ${book.reading_order}` : ''}</span>
             )}
             <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-2">{book.title}</h1>
             {book.subtitle && <p className="text-lg text-slate-500 font-medium mb-4 italic">{book.subtitle}</p>}
@@ -103,14 +100,15 @@ export default function BookDetail() {
                 <span className="text-sm text-slate-500 font-medium">{book.rating.toFixed(1)}</span>
               </div>
             )}
-            <p className="text-slate-600 leading-relaxed mb-6">{book.description}</p>
+            {book.short_description && <p className="text-base text-slate-700 font-medium leading-relaxed mb-4">{book.short_description}</p>}
+            <p className="text-slate-600 leading-relaxed mb-6 whitespace-pre-line">{book.description}</p>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               {authors.length > 0 && <InfoItem icon={User} label="Author" value={authors.map(a => a.name).join(', ')} />}
               {book.publisher && <InfoItem icon={BookMarked} label="Publisher" value={book.publisher} />}
-              {book.publication_year && <InfoItem icon={Calendar} label="Published" value={book.publication_year} />}
+              {book.publication_date && <InfoItem icon={Calendar} label="Published" value={new Date(book.publication_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} />}
+              {book.reading_level && <InfoItem icon={BookOpen} label="Reading Level" value={cap(book.reading_level)} />}
               {book.pages && <InfoItem icon={BookOpen} label="Pages" value={book.pages} />}
-              {book.isbn && <InfoItem icon={FileText} label="ISBN" value={book.isbn} />}
               {book.language && <InfoItem icon={BookOpen} label="Language" value={book.language} />}
             </div>
 
@@ -129,6 +127,20 @@ export default function BookDetail() {
                 <div className="flex flex-wrap gap-2">
                   {book.tags.map(t => <span key={t} className="px-3 py-1 text-xs font-medium text-teal-700 bg-teal-50 rounded-full">{t}</span>)}
                 </div>
+              </div>
+            )}
+
+            {book.key_learnings?.length > 0 && (
+              <div className="mb-6 p-5 rounded-xl bg-blue-50/60 border border-blue-100">
+                <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-3 flex items-center gap-1.5"><ListChecks className="w-4 h-4" /> What readers will learn</p>
+                <ul className="space-y-2">
+                  {book.key_learnings.map((k, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                      {k}
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
 
@@ -166,7 +178,23 @@ export default function BookDetail() {
           </div>
         </div>
 
-        {/* Reviews */}
+        <BookEditions book={book} />
+        <ChapterOverview parts={book.chapter_overview} />
+
+        {book.related_glossary?.length > 0 && (
+          <div className="mt-12 max-w-3xl">
+            <h2 className="text-xl font-bold text-slate-900 mb-1 tracking-tight">Related Glossary</h2>
+            <p className="text-sm text-slate-500 mb-4">Key terms connected to this book.</p>
+            <div className="flex flex-wrap gap-2">
+              {book.related_glossary.map(s => (
+                <Link key={s} to={`/glossary/${s}`} className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-full transition-colors">
+                  <Tag className="w-3.5 h-3.5" /> {s.replace(/-/g, ' ')}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {book.reviews?.length > 0 && (
           <div className="mt-12 max-w-3xl">
             <h2 className="text-xl font-bold text-slate-900 mb-5">Reviews</h2>
@@ -188,15 +216,17 @@ export default function BookDetail() {
           type="book"
           title={book.title}
           authors={authors.map(a => a.name)}
-          date={book.publication_year ? `${book.publication_year}-01-01` : null}
+          date={book.publication_date || (book.publication_year ? `${book.publication_year}-01-01` : null)}
           url={`${window.location.origin}/books/${book.slug}`}
           publisher={book.publisher}
-          isbn={book.isbn}
+          isbn={book.isbn_ebook || book.isbn}
         />
       </div>
     </div>
   );
 }
+
+function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
 
 function InfoItem({ icon: Icon, label, value }) {
   return (

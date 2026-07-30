@@ -17,7 +17,28 @@
     "description": {
       "type": "string"
     },
+    "short_description": {
+      "type": "string"
+    },
     "isbn": {
+      "type": "string"
+    },
+    "isbn_ebook": {
+      "type": "string"
+    },
+    "isbn_paperback": {
+      "type": "string"
+    },
+    "isbn_hardcover": {
+      "type": "string"
+    },
+    "isbn_audiobook": {
+      "type": "string"
+    },
+    "kindle_asin": {
+      "type": "string"
+    },
+    "audible_asin": {
       "type": "string"
     },
     "amazon_link": {
@@ -25,6 +46,44 @@
     },
     "amazon_kindle_link": {
       "type": "string"
+    },
+    "official_website": {
+      "type": "string"
+    },
+    "publisher_page": {
+      "type": "string"
+    },
+    "google_books_url": {
+      "type": "string"
+    },
+    "audible_url": {
+      "type": "string"
+    },
+    "access_links": {
+      "type": "object",
+      "properties": {
+        "kindle_url": {
+          "type": "string"
+        },
+        "paperback_url": {
+          "type": "string"
+        },
+        "hardcover_url": {
+          "type": "string"
+        },
+        "audible_url": {
+          "type": "string"
+        },
+        "google_books_url": {
+          "type": "string"
+        },
+        "official_website": {
+          "type": "string"
+        },
+        "publisher_page": {
+          "type": "string"
+        }
+      }
     },
     "formats": {
       "type": "array",
@@ -37,6 +96,20 @@
     },
     "publication_year": {
       "type": "number"
+    },
+    "publication_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "reading_level": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced",
+        "expert"
+      ],
+      "default": "beginner"
     },
     "author_ids": {
       "type": "array",
@@ -82,6 +155,29 @@
       "type": "array",
       "items": {
         "type": "string"
+      }
+    },
+    "key_learnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "chapter_overview": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "part_title": {
+            "type": "string"
+          },
+          "chapters": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
       }
     },
     "is_featured": {
@@ -161,6 +257,9 @@
       }
     },
     "citation": {
+      "type": "string"
+    },
+    "citation_bibtex": {
       "type": "string"
     }
   },
