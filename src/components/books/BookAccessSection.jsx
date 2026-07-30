@@ -1,5 +1,5 @@
 import React from 'react';
-import { ExternalLink, BookOpen, Headphones, Globe, Building2 } from 'lucide-react';
+import { ExternalLink, BookOpen, Headphones, Globe, Building2, Star } from 'lucide-react';
 
 export default function BookAccessSection({ book, compact = false }) {
   const a = book.access_links || {};
@@ -11,6 +11,9 @@ export default function BookAccessSection({ book, compact = false }) {
   if (a.audible_url) links.push({ label: 'Listen on Audible', url: a.audible_url, icon: Headphones });
   if (a.official_website) links.push({ label: 'Visit Official Website', url: a.official_website, icon: Globe });
   if (a.publisher_page) links.push({ label: 'View at Publisher', url: a.publisher_page, icon: Building2 });
+  // External references (e.g. Goodreads) stored on source_links.
+  const goodreads = (book.source_links || []).find(s => /goodreads/i.test(s.title) || /goodreads\.com/i.test(s.url || ''));
+  if (goodreads) links.push({ label: 'View on Goodreads', url: goodreads.url, icon: Star });
   // Fallbacks for legacy books without structured access_links.
   if (!links.length) {
     if (book.amazon_link) links.push({ label: 'Buy Paperback', url: book.amazon_link, icon: BookOpen });
