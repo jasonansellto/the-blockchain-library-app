@@ -1,86 +1,82 @@
 import React from 'react';
 import LegalPageLayout from '@/components/LegalPageLayout';
+import ChatGptAppNotice from '@/components/legal/ChatGptAppNotice';
 
 export default function Disclaimer() {
   return (
     <LegalPageLayout
       title="Disclaimer"
-      description="Important disclaimers regarding the content on The Blockchain Library, including the no-financial-advice notice."
-      lastUpdated="July 8, 2026"
+      description="Important disclaimers regarding the content on The Blockchain Library Website and ChatGPT App."
+      effectiveDate="August 4, 2026"
+      lastUpdated="August 4, 2026"
     >
       <p>
-        The information provided by The Blockchain Library (&ldquo;we&rdquo;, &ldquo;us&rdquo;, &ldquo;our&rdquo;) on this website
-        is for general informational and educational purposes only. By accessing this site, you accept this Disclaimer in full.
+        The Blockchain Library provides general educational and informational content. This Disclaimer applies to the Website and The Blockchain Library app available through ChatGPT.
       </p>
 
-      <h2>1. No Financial or Investment Advice</h2>
+      <ChatGptAppNotice />
+
+      <h2>1. Independent ChatGPT App</h2>
       <p>
-        All content on this website &mdash; including articles, glossary terms, guides, learning paths, and news &mdash; is
-        provided strictly for educational purposes. Nothing constitutes financial, investment, trading, legal, accounting, or
-        tax advice.
-      </p>
-      <p>
-        Cryptocurrency, blockchain, and Web3 technologies involve significant risk. Markets are highly volatile, and you may
-        lose some or all of your investment. You should not treat any content on this site as a recommendation to buy, sell,
-        or hold any asset. Always conduct your own research and consult a licensed financial advisor before making investment
-        decisions.
+        The ChatGPT App is independently published and operated by The Blockchain Library and Jason Ansell. It is not created, operated, sponsored, certified, or endorsed by OpenAI. ChatGPT is an OpenAI service, and your use of ChatGPT is governed by your agreement with OpenAI.
       </p>
 
-      <h2>2. Accuracy of Information</h2>
+      <h2>2. No Financial, Investment, Legal, Tax, or Professional Advice</h2>
       <p>
-        We strive to keep content accurate and up to date, but we make no warranties, express or implied, about completeness,
-        accuracy, reliability, or currency. Content may become outdated as the blockchain industry evolves rapidly. Any
-        reliance you place on such information is strictly at your own risk.
+        Nothing provided by the Website, the App, ChatGPT, or a returned Library resource is financial, investment, trading, legal, tax, medical, accounting, cybersecurity, or other professional advice. Nothing is an offer, solicitation, recommendation, endorsement, guarantee, or instruction to buy, sell, hold, stake, bridge, transfer, or use any asset, token, protocol, software, or service.
       </p>
 
-      <h2>3. External Links Disclaimer</h2>
+      <h2>3. Digital-Asset Risk</h2>
       <p>
-        This website may contain links to external websites, tools, RPC endpoints, and resources that are not provided or
-        maintained by us. We do not guarantee the accuracy, relevance, timeliness, or completeness of any information on
-        external sites. The inclusion of links does not imply endorsement.
+        Blockchain, cryptocurrency, decentralized finance, smart contracts, wallets, bridges, exchanges, and related technologies may involve extreme volatility, fraud, technical failure, smart-contract vulnerabilities, loss of access, regulatory change, and irreversible transactions. You may lose some or all funds or data. Conduct independent research and consult qualified professionals.
       </p>
 
-      <h2>4. Affiliate Disclosure</h2>
+      <h2>4. ChatGPT and Automated Output</h2>
       <p>
-        Some links on this website, including those to books, courses, and tools, may be affiliate links. This means we may
-        earn a commission if you make a purchase through them, at no additional cost to you. Affiliate relationships do not
-        influence our editorial content, and recommendations are based on our independent assessment. We only feature products
-        and services we believe provide value.
+        ChatGPT may select a tool, interpret a request, summarize a source, or present an App Response in a way that is incomplete, inaccurate, outdated, or misleading. Always open and review the cited source. The Blockchain Library does not control OpenAI&rsquo;s model output, conversation retention, interface, or service availability.
+      </p>
+      <p>
+        The App operates only on explicit tool inputs sent by ChatGPT and does not access your full conversation history.
       </p>
 
-      <h2>5. Testimonials and Examples</h2>
+      <h2>5. Coming-Soon Tools</h2>
       <p>
-        Any examples, case studies, or testimonials are illustrative and do not represent typical or guaranteed results. Past
-        performance does not guarantee future results.
+        Semantic search, resource summaries, concept comparisons, citation generation, personalized recommendations, and AI-assisted learning paths are currently disabled and labelled &ldquo;Coming soon.&rdquo; They return a feature-availability notice and do not make an OpenAI API request through our MCP server while disabled. Their presence does not promise a release date or future availability.
       </p>
 
-      <h2>6. Technical Tools and Resources</h2>
+      <h2>6. Accuracy and Timeliness</h2>
       <p>
-        Developer resources, code snippets, and RPC endpoints are provided &ldquo;as is&rdquo; for educational purposes. You are
-        responsible for reviewing and testing any code or configuration before using it in production. We are not liable for
-        any issues, losses, or damage arising from the use of these resources.
+        We try to provide useful sources but do not guarantee accuracy, completeness, availability, currency, or fitness for a particular purpose. Blockchain data, links, software, documentation, RPC endpoints, fees, laws, markets, and technical requirements can change without notice.
       </p>
 
-      <h2>7. Professional Assistance Disclaimer</h2>
+      <h2>7. Code, RPC, and Developer Resources</h2>
       <p>
-        The content is not a substitute for professional advice. You should seek the advice of a qualified professional for
-        matters specific to your situation.
+        Code snippets, SDK references, configuration examples, contract addresses, and RPC directory information are educational. Review, test, audit, and verify all code and endpoints before use. Never include a private key, seed phrase, password, API key, or signing secret in code, prompts, URLs, logs, or RPC requests.
       </p>
 
-      <h2>8. Use at Your Own Risk</h2>
+      <h2>8. External Links and Third-Party Services</h2>
       <p>
-        Your use of the website and any reliance on its content is solely at your own risk. To the fullest extent permitted by
-        law, The Blockchain Library disclaims all liability for any losses or damages arising from your use of the site.
+        The Services may link to third-party websites, protocols, applications, books, providers, and developer tools. We do not control or warrant them. A link does not imply endorsement. Review the third party&rsquo;s current terms, privacy policy, security practices, and applicable fees.
       </p>
 
-      <h2>9. Changes to This Disclaimer</h2>
+      <h2>9. Affiliate Disclosure</h2>
       <p>
-        We may update this Disclaimer from time to time. The &ldquo;Last updated&rdquo; date above reflects the latest revision.
+        Some Website links may be affiliate links. We may receive compensation if you complete a qualifying action, at no additional cost to you. Affiliate relationships do not change our obligation to identify educational content honestly. ChatGPT App tool inputs are not sold or used for targeted advertising.
       </p>
 
-      <h2>10. Contact</h2>
+      <h2>10. No Custody or Transactions</h2>
       <p>
-        If you have any questions about this Disclaimer, please <a href="/contact">contact us</a>.
+        The App does not hold funds, connect to a wallet, request signing authority, initiate transfers, execute trades, make purchases, or provide custody. Never send funds or credentials to anyone claiming that the App requires them.
+      </p>
+
+      <h2>11. Use at Your Own Risk</h2>
+      <p>
+        You are responsible for evaluating information and decisions. To the maximum extent permitted by law, use of and reliance on the Services is at your own risk. See the <a href="/terms">Terms &amp; Conditions</a> for additional limitations.
+      </p>
+
+      <h2>12. Changes and Contact</h2>
+      <p>
+        We may update this Disclaimer. Questions can be submitted through the <a href="/contact">/contact page</a>.
       </p>
     </LegalPageLayout>
   );

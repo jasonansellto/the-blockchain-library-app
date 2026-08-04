@@ -1,74 +1,85 @@
 import React from 'react';
 import LegalPageLayout from '@/components/LegalPageLayout';
+import ChatGptAppNotice from '@/components/legal/ChatGptAppNotice';
 
 export default function CookiePolicy() {
   return (
     <LegalPageLayout
       title="Cookie Policy"
-      description="How The Blockchain Library uses cookies and similar technologies, and how you can manage them."
-      lastUpdated="July 8, 2026"
+      description="How The Blockchain Library uses cookies and similar technologies on the Website."
+      effectiveDate="August 4, 2026"
+      lastUpdated="August 4, 2026"
     >
       <p>
-        This Cookie Policy explains how The Blockchain Library (&ldquo;we&rdquo;, &ldquo;us&rdquo;) uses cookies and similar
-        technologies on our website. This policy should be read alongside our <a href="/privacy">Privacy Policy</a>.
+        This Cookie Policy explains how The Blockchain Library uses cookies and similar technologies on the Website. It should be read with our <a href="/privacy">Privacy Policy</a>.
       </p>
 
-      <h2>1. What Are Cookies?</h2>
+      <ChatGptAppNotice />
+
+      <h2>1. ChatGPT App</h2>
       <p>
-        Cookies are small text files placed on your device by the websites you visit. They are widely used to make websites
-        function efficiently and to provide reporting and personalization. Cookies do not harm your device and do not, by
-        themselves, identify you personally.
+        The Blockchain Library&rsquo;s ChatGPT App and MCP endpoint do not use Library cookies to identify a user, authenticate a Library account, personalize advertising, or track activity across websites. ChatGPT and OpenAI may use their own cookies and technologies when you use ChatGPT. Those technologies are controlled by OpenAI and are described in OpenAI&rsquo;s privacy and cookie notices.
+      </p>
+      <p>
+        Opening a public theblockchainlibrary.com link returned by the App takes you to the Website, where this Cookie Policy applies.
       </p>
 
-      <h2>2. Types of Cookies We Use</h2>
-      <h3>Strictly Necessary Cookies</h3>
+      <h2>2. What Cookies Are</h2>
       <p>
-        These cookies are essential for the website to function. They enable core features such as security, session
-        management, and access to authenticated areas. The Service cannot work properly without them.
-      </p>
-      <h3>Performance and Analytics Cookies</h3>
-      <p>
-        These cookies help us understand how visitors interact with the site &mdash; which pages are popular, where traffic
-        comes from, and where errors occur. This information is aggregated and used to improve the Service.
-      </p>
-      <h3>Functionality Cookies</h3>
-      <p>
-        These cookies remember your preferences and settings, such as language, reading history, and bookmarks, to provide a
-        more personalized experience.
-      </p>
-      <h3>Targeting and Advertising Cookies</h3>
-      <p>
-        Where applicable, these cookies may be used to deliver relevant content or advertising. They may be set by us or by
-        third-party advertising partners.
+        Cookies are small files stored by a website on a browser or device. Similar technologies include local storage, pixels, tags, and software development kit identifiers. They can support security, sessions, preferences, performance measurement, and advertising.
       </p>
 
-      <h2>3. Third-Party Cookies</h2>
+      <h2>3. Cookie Categories</h2>
+      <p>The Website may use:</p>
+      <h3>Strictly Necessary</h3>
       <p>
-        We may use third-party services (such as analytics or email providers) that set their own cookies. These third parties
-        have their own privacy and cookie policies governing how they use the data collected. We encourage you to review them.
+        Required for security, network delivery, authentication, session management, consent choices, and core site functions. These cannot always be disabled through our interface.
+      </p>
+      <h3>Functional or Preference</h3>
+      <p>
+        Remember optional settings such as display preferences, language, bookmarks, or account choices. Where required, these are activated only after consent.
+      </p>
+      <h3>Analytics or Performance</h3>
+      <p>
+        Help us understand aggregated Website traffic, page performance, errors, and feature use. Where required, these are activated only after consent. The ChatGPT App&rsquo;s tool inputs must not be used for cross-context behavioural profiling.
+      </p>
+      <h3>Advertising or Targeting</h3>
+      <p>
+        Used only if specifically disclosed and enabled. These must not be activated before consent where consent is required. We do not use ChatGPT App tool inputs for targeted advertising.
       </p>
 
-      <h2>4. Managing Cookies</h2>
-      <p>You have several options for managing cookies:</p>
+      <h2>4. Current Cookie Inventory</h2>
+      <p>
+        We currently use only strictly necessary technologies. If non-essential cookies are deployed in future, a live inventory will be generated from the production Website configuration, showing for every cookie or similar technology its name, provider, category, purpose, first-party or third-party status, and duration. No placeholder providers or cookies will be published.
+      </p>
+
+      <h2>5. Consent and Controls</h2>
+      <p>Where required by law:</p>
       <ul>
-        <li><strong>Browser settings:</strong> Most browsers let you accept, block, or delete cookies through their settings. See your browser&rsquo;s help documentation.</li>
-        <li><strong>Opt-out tools:</strong> Industry opt-out tools may be available for certain advertising cookies.</li>
-        <li><strong>Account preferences:</strong> Where we offer preference controls, you can adjust them in your account.</li>
+        <li>non-essential cookies remain off until the user makes a choice;</li>
+        <li>Reject non-essential must be as easy to select as Accept all;</li>
+        <li>users can choose categories separately;</li>
+        <li>consent is not inferred from silence or continued browsing;</li>
+        <li>the footer contains a persistent Cookie settings link; and</li>
+        <li>withdrawing consent is as easy as granting it.</li>
       </ul>
       <p>
-        Please note that disabling strictly necessary cookies may prevent the Service from functioning correctly, and some
-        features may become unavailable.
+        You can also use browser controls to block or delete cookies. Blocking strictly necessary technologies may prevent some Website features from working.
       </p>
 
-      <h2>5. Updates to This Policy</h2>
+      <h2>6. Third Parties</h2>
       <p>
-        We may update this Cookie Policy as our use of cookies changes or for legal reasons. The &ldquo;Last updated&rdquo; date
-        above reflects the latest revision. We encourage you to review this page periodically.
+        Third-party services may set their own technologies when enabled. Their use is governed by their privacy notices. Every active third party will be listed in the cookie inventory with a link to its policy. Advertising, embedded media, or analytics providers will not be loaded before required consent.
       </p>
 
-      <h2>6. Contact</h2>
+      <h2>7. Retention</h2>
       <p>
-        For questions about our use of cookies, please <a href="/contact">contact us</a>.
+        Cookie duration is shown in the current cookie inventory. Consent records are retained only as long as necessary to demonstrate and honour a user&rsquo;s choice. Analytics retention matches the Privacy Policy and the configured provider setting.
+      </p>
+
+      <h2>8. Changes and Contact</h2>
+      <p>
+        We may update this Policy when technologies or legal requirements change. Questions or requests can be submitted through the <a href="/contact">/contact page</a> using the subject <strong>Privacy or data request</strong>.
       </p>
     </LegalPageLayout>
   );

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import Seo from '@/components/Seo';
 
-export default function LegalPageLayout({ title, description, lastUpdated, children }) {
+export default function LegalPageLayout({ title, description, lastUpdated, effectiveDate, children }) {
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -28,21 +28,25 @@ export default function LegalPageLayout({ title, description, lastUpdated, child
             <span className="text-slate-900 font-medium">{title}</span>
           </nav>
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">{title}</h1>
-          {lastUpdated && (
-            <p className="mt-3 text-sm text-slate-500">Last updated: {lastUpdated}</p>
-          )}
+          <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-slate-500">
+            {effectiveDate && <span>Effective date: {effectiveDate}</span>}
+            {lastUpdated && <span>Last updated: {lastUpdated}</span>}
+          </div>
           <p className="mt-4 max-w-2xl text-slate-600 text-base leading-relaxed">{description}</p>
         </div>
       </div>
       <div className="container-tbl py-12 sm:py-16">
         <div className="max-w-3xl">
           <div className="prose-tbl">{children}</div>
-          <div className="mt-12 pt-8 border-t border-slate-200 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-            <Link to="/privacy" className="text-slate-500 hover:text-blue-600 transition-colors">Privacy Policy</Link>
-            <Link to="/terms" className="text-slate-500 hover:text-blue-600 transition-colors">Terms &amp; Conditions</Link>
-            <Link to="/cookies" className="text-slate-500 hover:text-blue-600 transition-colors">Cookie Policy</Link>
-            <Link to="/disclaimer" className="text-slate-500 hover:text-blue-600 transition-colors">Disclaimer</Link>
-            <Link to="/contact" className="ml-auto text-slate-500 hover:text-blue-600 transition-colors">Questions? Contact us →</Link>
+          <div className="mt-12 pt-8 border-t border-slate-200">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">ChatGPT App</p>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+              <Link to="/privacy" className="text-slate-500 hover:text-blue-600 transition-colors">Privacy Policy</Link>
+              <Link to="/terms" className="text-slate-500 hover:text-blue-600 transition-colors">Terms &amp; Conditions</Link>
+              <Link to="/disclaimer" className="text-slate-500 hover:text-blue-600 transition-colors">Disclaimer</Link>
+              <Link to="/cookies" className="text-slate-500 hover:text-blue-600 transition-colors">Cookie Policy</Link>
+              <Link to="/contact" className="ml-auto text-slate-500 hover:text-blue-600 transition-colors">Questions? Contact us →</Link>
+            </div>
           </div>
         </div>
       </div>
