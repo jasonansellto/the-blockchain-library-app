@@ -19,7 +19,7 @@ export default function Research() {
 
   const fetchPapers = async () => {
     try {
-      const res = await base44.entities.ResearchPaper.list('-updated_date', 200);
+      const res = await base44.entities.ResearchPaper.list('-updated_date', 500);
       const arr = res.results || res || [];
       setPapers(arr.filter((p) => p.status !== 'draft'));
     } catch (e) { console.error(e); } finally { setLoading(false); }
