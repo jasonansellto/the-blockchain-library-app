@@ -5,6 +5,7 @@ import { Loader2, ChevronRight, Search, Star, Server, Network as NetworkIcon, X 
 import Seo from '@/components/Seo';
 import { buildBreadcrumbSchema } from '@/lib/seoSchemas';
 import RpcEndpointCard from '@/components/developers/RpcEndpointCard';
+import FeaturedRpcBanner from '@/components/developers/FeaturedRpcBanner';
 
 export default function RpcDirectory() {
   const [endpoints, setEndpoints] = useState([]);
@@ -50,11 +51,27 @@ export default function RpcDirectory() {
   const grouped = useMemo(() => {
     const map = {};
     filtered.forEach(ep => {
-      if (!map[ep.network]) map[ep.network] = { network: ep.network, chainId: ep.chain_id, category: ep.category, endpoints: [] };
+      if (!map[ep.network]) {
+        map[ep.network] = {
+          network: ep.network, chainId: ep.chain_id, category: ep.category, endpoints: [],
+          isFeatured: false, featuredNote: '', explorerUrl: '', nativeCurrency: ''
+        };
+      }
       map[ep.network].endpoints.push(ep);
+      if (ep.is_featured) {
+        map[ep.network].isFeatured = true;
+        if (ep.featured_note) map[ep.network].featuredNote = ep.featured_note;
+        if (ep.explorer_url) map[ep.network].explorerUrl = ep.explorer_url;
+        if (ep.native_currency) map[ep.network].nativeCurrency = ep.native_currency;
+      }
     });
-    return Object.values(map).sort((a, b) => a.network.localeCompare(b.network));
+    return Object.values(map).sort((a, b) => {
+      if (a.isFeatured !== b.isFeatured) return a.isFeatured ? -1 : 1;
+      return a.network.localeCompare(b.network);
+    });
   }, [filtered]);
+
+  const featuredGroup = grouped.find(g => g.isFeatured);
 
   const hasActiveFilters = search || category || networkFilter || recommendedOnly;
   const clearFilters = () => { setSearch(''); setCategory(''); setNetworkFilter(''); setRecommendedOnly(false); };
@@ -140,6 +157,9 @@ export default function RpcDirectory() {
           </div>
         ) : (
           <div className="space-y-10">
+            {featuredGroup && (
+              <FeaturedRpcBanner group={featuredGroup} copiedId={copiedId} onCopy={handleCopy} />
+            )}
             {grouped.map(group => (
               <section key={group.network}>
                 <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">

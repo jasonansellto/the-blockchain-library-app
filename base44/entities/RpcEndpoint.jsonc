@@ -38,6 +38,19 @@
         "testnet"
       ],
       "default": "mainnet"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "featured_note": {
+      "type": "string"
+    },
+    "explorer_url": {
+      "type": "string"
+    },
+    "native_currency": {
+      "type": "string"
     }
   },
   "required": [
