@@ -4,6 +4,9 @@ const SITE_URL = typeof window !== 'undefined' ? window.location.origin : 'https
 const SITE_NAME = 'The Blockchain Library';
 const LOGO_URL = `${SITE_URL}/logo.png`;
 
+const GITHUB_URL = 'https://github.com/jasonansellto/the-blockchain-library';
+const DOCS_URL = 'https://docs.theblockchainlibrary.com';
+
 export function buildOrganizationSchema() {
   return {
     "@context": "https://schema.org",
@@ -11,8 +14,8 @@ export function buildOrganizationSchema() {
     "name": SITE_NAME,
     "url": SITE_URL,
     "logo": { "@type": "ImageObject", "url": LOGO_URL },
-    "description": "The definitive educational resource for blockchain, cryptocurrency, Web3, AI, and decentralized technology.",
-    "sameAs": []
+    "description": "The open knowledge platform for blockchain technology — structured, connected, and AI-ready.",
+    "sameAs": [GITHUB_URL, DOCS_URL]
   };
 }
 
@@ -22,7 +25,7 @@ export function buildWebSiteSchema() {
     "@type": "WebSite",
     "name": SITE_NAME,
     "url": SITE_URL,
-    "description": "The definitive educational resource for blockchain, cryptocurrency, Web3, AI, and decentralized technology.",
+    "description": "The open knowledge platform for blockchain technology — connecting topics, glossary, books, research, developer resources, and learning paths.",
     "potentialAction": {
       "@type": "SearchAction",
       "target": `${SITE_URL}/search?q={search_term_string}`,

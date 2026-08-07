@@ -1,21 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ArrowRight, BookOpen, Library, FileText, GraduationCap, BookMarked, TrendingUp, Users } from 'lucide-react';
-import SearchBar from '@/components/SearchBar';
+import { ArrowRight, BookOpen, GraduationCap, TrendingUp, Users } from 'lucide-react';
 import NewsletterSignup from '@/components/NewsletterSignup';
 import ArticleCard from '@/components/cards/ArticleCard';
-import BookCard from '@/components/cards/BookCard';
-import MasteringCryptoSeries from '@/components/home/MasteringCryptoSeries';
-import ResearchCard from '@/components/cards/ResearchCard';
 import LearningPathCard from '@/components/cards/LearningPathCard';
 import CategoryCard from '@/components/cards/CategoryCard';
 import LatestNewsWidget from '@/components/news/LatestNewsWidget';
 import Seo from '@/components/Seo';
-import NeuralGraph from '@/components/animations/NeuralGraph';
 import Reveal from '@/components/animations/Reveal';
 import StaggerGroup from '@/components/animations/StaggerGroup';
-import CountUp from '@/components/animations/CountUp';
+import { buildOrganizationSchema, buildWebSiteSchema } from '@/lib/seoSchemas';
+import PlatformHero from '@/components/home/PlatformHero';
+import ConnectedKnowledge from '@/components/home/ConnectedKnowledge';
+import PlatformNumbers from '@/components/home/PlatformNumbers';
+import KnowledgeEngineSection from '@/components/home/KnowledgeEngineSection';
+import LearnSection from '@/components/home/LearnSection';
+import GlossarySection from '@/components/home/GlossarySection';
+import DeveloperSection from '@/components/home/DeveloperSection';
+import BooksSection from '@/components/home/BooksSection';
+import ResearchSection from '@/components/home/ResearchSection';
+import AiReadySection from '@/components/home/AiReadySection';
+import OpenSourceSection from '@/components/home/OpenSourceSection';
+import PlatformStatus from '@/components/home/PlatformStatus';
 
 export default function Home() {
   const [data, setData] = useState({
@@ -32,8 +39,8 @@ export default function Home() {
     (async () => {
       try {
         const res = await base44.functions.invoke('fetchNews', { t: Date.now() });
-        const data = res.data || res;
-        if (!data.error) setNews(data.items || []);
+        const newsData = res.data || res;
+        if (!newsData.error) setNews(newsData.items || []);
       } catch (e) { console.error(e); }
       setNewsLoading(false);
     })();
@@ -61,8 +68,6 @@ export default function Home() {
       const catsArr = categories.results || categories || [];
       const authorsArr = authors.results || authors || [];
 
-      // Featured Authors: Jason Ansell always first, then fill with other book
-      // authors (display-only — no detail page when no info exists for them).
       const realAuthors = [...authorsArr].sort((a, b) => (/jason ansell/i.test(a.name) ? -1 : /jason ansell/i.test(b.name) ? 1 : 0));
       const seenAuthorNames = new Set(realAuthors.map((a) => a.name.toLowerCase()));
       const fillerAuthors = [];
@@ -81,8 +86,6 @@ export default function Home() {
         ...fillerAuthors
       ].slice(0, 6);
 
-      // Featured Research: the pinned Deterministic Execution paper is fetched
-      // explicitly (it ranks low by update date), then 2 other featured papers.
       const researchFeatured = researchArr.filter((r) => r.is_featured);
       const researchSrc = researchFeatured.length ? researchFeatured : researchArr;
       const pinnedResearch = (pinnedResearchRes.results || pinnedResearchRes || [])[0] || null;
@@ -128,77 +131,26 @@ export default function Home() {
 
   const catName = (id) => data.categories.find(c => c.id === id)?.name;
 
+  const schemas = [buildOrganizationSchema(), buildWebSiteSchema()];
+
   return (
     <div>
-      <Seo title="The Definitive Blockchain Knowledge Library" description="Learn blockchain, cryptocurrency, Web3, AI, decentralized finance, and emerging technology through thousands of expertly written educational resources." />
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-blue-50/70 via-slate-50 to-white border-b border-slate-100">
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #0f172a 1px, transparent 0)', backgroundSize: '32px 32px' }} />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[480px] bg-gradient-to-b from-blue-100/50 to-transparent blur-3xl rounded-full pointer-events-none" />
-        <NeuralGraph className="opacity-60" />
-        <div className="container-tbl relative py-20 sm:py-28 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold mb-6 animate-fade-in">
-            <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
-            The world's blockchain knowledge library
-          </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 tracking-tight mb-6 max-w-4xl mx-auto leading-[1.1] animate-slide-up">
-            The Definitive Blockchain Knowledge Library
-          </h1>
-          <p className="text-lg sm:text-xl text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed animate-slide-up" style={{ animationDelay: '0.1s' }}>
-            Learn blockchain, cryptocurrency, Web3, AI, decentralized finance, and emerging technology
-            through thousands of expertly written educational resources.
-          </p>
-          <div className="max-w-2xl mx-auto mb-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            <SearchBar size="lg" />
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-3 animate-slide-up" style={{ animationDelay: '0.3s' }}>
-            <Link to="/learn" className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
-              Start Learning <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link to="/library" className="inline-flex items-center px-6 py-3 text-sm font-semibold text-slate-700 bg-white/80 backdrop-blur-sm hover:bg-white border border-slate-200 rounded-lg transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5">
-              Browse Library
-            </Link>
-            <Link to="/glossary" className="inline-flex items-center px-6 py-3 text-sm font-semibold text-teal-700 bg-teal-50/80 backdrop-blur-sm hover:bg-teal-100 border border-teal-200 rounded-lg transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5">
-              Explore Glossary
-            </Link>
-          </div>
-        </div>
-      </section>
+      <Seo title="The Open Knowledge Platform for Blockchain Technology" description="The Blockchain Library is an open, structured, AI-ready knowledge platform connecting blockchain topics, glossary definitions, tutorials, books, research, developer resources, and learning paths." schemas={schemas} />
 
-      {/* Statistics */}
-      <section className="border-b border-slate-100 bg-white">
-        <div className="container-tbl py-12">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-            {[
-              { icon: BookOpen, label: 'Articles', value: data.counts.articles, color: 'text-blue-600' },
-              { icon: Library, label: 'Glossary Terms', value: data.counts.glossary, color: 'text-teal-600' },
-              { icon: BookMarked, label: 'Books', value: data.counts.books, color: 'text-indigo-600' },
-              { icon: FileText, label: 'Research Papers', value: data.counts.research, color: 'text-purple-600' },
-              { icon: GraduationCap, label: 'Learning Paths', value: data.counts.paths, color: 'text-amber-600' },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <stat.icon className={`w-7 h-7 mx-auto mb-2 ${stat.color}`} />
-                <div className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{typeof stat.value === 'number' ? <CountUp end={stat.value} /> : '—'}</div>
-                <div className="text-xs text-slate-400 font-medium mt-1">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <PlatformHero />
+      <ConnectedKnowledge />
+      <PlatformNumbers />
+      <KnowledgeEngineSection />
+      <LearnSection />
+      <GlossarySection />
+      <DeveloperSection />
+      <BooksSection books={data.featuredBooks} />
+      <ResearchSection papers={data.featuredResearch} />
+      <AiReadySection />
+      <OpenSourceSection />
+      <PlatformStatus />
 
       <div className="container-tbl py-16 space-y-20">
-        {/* Featured Books */}
-        {data.featuredBooks.length > 0 && (
-          <section>
-            <Reveal>
-              <SectionHeader title="Featured Books" subtitle="Curated reading from leading blockchain authors" link="/books" linkLabel="All books" icon={BookMarked} />
-            </Reveal>
-            <StaggerGroup className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {data.featuredBooks.map(b => <BookCard key={b.id} book={b} />)}
-            </StaggerGroup>
-          </section>
-        )}
-
         {/* Featured Learning Paths */}
         {data.featuredPaths.length > 0 && (
           <section>
@@ -250,23 +202,6 @@ export default function Home() {
         {/* Latest News */}
         {(newsLoading || news.length > 0) && (
           <LatestNewsWidget items={news} loading={newsLoading} />
-        )}
-
-        {/* Mastering Crypto Series */}
-        <Reveal>
-          <MasteringCryptoSeries />
-        </Reveal>
-
-        {/* Featured Research */}
-        {data.featuredResearch.length > 0 && (
-          <section>
-            <Reveal>
-              <SectionHeader title="Featured Research" subtitle="Academic papers and industry research, annotated and linked" link="/research" linkLabel="All research" icon={FileText} />
-            </Reveal>
-            <StaggerGroup className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {data.featuredResearch.map(r => <ResearchCard key={r.id} paper={r} />)}
-            </StaggerGroup>
-          </section>
         )}
 
         {/* Featured Authors */}

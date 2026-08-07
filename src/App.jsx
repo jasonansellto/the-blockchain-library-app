@@ -21,6 +21,8 @@ import ResearchDetail from '@/pages/ResearchDetail';
 import LearningPathDetail from '@/pages/LearningPathDetail';
 import SearchPage from '@/pages/SearchPage';
 import About from '@/pages/About';
+import KnowledgePlatform from '@/pages/KnowledgePlatform';
+import KnowledgeEngine from '@/pages/KnowledgeEngine';
 import Contact from '@/pages/Contact';
 import Resources from '@/pages/Resources';
 import ResourcesHub from '@/pages/ResourcesHub';
@@ -133,6 +135,8 @@ const AuthenticatedApp = () => {
         <Route path="/developers/api" element={<ApiDocs />} />
         <Route path="/news" element={<News />} />
         <Route path="/about" element={<About />} />
+        <Route path="/knowledge-platform" element={<KnowledgePlatform />} />
+        <Route path="/knowledge-engine" element={<KnowledgeEngine />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<Terms />} />

@@ -1,32 +1,72 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, ChevronDown, Shield, LogOut } from 'lucide-react';
+import { Search, Menu, X, ChevronDown, Shield, LogOut, Github } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
+import { platformLinks } from '@/lib/platformLinks';
 
-const navItems = [
-  { label: 'Home', path: '/' },
-  { label: 'Learn', path: '/learn' },
-  { label: 'Library', path: '/library' },
-  { label: 'Glossary', path: '/glossary' },
+// Top-level nav items (no dropdown)
+const simpleNav = [
   { label: 'Books', path: '/books' },
   { label: 'Research', path: '/research' },
+  { label: 'Glossary', path: '/glossary' },
+  { label: 'About', path: '/about' },
 ];
 
-const resourceItems = [
-  { label: 'All Resources', path: '/resources' },
-  { label: 'Blockchain Directory', path: '/resources/blockchain' },
-  { label: 'Tools', path: '/tools' },
-  { label: 'Developers', path: '/developers' },
-  { label: 'News & Insights', path: '/news' },
-  { label: 'Newsletter', path: '/newsletter' },
-  { label: 'AI Assistant', path: '/ai-assistant' },
-  { label: 'Open Access Libraries', path: '/resources/open-access' },
+// Dropdown definitions — mix of internal routes and external docs links
+const dropdowns = [
+  {
+    label: 'Learn',
+    items: [
+      { label: 'Getting Started', href: platformLinks.quickstart, external: true },
+      { label: 'Learning Paths', to: '/learn' },
+      { label: 'Blockchain Basics', to: '/library' },
+      { label: 'Wallet Security', to: '/tools' },
+      { label: 'DeFi', to: '/library' },
+      { label: 'Web3', to: '/library' },
+    ],
+  },
+  {
+    label: 'Explore',
+    items: [
+      { label: 'Knowledge Platform', to: '/knowledge-platform' },
+      { label: 'Knowledge Engine', to: '/knowledge-engine' },
+      { label: 'Topic Catalog', href: platformLinks.topicsCatalog, external: true },
+      { label: 'Knowledge Graph', href: platformLinks.knowledgeGraph, external: true },
+      { label: 'AI Resources', to: '/ai-assistant' },
+      { label: 'News & Insights', to: '/news' },
+    ],
+  },
+  {
+    label: 'Developers',
+    items: [
+      { label: 'Developer Overview', to: '/developers' },
+      { label: 'Code Examples', to: '/developers/snippets' },
+      { label: 'RPC Directory', to: '/developers/rpc' },
+      { label: 'SDK Reference', to: '/developers/sdks' },
+      { label: 'Architecture', href: platformLinks.architecture, external: true },
+      { label: 'API Reference', to: '/developers/api' },
+    ],
+  },
 ];
 
 const secondaryItems = [
-  { label: 'About', path: '/about' },
   { label: 'Contact', path: '/contact' },
 ];
+
+function DropdownItem({ item, onNavigate }) {
+  if (item.external) {
+    return (
+      <a href={item.href} target="_blank" rel="noopener noreferrer" className="block px-4 py-2 text-sm text-slate-600 hover:text-blue-600 hover:bg-slate-50">
+        {item.label}
+      </a>
+    );
+  }
+  return (
+    <Link to={item.to} onClick={onNavigate} className="block px-4 py-2 text-sm text-slate-600 hover:text-blue-600 hover:bg-slate-50">
+      {item.label}
+    </Link>
+  );
+}
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -46,6 +86,8 @@ export default function Navbar() {
     }
   };
 
+  const closeMobile = () => setMobileOpen(false);
+
   return (
     <>
     <header className="sticky top-0 z-50">
@@ -54,7 +96,7 @@ export default function Navbar() {
         <div className="container-tbl flex items-center justify-between h-9 text-xs">
           <span className="flex items-center gap-1.5 font-medium tracking-tight">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-            Definitive blockchain &amp; Web3 knowledge
+            The open knowledge platform for blockchain technology
           </span>
           <div className="flex items-center gap-5">
             {secondaryItems.map((item) => (
@@ -62,6 +104,9 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
+            <a href={platformLinks.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-white transition-colors">
+              <Github className="w-3 h-3" /> Open Source
+            </a>
             <span className="w-px h-3.5 bg-slate-700" />
             {isAuthenticated ? (
               <>
@@ -89,27 +134,26 @@ export default function Navbar() {
             </Link>
 
             <div className="hidden lg:flex items-center gap-1">
-              {navItems.map((item) => (
+              {dropdowns.map((dd) => (
+                <div key={dd.label} className="relative group">
+                  <button className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-slate-50 rounded-md transition-colors flex items-center gap-1">
+                    {dd.label} <ChevronDown className="w-3.5 h-3.5" />
+                  </button>
+                  <div className="absolute left-0 top-full pt-1 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all">
+                    <div className="bg-white rounded-lg shadow-lg border border-slate-200 py-1.5 min-w-[200px]">
+                      {dd.items.map((item) => (
+                        <DropdownItem key={item.label} item={item} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {simpleNav.map((item) => (
                 <Link key={item.path} to={item.path}
                   className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-slate-50 rounded-md transition-colors">
                   {item.label}
                 </Link>
               ))}
-              <div className="relative group">
-                <button className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-slate-50 rounded-md transition-colors flex items-center gap-1">
-                  Resources <ChevronDown className="w-3.5 h-3.5" />
-                </button>
-                <div className="absolute left-0 top-full pt-1 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all">
-                  <div className="bg-white rounded-lg shadow-lg border border-slate-200 py-1.5 min-w-[180px]">
-                    {resourceItems.map((item) => (
-                      <Link key={item.path} to={item.path}
-                        className="block px-4 py-2 text-sm text-slate-600 hover:text-blue-600 hover:bg-slate-50">
-                        {item.label}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </div>
               {isAdmin && (
                 <Link to="/admin/learning-paths"
                   className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-md transition-colors">
@@ -153,7 +197,7 @@ export default function Navbar() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input autoFocus type="text" value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search articles, glossary terms, books, research..."
+                  placeholder="Search topics, glossary, books, research..."
                   className="w-full pl-12 pr-4 py-3 text-base bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white" />
               </div>
             </form>
@@ -168,31 +212,47 @@ export default function Navbar() {
         <div className="lg:hidden fixed inset-0 top-16 z-40 bg-black/20" onClick={() => setMobileOpen(false)} />
         <div className="lg:hidden fixed inset-x-0 top-16 bottom-0 z-50 bg-white overflow-y-auto animate-fade-in-fast">
           <div className="container-tbl py-4 space-y-1">
-            {[...navItems, ...resourceItems, ...secondaryItems].map((item) => (
-              <Link key={item.path} to={item.path} onClick={() => setMobileOpen(false)}
+            {dropdowns.map((dd) => (
+              <div key={dd.label} className="mb-2">
+                <p className="px-3 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">{dd.label}</p>
+                {dd.items.map((item) => <DropdownItem key={item.label} item={item} onNavigate={closeMobile} />)}
+              </div>
+            ))}
+            {simpleNav.map((item) => (
+              <Link key={item.path} to={item.path} onClick={closeMobile}
+                className="block px-3 py-3 text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50 rounded-md">
+                {item.label}
+              </Link>
+            ))}
+            <a href={platformLinks.github} target="_blank" rel="noopener noreferrer" onClick={closeMobile}
+              className="flex items-center gap-1.5 px-3 py-3 text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50 rounded-md">
+              <Github className="w-4 h-4" /> Open Source
+            </a>
+            {secondaryItems.map((item) => (
+              <Link key={item.path} to={item.path} onClick={closeMobile}
                 className="block px-3 py-3 text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50 rounded-md">
                 {item.label}
               </Link>
             ))}
             {isAdmin && (
-              <Link to="/admin/learning-paths" onClick={() => setMobileOpen(false)}
+              <Link to="/admin/learning-paths" onClick={closeMobile}
                 className="flex items-center gap-1.5 px-3 py-3 text-base font-medium text-blue-600 bg-blue-50 rounded-md mt-2">
                 <Shield className="w-4 h-4" /> Admin
               </Link>
             )}
             {isAuthenticated ? (
               <>
-                <Link to="/dashboard" onClick={() => setMobileOpen(false)}
+                <Link to="/dashboard" onClick={closeMobile}
                   className="block px-3 py-3 text-base font-semibold text-blue-700 bg-blue-50 rounded-md text-center mt-3">
                   Dashboard
                 </Link>
-                <button onClick={() => { setMobileOpen(false); logout(); }}
+                <button onClick={() => { closeMobile(); logout(); }}
                   className="block w-full px-3 py-3 text-base font-semibold text-slate-600 bg-slate-100 rounded-md text-center mt-2">
                   Logout
                 </button>
               </>
             ) : (
-              <Link to="/login" onClick={() => setMobileOpen(false)}
+              <Link to="/login" onClick={closeMobile}
                 className="block px-3 py-3 text-base font-semibold text-white bg-blue-600 rounded-md text-center mt-3">
                 Login
               </Link>
