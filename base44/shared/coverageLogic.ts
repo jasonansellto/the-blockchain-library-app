@@ -182,9 +182,9 @@ export function buildResolutionIndexes(searchIndex: any[], graph: any, catalog: 
     outArr.push({ target: to, type, source, strength, direction: 'outbound' });
     outgoingEdgesByUid.set(from, outArr);
 
-    // Incoming
+    // Incoming — use sourceUid for the source node UID, source for edge origin
     const inArr = incomingEdgesByUid.get(to) || [];
-    inArr.push({ source: from, type, source: source, strength, direction: 'inbound' });
+    inArr.push({ sourceUid: from, type, source, strength, direction: 'inbound' });
     incomingEdgesByUid.set(to, inArr);
   }
 
@@ -236,8 +236,8 @@ export function buildResolutionIndexes(searchIndex: any[], graph: any, catalog: 
 
             // Add incoming edge to target from source (reverse connection)
             const inArr = incomingEdgesByUid.get(targetUid) || [];
-            if (!inArr.some((e) => e.source === sourceUid && e.type === edgeType)) {
-              inArr.push({ source: sourceUid, type: edgeType, source: 'catalog', strength: 1, direction: 'inbound' });
+            if (!inArr.some((e) => e.sourceUid === sourceUid && e.type === edgeType)) {
+              inArr.push({ sourceUid: sourceUid, type: edgeType, source: 'catalog', strength: 1, direction: 'inbound' });
               incomingEdgesByUid.set(targetUid, inArr);
             }
           }
@@ -303,15 +303,16 @@ export function resolveRelationships(uid: string, indexes: ResolutionIndexes) {
   }
 
   for (const edge of incoming) {
-    if (edge.source === uid) { selfRelationships.push(edge); continue; }
-    const key = `${edge.source}:${edge.type}`;
+    const srcUid = edge.sourceUid || edge.source;
+    if (srcUid === uid) { selfRelationships.push(edge); continue; }
+    const key = `${srcUid}:${edge.type}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    const targetObj = indexes.objectByUid.get(edge.source);
+    const targetObj = indexes.objectByUid.get(srcUid);
     allRelationships.push({
-      uid: edge.source,
+      uid: srcUid,
       type: targetObj?.type || 'unknown',
-      title: targetObj?.title || edge.source,
+      title: targetObj?.title || srcUid,
       edgeType: edge.type,
       direction: 'inbound',
       resolved: !!targetObj,

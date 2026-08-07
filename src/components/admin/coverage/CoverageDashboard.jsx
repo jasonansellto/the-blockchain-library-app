@@ -1,4 +1,5 @@
 import React from 'react';
+// CoverageDashboard: global score, dimension cards, coverage heatmap
 import { TrendingUp, TrendingDown, AlertTriangle, FileSearch, Link2, BookOpen, GraduationCap, Code, Search as SearchIcon } from 'lucide-react';
 import CoverageHeatmap from './CoverageHeatmap';
 
