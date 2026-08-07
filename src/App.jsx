@@ -55,6 +55,7 @@ import TopicHub from '@/pages/TopicHub';
 import TagBrowse from '@/pages/TagBrowse';
 import AdminRevisions from '@/pages/AdminRevisions';
 import AdminContent from '@/pages/AdminContent';
+import AdminExport from '@/pages/AdminExport';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -153,6 +154,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/seo" element={<AdminSeoDashboard />} />
             <Route path="/admin/revisions" element={<AdminRevisions />} />
             <Route path="/admin/content" element={<AdminContent />} />
+            <Route path="/admin/export" element={<AdminExport />} />
           </Route>
         </Route>
         <Route path="*" element={<PageNotFound />} />
