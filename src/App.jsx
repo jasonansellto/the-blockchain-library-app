@@ -57,6 +57,8 @@ import AdminRevisions from '@/pages/AdminRevisions';
 import AdminContent from '@/pages/AdminContent';
 import AdminExport from '@/pages/AdminExport';
 import Explore from '@/pages/Explore';
+import CoverageIntelligence from '@/pages/admin/CoverageIntelligence';
+import ContributeKnowledgeGaps from '@/pages/ContributeKnowledgeGaps';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -149,6 +151,7 @@ const AuthenticatedApp = () => {
         <Route path="/explore/:urlType/:slug" element={<Explore />} />
         <Route path="/newsletter" element={<NewsletterArchive />} />
         <Route path="/newsletter/:slug" element={<NewsletterDetail />} />
+        <Route path="/contribute/knowledge-gaps" element={<ContributeKnowledgeGaps />} />
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/history" element={<History />} />
@@ -158,6 +161,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/revisions" element={<AdminRevisions />} />
             <Route path="/admin/content" element={<AdminContent />} />
             <Route path="/admin/export" element={<AdminExport />} />
+            <Route path="/admin/coverage" element={<CoverageIntelligence />} />
           </Route>
         </Route>
         <Route path="*" element={<PageNotFound />} />

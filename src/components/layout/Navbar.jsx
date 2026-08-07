@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, ChevronDown, Shield, LogOut, Github, Database } from 'lucide-react';
+import { Search, Menu, X, ChevronDown, Shield, LogOut, Github, Database, Activity } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { platformLinks } from '@/lib/platformLinks';
 
@@ -165,6 +165,10 @@ export default function Navbar() {
                     className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-teal-600 hover:bg-teal-50 rounded-md transition-colors">
                     <Database className="w-3.5 h-3.5" /> Export
                   </Link>
+                  <Link to="/admin/coverage"
+                    className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-violet-600 hover:bg-violet-50 rounded-md transition-colors">
+                    <Activity className="w-3.5 h-3.5" /> Coverage
+                  </Link>
                 </>
               )}
             </div>
@@ -250,6 +254,10 @@ export default function Navbar() {
                 <Link to="/admin/export" onClick={closeMobile}
                   className="flex items-center gap-1.5 px-3 py-3 text-base font-medium text-teal-600 bg-teal-50 rounded-md">
                   <Database className="w-4 h-4" /> Content Export
+                </Link>
+                <Link to="/admin/coverage" onClick={closeMobile}
+                  className="flex items-center gap-1.5 px-3 py-3 text-base font-medium text-violet-600 bg-violet-50 rounded-md">
+                  <Activity className="w-4 h-4" /> Coverage Intelligence
                 </Link>
               </>
             )}

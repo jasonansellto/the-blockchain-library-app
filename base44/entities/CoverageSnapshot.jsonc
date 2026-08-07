@@ -1,0 +1,107 @@
+{
+  "name": "CoverageSnapshot",
+  "type": "object",
+  "properties": {
+    "build_id": {
+      "type": "string"
+    },
+    "release_version": {
+      "type": "string"
+    },
+    "global_score": {
+      "type": "number",
+      "default": 0
+    },
+    "total_objects": {
+      "type": "number",
+      "default": 0
+    },
+    "total_edges": {
+      "type": "number",
+      "default": 0
+    },
+    "coverage_levels": {
+      "type": "object"
+    },
+    "dimension_scores": {
+      "type": "object"
+    },
+    "high_priority_gaps": {
+      "type": "number",
+      "default": 0
+    },
+    "missing_concepts_count": {
+      "type": "number",
+      "default": 0
+    },
+    "unresolved_relationships_count": {
+      "type": "number",
+      "default": 0
+    },
+    "research_coverage": {
+      "type": "number",
+      "default": 0
+    },
+    "learning_coverage": {
+      "type": "number",
+      "default": 0
+    },
+    "developer_coverage": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "build_id",
+    "global_score"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "editor"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "editor"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "editor"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

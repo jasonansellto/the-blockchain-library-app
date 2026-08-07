@@ -292,6 +292,27 @@ export function trackExplorerEvent(eventName, properties = {}) {
   } catch (e) { /* silent */ }
 }
 
+// ── Simple coverage (client-side, for Explorer drawer) ──
+export function calculateSimpleCoverage(searchObj, relatedObjs) {
+  if (!searchObj) return null;
+  const rel = relatedObjs || [];
+  const relCount = rel.length;
+  const typeDiversity = new Set(rel.map(r => r.type)).size;
+
+  const metadata = Math.min(100,
+    (searchObj.title ? 20 : 0) + (searchObj.summary ? 25 : 0) +
+    (searchObj.categoryId ? 20 : 0) + (searchObj.tags?.length ? 15 : 0) +
+    (searchObj.aliases?.length ? 10 : 0) + (searchObj.canonicalUrl ? 10 : 0));
+  const relationships = Math.min(100, Math.min(40, relCount * 5) + Math.min(30, typeDiversity * 10) + (relCount > 0 ? 30 : 0));
+  const seo = Math.min(100, (searchObj.summary ? 30 : 0) + (searchObj.canonicalUrl ? 25 : 0) + (searchObj.title ? 20 : 0) + (searchObj.tags?.length ? 15 : 0) + (searchObj.categoryId ? 10 : 0));
+  const research = Math.min(100, (rel.some(r => r.type === 'research') ? 60 : 0) + (rel.some(r => r.type === 'book') ? 40 : 0));
+  const learning = Math.min(100, (rel.some(r => r.type === 'learning-path') ? 35 : 0) + (rel.some(r => r.type === 'article') ? 20 : 0));
+  const developer = Math.min(100, (rel.some(r => r.type === 'code-snippet') ? 35 : 0) + (rel.some(r => r.type === 'resource') ? 35 : 0) + (rel.some(r => r.type === 'rpc') ? 30 : 0));
+
+  const score = Math.round(metadata * 0.25 + relationships * 0.20 + seo * 0.15 + research * 0.15 + learning * 0.15 + developer * 0.10);
+  return { score, level: score >= 90 ? 'excellent' : score >= 75 ? 'strong' : score >= 60 ? 'needsImprovement' : score >= 40 ? 'weak' : 'sparse' };
+}
+
 // ── Documentation URL ──
 export function getDocsUrl(type, slug) {
   const catalogMap = {

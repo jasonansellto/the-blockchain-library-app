@@ -1,14 +1,19 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { X, ExternalLink, Share2, Copy, FileText, BookOpen, GraduationCap, Code, BookMarked, Map, Server } from 'lucide-react';
-import { getTypeMeta, groupRelatedByType, calculateQualityScore, getRelationshipCount, buildExploreUrl, getDocsUrl, trackExplorerEvent } from '@/lib/knowledgeEngine';
+import { getTypeMeta, groupRelatedByType, calculateQualityScore, getRelationshipCount, buildExploreUrl, getDocsUrl, trackExplorerEvent, calculateSimpleCoverage, getRelatedObjects } from '@/lib/knowledgeEngine';
+import CoverageBadge from './CoverageBadge';
 
 export default function ObjectDrawer({ object, related, categories, onClose, onExploreConnections, onObjectClick }) {
   const meta = getTypeMeta(object.type);
   const categoryName = categories.find(c => c.id === object.categoryId)?.name;
   const relCount = getRelationshipCount(related, object.id);
   const quality = calculateQualityScore(object, relCount);
+  const coverageInfo = calculateSimpleCoverage(object, getRelatedObjects(related, object.id));
   const grouped = useMemo(() => groupRelatedByType(related, object.id), [related, object.id]);
+  const hasResearch = (grouped['research'] || []).length > 0;
+  const hasTutorial = (grouped['learning-path'] || []).length > 0;
+  const hasCodeExample = (grouped['code-snippet'] || []).length > 0;
 
   const slug = object.id.split(':').slice(1).join(':');
   const exploreUrl = buildExploreUrl(object.type, slug);
@@ -87,6 +92,12 @@ export default function ObjectDrawer({ object, related, categories, onClose, onE
                 </div>
               </div>
             )}
+            {coverageInfo && (
+              <div>
+                <p className="text-xs text-slate-400 uppercase mb-0.5">Knowledge Coverage</p>
+                <CoverageBadge score={coverageInfo.score} showLabel />
+              </div>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-2 mb-6">
@@ -120,6 +131,22 @@ export default function ObjectDrawer({ object, related, categories, onClose, onE
               {renderGroup(grouped['resource'], 'Developer Resources', Code)}
               {renderGroup(grouped['code-snippet'], 'Code Examples', Code)}
               {renderGroup(grouped['rpc'], 'RPC Infrastructure', Server)}
+            </div>
+          )}
+
+          {coverageInfo && coverageInfo.score < 75 && (!hasResearch || !hasTutorial || !hasCodeExample) && (
+            <div className="mb-4 p-4 bg-gradient-to-br from-slate-900 to-slate-800 rounded-lg text-white">
+              <p className="text-xs text-teal-400 font-semibold uppercase tracking-wide mb-1">Help Us Improve This Topic</p>
+              <p className="text-sm text-slate-300 mb-3">
+                This topic currently has {[
+                  !hasResearch && 'limited research coverage',
+                  !hasTutorial && 'no tutorials',
+                  !hasCodeExample && 'no code examples',
+                ].filter(Boolean).join(', ')}.
+              </p>
+              <Link to="/contribute/knowledge-gaps" className="inline-flex items-center gap-1.5 text-sm font-semibold text-cyan-400 hover:text-cyan-300">
+                Contribute / Suggest Resource →
+              </Link>
             </div>
           )}
 

@@ -39,6 +39,7 @@ const footerSections = [
       { label: 'Vision', href: platformLinks.vision, external: true },
       { label: 'Roadmap', href: platformLinks.roadmap, external: true },
       { label: 'Contributing', href: platformLinks.contributing, external: true },
+      { label: 'Knowledge Gaps', path: '/contribute/knowledge-gaps' },
     ],
   },
 ];
