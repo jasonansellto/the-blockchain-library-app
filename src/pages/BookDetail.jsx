@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ChevronRight, Star, BookOpen, FileText, Calendar, BookMarked, User, Sparkles, ListChecks, Tag } from 'lucide-react';
+import { ChevronRight, Star, BookOpen, FileText, Calendar, BookMarked, User, Sparkles, ListChecks, Tag, ArrowRight, Share2 } from 'lucide-react';
 import Seo from '@/components/Seo';
 import { buildBookSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 import CitationBox from '@/components/CitationBox';
@@ -211,6 +211,17 @@ export default function BookDetail() {
             </div>
           </div>
         )}
+
+        <div className="mt-8 p-6 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <p className="text-xs text-teal-400 font-semibold uppercase tracking-wide mb-1">Knowledge Explorer</p>
+            <p className="text-lg font-bold">Knowledge Connections</p>
+            <p className="text-sm text-slate-400 mt-1">See how {book.title} connects to concepts, technologies, and research in the Knowledge Graph.</p>
+          </div>
+          <Link to={`/explore/book/${book.slug}`} className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-white text-slate-900 rounded-lg hover:bg-slate-100 transition-colors">
+            <Share2 className="w-4 h-4" /> Explore Connections
+          </Link>
+        </div>
 
         <CitationBox
           type="book"

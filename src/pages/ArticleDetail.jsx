@@ -418,6 +418,19 @@ export default function ArticleDetail() {
         </div>
       </div>
 
+      <div className="container-tbl pb-10">
+        <div className="max-w-4xl p-6 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <p className="text-xs text-teal-400 font-semibold uppercase tracking-wide mb-1">Knowledge Explorer</p>
+            <p className="text-lg font-bold">Explore Related Knowledge</p>
+            <p className="text-sm text-slate-400 mt-1">See how {article.title} connects to glossary terms, research, books, and developer resources in the Knowledge Graph.</p>
+          </div>
+          <Link to={`/explore/topic/${article.slug}`} className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-white text-slate-900 rounded-lg hover:bg-slate-100 transition-colors">
+            <Share2 className="w-4 h-4" /> Explore Connections
+          </Link>
+        </div>
+      </div>
+
       <NewsletterSignup variant="section" />
     </div>
   );

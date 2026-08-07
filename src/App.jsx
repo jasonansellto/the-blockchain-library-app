@@ -56,6 +56,7 @@ import TagBrowse from '@/pages/TagBrowse';
 import AdminRevisions from '@/pages/AdminRevisions';
 import AdminContent from '@/pages/AdminContent';
 import AdminExport from '@/pages/AdminExport';
+import Explore from '@/pages/Explore';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -144,6 +145,8 @@ const AuthenticatedApp = () => {
         <Route path="/cookies" element={<CookiePolicy />} />
         <Route path="/disclaimer" element={<Disclaimer />} />
         <Route path="/ai-assistant" element={<AIAssistant />} />
+        <Route path="/explore" element={<Explore />} />
+        <Route path="/explore/:urlType/:slug" element={<Explore />} />
         <Route path="/newsletter" element={<NewsletterArchive />} />
         <Route path="/newsletter/:slug" element={<NewsletterDetail />} />
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>

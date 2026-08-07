@@ -15,6 +15,7 @@ import PlatformHero from '@/components/home/PlatformHero';
 import ConnectedKnowledge from '@/components/home/ConnectedKnowledge';
 import PlatformNumbers from '@/components/home/PlatformNumbers';
 import KnowledgeEngineSection from '@/components/home/KnowledgeEngineSection';
+import ExplorerSection from '@/components/home/ExplorerSection';
 import LearnSection from '@/components/home/LearnSection';
 import GlossarySection from '@/components/home/GlossarySection';
 import DeveloperSection from '@/components/home/DeveloperSection';
@@ -224,6 +225,7 @@ export default function Home() {
 
       <PlatformNumbers />
       <KnowledgeEngineSection />
+      <ExplorerSection />
       <LearnSection />
       <GlossarySection />
       <DeveloperSection />

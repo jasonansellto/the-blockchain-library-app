@@ -16,6 +16,7 @@ const footerSections = [
   {
     title: 'Explore',
     links: [
+      { label: 'Knowledge Explorer', path: '/explore' },
       { label: 'Knowledge Engine', path: '/knowledge-engine' },
       { label: 'Knowledge Graph', href: platformLinks.knowledgeGraph, external: true },
       { label: 'Books', path: '/books' },

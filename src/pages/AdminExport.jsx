@@ -6,6 +6,7 @@ import Seo from '@/components/Seo';
 import { EXPORT_CONTENT_TYPES } from '@/lib/exportConfig';
 import ExportCard from '@/components/admin/export/ExportCard';
 import ReconciliationTable from '@/components/admin/export/ReconciliationTable';
+import ExplorerStatusPanel from '@/components/admin/ExplorerStatusPanel';
 
 function downloadJSON(filename, data) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -143,6 +144,7 @@ export default function AdminExport() {
             {[
               { id: 'export', label: 'Export', icon: Download },
               { id: 'reconciliation', label: 'Reconciliation', icon: Activity },
+              { id: 'explorer', label: 'Explorer Status', icon: GitBranch },
             ].map(t => (
               <button key={t.id} onClick={() => setTab(t.id)}
                 className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${tab === t.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
@@ -231,6 +233,8 @@ export default function AdminExport() {
             )}
           </div>
         )}
+
+        {tab === 'explorer' && <ExplorerStatusPanel />}
       </div>
     </div>
   );

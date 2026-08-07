@@ -28,6 +28,7 @@ const dropdowns = [
   {
     label: 'Explore',
     items: [
+      { label: 'Knowledge Explorer', to: '/explore' },
       { label: 'Knowledge Platform', to: '/knowledge-platform' },
       { label: 'Knowledge Engine', to: '/knowledge-engine' },
       { label: 'Topic Catalog', href: platformLinks.topicsCatalog, external: true },

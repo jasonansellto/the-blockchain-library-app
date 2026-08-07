@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ChevronRight, BookOpen, FileText, ExternalLink, Lightbulb, CheckCircle2, AlertTriangle, HelpCircle, Sparkles, Target, Cog, Globe } from 'lucide-react';
+import { ChevronRight, BookOpen, FileText, ExternalLink, Lightbulb, CheckCircle2, AlertTriangle, HelpCircle, Sparkles, Target, Cog, Globe, ArrowRight, Share2 } from 'lucide-react';
 import DifficultyBadge from '@/components/DifficultyBadge';
 import CategoryBadge from '@/components/CategoryBadge';
 import Seo from '@/components/Seo';
@@ -192,6 +192,17 @@ export default function GlossaryDetail() {
             </ul>
           </div>
         )}
+
+        <div className="mt-10 p-6 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <p className="text-xs text-teal-400 font-semibold uppercase tracking-wide mb-1">Knowledge Explorer</p>
+            <p className="text-lg font-bold">Explore This Concept in the Knowledge Graph</p>
+            <p className="text-sm text-slate-400 mt-1">See how {term.title} connects to other concepts, books, research, and developer resources.</p>
+          </div>
+          <Link to={`/explore/glossary/${term.slug}`} className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-white text-slate-900 rounded-lg hover:bg-slate-100 transition-colors">
+            <Share2 className="w-4 h-4" /> Explore Connections
+          </Link>
+        </div>
 
         <CitationBox
           type="glossary"
