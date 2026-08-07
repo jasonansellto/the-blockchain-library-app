@@ -139,16 +139,6 @@ export default function Home() {
 
       <PlatformHero />
       <ConnectedKnowledge />
-      <PlatformNumbers />
-      <KnowledgeEngineSection />
-      <LearnSection />
-      <GlossarySection />
-      <DeveloperSection />
-      <BooksSection books={data.featuredBooks} />
-      <ResearchSection papers={data.featuredResearch} />
-      <AiReadySection />
-      <OpenSourceSection />
-      <PlatformStatus />
 
       <div className="container-tbl py-16 space-y-20">
         {/* Featured Learning Paths */}
@@ -231,6 +221,17 @@ export default function Home() {
           </section>
         )}
       </div>
+
+      <PlatformNumbers />
+      <KnowledgeEngineSection />
+      <LearnSection />
+      <GlossarySection />
+      <DeveloperSection />
+      <BooksSection books={data.featuredBooks} />
+      <ResearchSection papers={data.featuredResearch} />
+      <AiReadySection />
+      <OpenSourceSection />
+      <PlatformStatus />
 
       {loading && (
         <div className="container-tbl py-20 text-center">
