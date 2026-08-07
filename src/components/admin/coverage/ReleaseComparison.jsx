@@ -38,6 +38,14 @@ export default function ReleaseComparison({ coverage }) {
       <div className="mb-4">
         <h2 className="text-lg font-bold text-slate-900">Release Impact</h2>
         <p className="text-sm text-slate-500">Coverage changes between Knowledge Engine releases.</p>
+        {coverage.baselineReset && (
+          <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-sm text-amber-700">
+              <strong>Scoring Baseline Reset.</strong> {coverage.baselineResetReason || 'Coverage Resolution Engine updated.'}
+              Future snapshots will compare against this corrected baseline.
+            </p>
+          </div>
+        )}
       </div>
 
       {previous ? (

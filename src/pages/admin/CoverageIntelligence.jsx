@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Loader2, AlertCircle, RefreshCw, Download, GitBranch, FileJson, FileSpreadsheet, ChevronRight } from 'lucide-react';
+import { Loader2, AlertCircle, RefreshCw, Download, GitBranch, FileJson, FileSpreadsheet, ChevronRight, Stethoscope, ShieldCheck, Archive } from 'lucide-react';
 import Seo from '@/components/Seo';
 import CoverageDashboard from '@/components/admin/coverage/CoverageDashboard';
 import CoverageObjectList from '@/components/admin/coverage/CoverageObjectList';
@@ -10,6 +10,7 @@ import PriorityQueue from '@/components/admin/coverage/PriorityQueue';
 import DataQuality from '@/components/admin/coverage/DataQuality';
 import ReleaseComparison from '@/components/admin/coverage/ReleaseComparison';
 import EditorialTaskPanel from '@/components/admin/coverage/EditorialTaskPanel';
+import DiagnosticsTab from '@/components/admin/coverage/DiagnosticsTab';
 
 const TABS = [
   { id: 'dashboard', label: 'Dashboard' },
@@ -20,14 +21,25 @@ const TABS = [
   { id: 'quality', label: 'Data Quality' },
   { id: 'comparison', label: 'Release Impact' },
   { id: 'tasks', label: 'Editorial Tasks' },
+  { id: 'diagnostics', label: 'Diagnostics' },
 ];
 
 export default function CoverageIntelligence() {
   const [coverage, setCoverage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [recalculating, setRecalculating] = useState(false);
+  const [validating, setValidating] = useState(false);
+  const [archiving, setArchiving] = useState(false);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+
+  // Read tab from URL query param
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab && TABS.find((t) => t.id === tab)) setActiveTab(tab);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -55,20 +67,51 @@ export default function CoverageIntelligence() {
     setRecalculating(false);
   };
 
+  const validate = async () => {
+    setValidating(true);
+    try {
+      const res = await base44.functions.invoke('calculateCoverage', { validate: true });
+      setCoverage(res.data?.coverage || res.coverage);
+      setActiveTab('diagnostics');
+    } catch (e) { setError(e.message); }
+    setValidating(false);
+  };
+
+  const archiveInvalidTasks = async () => {
+    setArchiving(true);
+    try {
+      // Mark all open tasks from pre-v2.3.1 builds as "review" (not delete)
+      const tasks = await base44.entities.EditorialTask.list('-created_date', 200);
+      const taskArr = tasks.results || tasks || [];
+      const oldTasks = taskArr.filter((t) => t.status === 'open' && t.build_id && t.build_id !== coverage?.buildId);
+      for (const t of oldTasks) {
+        await base44.entities.EditorialTask.update(t.id, { status: 'review' });
+      }
+      setShowArchiveConfirm(false);
+    } catch (e) { setError(e.message); }
+    setArchiving(false);
+  };
+
   const exportJSON = () => {
     const blob = new Blob([JSON.stringify({
       version: coverage.version,
+      coverageEngineVersion: coverage.coverageEngineVersion,
+      scoringSchemaVersion: coverage.scoringSchemaVersion,
       buildId: coverage.buildId,
       generatedAt: coverage.generatedAt,
       summary: coverage.summary,
       objects: coverage.objects.map(o => ({
-        canonicalUid: o.canonicalUid, title: o.title, type: o.type, category: o.categoryId,
+        canonicalUid: o.canonicalUid, title: o.title, type: o.type,
+        category: o.category?.name, categoryId: o.categoryId,
         coverageScore: o.coverageScore, priorityScore: o.priorityScore,
         relationshipScore: o.scores.relationships, metadataScore: o.scores.metadata,
         seoScore: o.scores.seo, referenceScore: o.scores.references,
         researchScore: o.scores.research, learningScore: o.scores.learning,
-        developerScore: o.scores.developer, missingResources: o.missingResources,
+        developerScore: o.scores.developer,
+        resolvedResources: o.resolvedResources,
+        missingResources: o.missingResources,
         recommendations: o.recommendations,
+        whyThisScore: o.whyThisScore,
       })),
     }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -80,7 +123,7 @@ export default function CoverageIntelligence() {
   const exportCSV = () => {
     const headers = ['canonicalUid', 'title', 'type', 'category', 'coverageScore', 'priorityScore', 'relationshipScore', 'metadataScore', 'seoScore', 'referenceScore', 'researchScore', 'learningScore', 'developerScore', 'missingResources', 'recommendations'];
     const rows = coverage.objects.map(o => [
-      o.canonicalUid, o.title, o.type, o.categoryId || '',
+      o.canonicalUid, o.title, o.type, o.category?.name || '',
       o.coverageScore, o.priorityScore, o.scores.relationships, o.scores.metadata,
       o.scores.seo, o.scores.references, o.scores.research, o.scores.learning, o.scores.developer,
       o.missingResources.join('; '), o.recommendations.join('; '),
@@ -90,6 +133,24 @@ export default function CoverageIntelligence() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = `coverage-intelligence-${coverage.buildId}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportDiagnostics = () => {
+    const blob = new Blob([JSON.stringify({
+      buildId: coverage.buildId,
+      coverageEngineVersion: coverage.coverageEngineVersion,
+      scoringSchemaVersion: coverage.scoringSchemaVersion,
+      resolutionVersion: coverage.resolutionVersion,
+      resolutionSummary: coverage.diagnostics,
+      mappingWarnings: coverage.diagnostics?.mappingWarnings,
+      objectDiagnostics: coverage.objects?.map(o => o.diagnostics),
+      health: coverage.health,
+      anomalies: coverage.anomalies,
+    }, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `coverage-diagnostics-${coverage.buildId}.json`; a.click();
     URL.revokeObjectURL(url);
   };
 
@@ -115,6 +176,7 @@ export default function CoverageIntelligence() {
   if (!coverage) return null;
 
   const s = coverage.summary;
+  const health = coverage.health || {};
 
   return (
     <div className="min-h-full bg-slate-50">
@@ -127,10 +189,18 @@ export default function CoverageIntelligence() {
               <div className="flex items-center gap-2 mb-1">
                 <GitBranch className="w-5 h-5 text-cyan-400" />
                 <h1 className="text-2xl font-bold tracking-tight">Coverage Intelligence</h1>
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">v{coverage.coverageEngineVersion}</span>
               </div>
               <p className="text-slate-300 text-sm">Knowledge Engine v{coverage.releaseVersion} · Build {coverage.buildId}</p>
+              {coverage.baselineReset && (
+                <p className="text-xs text-amber-400 mt-1">⚠ Scoring Baseline Reset — v2.3.1 resolution engine</p>
+              )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <button onClick={validate} disabled={validating}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-white/10 hover:bg-white/20 rounded-lg disabled:opacity-60">
+                {validating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Stethoscope className="w-4 h-4" />} Validate
+              </button>
               <button onClick={exportJSON} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-white/10 hover:bg-white/20 rounded-lg">
                 <FileJson className="w-4 h-4" /> JSON
               </button>
@@ -163,6 +233,20 @@ export default function CoverageIntelligence() {
               <p className="text-xl font-bold text-orange-400">{s.topCards.highPriorityGaps}</p>
             </div>
           </div>
+
+          {/* Health indicators */}
+          <div className="flex items-center gap-3 mt-4 flex-wrap">
+            <span className="text-xs text-slate-400">Health:</span>
+            {Object.entries(health).map(([key, status]) => (
+              <span key={key} className={`text-xs px-2 py-0.5 rounded-full capitalize ${
+                status === 'healthy' ? 'bg-emerald-500/20 text-emerald-300' :
+                status === 'warning' ? 'bg-amber-500/20 text-amber-300' :
+                'bg-red-500/20 text-red-300'
+              }`}>
+                {key.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase())}: {status}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -183,7 +267,29 @@ export default function CoverageIntelligence() {
         {activeTab === 'priority' && <PriorityQueue coverage={coverage} />}
         {activeTab === 'quality' && <DataQuality coverage={coverage} />}
         {activeTab === 'comparison' && <ReleaseComparison coverage={coverage} />}
-        {activeTab === 'tasks' && <EditorialTaskPanel coverage={coverage} />}
+        {activeTab === 'tasks' && (
+          <div>
+            <div className="mb-4 flex justify-end">
+              {showArchiveConfirm ? (
+                <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-sm text-amber-700">Archive all open tasks from pre-v2.3.1 builds?</p>
+                  <button onClick={archiveInvalidTasks} disabled={archiving}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg disabled:opacity-50">
+                    {archiving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />} Confirm Archive
+                  </button>
+                  <button onClick={() => setShowArchiveConfirm(false)} className="text-sm text-slate-500 hover:text-slate-700">Cancel</button>
+                </div>
+              ) : (
+                <button onClick={() => setShowArchiveConfirm(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg">
+                  <Archive className="w-4 h-4" /> Archive Invalid Coverage Tasks
+                </button>
+              )}
+            </div>
+            <EditorialTaskPanel coverage={coverage} />
+          </div>
+        )}
+        {activeTab === 'diagnostics' && <DiagnosticsTab coverage={coverage} onExportDiagnostics={exportDiagnostics} />}
       </div>
     </div>
   );

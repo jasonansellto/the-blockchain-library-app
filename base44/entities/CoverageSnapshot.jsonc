@@ -49,6 +49,24 @@
     "developer_coverage": {
       "type": "number",
       "default": 0
+    },
+    "coverage_engine_version": {
+      "type": "string"
+    },
+    "scoring_schema_version": {
+      "type": "number",
+      "default": 2
+    },
+    "resolution_version": {
+      "type": "number",
+      "default": 1
+    },
+    "baseline_reset": {
+      "type": "boolean",
+      "default": false
+    },
+    "baseline_reset_reason": {
+      "type": "string"
     }
   },
   "required": [

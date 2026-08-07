@@ -4,7 +4,7 @@ import { X, ExternalLink, Share2, Copy, FileText, BookOpen, GraduationCap, Code,
 import { getTypeMeta, groupRelatedByType, calculateQualityScore, getRelationshipCount, buildExploreUrl, getDocsUrl, trackExplorerEvent, calculateSimpleCoverage, getRelatedObjects } from '@/lib/knowledgeEngine';
 import CoverageBadge from './CoverageBadge';
 
-export default function ObjectDrawer({ object, related, categories, onClose, onExploreConnections, onObjectClick }) {
+export default function ObjectDrawer({ object, related, categories, onClose, onExploreConnections, onObjectClick, coverageHealth = 'healthy' }) {
   const meta = getTypeMeta(object.type);
   const categoryName = categories.find(c => c.id === object.categoryId)?.name;
   const relCount = getRelationshipCount(related, object.id);
@@ -95,7 +95,7 @@ export default function ObjectDrawer({ object, related, categories, onClose, onE
             {coverageInfo && (
               <div>
                 <p className="text-xs text-slate-400 uppercase mb-0.5">Knowledge Coverage</p>
-                <CoverageBadge score={coverageInfo.score} showLabel />
+                <CoverageBadge score={coverageInfo.score} showLabel health={coverageHealth} />
               </div>
             )}
           </div>

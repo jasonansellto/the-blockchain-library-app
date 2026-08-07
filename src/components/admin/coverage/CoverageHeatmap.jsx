@@ -22,9 +22,10 @@ export default function CoverageHeatmap({ coverage }) {
   const categoryData = useMemo(() => {
     const byCat = {};
     for (const obj of coverage.objects) {
-      const catId = obj.categoryId;
+      const catId = obj.category?.id || obj.categoryId;
       if (!catId) continue;
-      if (!byCat[catId]) byCat[catId] = { objects: [], name: catId };
+      const catName = obj.category?.name || catId;
+      if (!byCat[catId]) byCat[catId] = { objects: [], name: catName };
       byCat[catId].objects.push(obj);
     }
     return Object.values(byCat).map(c => {

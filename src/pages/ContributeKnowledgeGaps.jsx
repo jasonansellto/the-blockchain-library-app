@@ -30,6 +30,10 @@ export default function ContributeKnowledgeGaps() {
       .slice(0, 24);
   }, [coverage]);
 
+  const health = coverage?.health || {};
+  const hasFailedHealth = Object.values(health).some((s) => s === 'failed');
+  const hasWarningHealth = Object.values(health).some((s) => s === 'warning');
+
   return (
     <div className="min-h-full bg-slate-50">
       <Seo title="Contribute — Knowledge Gaps" description="Help improve The Blockchain Library by contributing to concepts that need research, tutorials, code examples, and more." />
@@ -53,6 +57,12 @@ export default function ContributeKnowledgeGaps() {
           <div className="text-center py-20">
             <AlertCircle className="w-10 h-10 text-slate-300 mx-auto mb-3" />
             <p className="text-slate-500">Unable to load coverage data right now.</p>
+          </div>
+        ) : hasFailedHealth ? (
+          <div className="text-center py-20">
+            <AlertCircle className="w-10 h-10 text-amber-400 mx-auto mb-3" />
+            <p className="text-slate-500 mb-1">Coverage data is being updated.</p>
+            <p className="text-sm text-slate-400">Contribution opportunities will be available once the latest coverage analysis is complete.</p>
           </div>
         ) : (
           <div>

@@ -30,6 +30,7 @@ export default function Explore() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [devMode, setDevMode] = useState(false);
   const [researchMode, setResearchMode] = useState(false);
+  const [coverageHealth, setCoverageHealth] = useState('healthy');
 
   const mode = searchParams.get('mode') || 'discover';
   const query = searchParams.get('q') || '';
@@ -61,6 +62,15 @@ export default function Explore() {
       try {
         const res = await base44.entities.Category.list('-updated_date', 100);
         setCategories(res.results || res || []);
+      } catch (e) {}
+      // Fetch coverage health for badge gating
+      try {
+        const covRes = await base44.functions.invoke('calculateCoverage', {});
+        const cov = covRes.data?.coverage || covRes.coverage;
+        if (cov?.health) {
+          const failedCount = Object.values(cov.health).filter((s) => s === 'failed').length;
+          setCoverageHealth(failedCount > 0 ? 'failed' : 'healthy');
+        }
       } catch (e) {}
     })();
   }, []);
@@ -224,7 +234,7 @@ export default function Explore() {
       {drawerOpen && selectedObject && (
         <ObjectDrawer object={selectedObject} related={related} categories={categories}
           onClose={handleDrawerClose} onExploreConnections={handleExploreConnections}
-          onObjectClick={handleObjectClick} />
+          onObjectClick={handleObjectClick} coverageHealth={coverageHealth} />
       )}
 
       {!loading && manifest && <ReleaseStatus manifest={manifest} />}

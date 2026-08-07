@@ -20,7 +20,17 @@ function getLevel(score) {
   return 'sparse';
 }
 
-export default function CoverageBadge({ score, showLabel = false }) {
+export default function CoverageBadge({ score, showLabel = false, health = 'healthy' }) {
+  // If health is failed, don't expose a public numerical score
+  if (health === 'failed') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500" title="Coverage data is being recalculated.">
+        <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse" />
+        Coverage data updating
+      </span>
+    );
+  }
+
   if (score == null) return null;
   const level = getLevel(score);
   return (
