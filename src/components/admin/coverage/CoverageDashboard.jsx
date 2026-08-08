@@ -1,5 +1,5 @@
 import React from 'react';
-// CoverageDashboard — global score, dimension cards, coverage heatmap
+// CoverageDashboard — global score, dimension cards, coverage heatmap (v2.3.1)
 import { TrendingUp, TrendingDown, AlertTriangle, FileSearch, Link2, BookOpen, GraduationCap, Code, Search as SearchIcon } from 'lucide-react';
 import CoverageHeatmap from './CoverageHeatmap';
 
@@ -38,6 +38,7 @@ export default function CoverageDashboard({ coverage }) {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-lg font-bold text-slate-900">Overall Knowledge Coverage</h2>
+            <p className="text-xs text-slate-400 mt-1">Coverage across eligible objects — news, newsletters, authors, and categories are excluded from concept-oriented scoring.</p>
             {s.scoreChange !== null && (
               <p className={`text-sm flex items-center gap-1 mt-1 ${s.scoreChange >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                 {s.scoreChange >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
@@ -49,6 +50,25 @@ export default function CoverageDashboard({ coverage }) {
         </div>
         <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
           <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all" style={{ width: `${s.globalScore}%` }} />
+        </div>
+      </div>
+
+      {/* Coverage Population */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="bg-white border border-slate-200 rounded-xl p-4">
+          <p className="text-xs text-slate-400 uppercase mb-1">Canonical Objects</p>
+          <p className="text-2xl font-bold text-slate-900">{(s.totalCanonicalObjects || 0).toLocaleString()}</p>
+          <p className="text-xs text-slate-500">All objects in the Knowledge Engine</p>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-4">
+          <p className="text-xs text-slate-400 uppercase mb-1">Coverage Eligible</p>
+          <p className="text-2xl font-bold text-emerald-600">{(s.totalObjects || 0).toLocaleString()}</p>
+          <p className="text-xs text-slate-500">Concept &amp; resource types scored</p>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-4">
+          <p className="text-xs text-slate-400 uppercase mb-1">Coverage Evaluated</p>
+          <p className="text-2xl font-bold text-blue-600">{(s.totalObjects || 0).toLocaleString()}</p>
+          <p className="text-xs text-slate-500">All eligible objects evaluated</p>
         </div>
       </div>
 

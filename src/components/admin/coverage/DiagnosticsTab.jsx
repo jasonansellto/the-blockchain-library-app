@@ -43,6 +43,8 @@ export default function DiagnosticsTab({ coverage, onExportDiagnostics }) {
     { key: 'referenceResolution', label: 'Reference Resolution' },
     { key: 'resourceMapping', label: 'Resource Mapping' },
     { key: 'priorityCalculation', label: 'Priority Calculation' },
+    { key: 'pageRankHealth', label: 'PageRank Health' },
+    { key: 'coveragePopulation', label: 'Coverage Population' },
   ];
 
   const prDiag = d.pageRankDiagnostics || {};
@@ -70,7 +72,7 @@ export default function DiagnosticsTab({ coverage, onExportDiagnostics }) {
       {/* Health Checks */}
       <div className="bg-white border border-slate-200 rounded-xl p-5">
         <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-4">Health Checks</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
           {healthChecks.map((h) => {
             const status = health[h.key] || 'healthy';
             const Icon = HEALTH_ICONS[status];
@@ -115,6 +117,129 @@ export default function DiagnosticsTab({ coverage, onExportDiagnostics }) {
           ))}
         </div>
       </div>
+
+      {/* Coverage Population */}
+      {coverage.coveragePopulation && (() => {
+        const pop = coverage.coveragePopulation;
+        return (
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-4">Coverage Population</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+              <div className="p-3 bg-slate-50 rounded-lg">
+                <p className="text-xs text-slate-400">Canonical Objects</p>
+                <p className="text-lg font-bold text-slate-900">{pop.totalCanonical.toLocaleString()}</p>
+              </div>
+              <div className="p-3 bg-emerald-50 rounded-lg">
+                <p className="text-xs text-slate-400">Coverage Eligible</p>
+                <p className="text-lg font-bold text-emerald-700">{pop.totalEligible.toLocaleString()}</p>
+              </div>
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <p className="text-xs text-slate-400">Coverage Evaluated</p>
+                <p className="text-lg font-bold text-blue-700">{pop.totalEvaluated.toLocaleString()}</p>
+              </div>
+              <div className="p-3 bg-amber-50 rounded-lg">
+                <p className="text-xs text-slate-400">Coverage Excluded</p>
+                <p className="text-lg font-bold text-amber-700">{pop.totalExcluded.toLocaleString()}</p>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 text-left text-xs text-slate-400 uppercase">
+                    <th className="py-2 pr-4">Type</th>
+                    <th className="py-2 px-4 text-right">Canonical</th>
+                    <th className="py-2 px-4 text-right">Eligible</th>
+                    <th className="py-2 px-4 text-right">Evaluated</th>
+                    <th className="py-2 px-4 text-right">Excluded</th>
+                    <th className="py-2 pl-4">Exclusion Reason</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pop.types.map((t) => (
+                    <tr key={t.type} className="border-b border-slate-100">
+                      <td className="py-2 pr-4 font-mono text-slate-700">{t.type}</td>
+                      <td className="py-2 px-4 text-right text-slate-900">{t.canonicalCount.toLocaleString()}</td>
+                      <td className="py-2 px-4 text-right text-emerald-600">{t.eligibleCount.toLocaleString()}</td>
+                      <td className="py-2 px-4 text-right text-blue-600">{t.evaluatedCount.toLocaleString()}</td>
+                      <td className="py-2 px-4 text-right text-amber-600">{t.excludedCount.toLocaleString()}</td>
+                      <td className="py-2 pl-4 text-xs text-slate-500">{t.exclusionReason || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Priority Diagnostics */}
+      {coverage.priorityDiagnostics && (() => {
+        const pd = coverage.priorityDiagnostics;
+        return (
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-4">Priority Score Diagnostics</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 mb-4">
+              <div className="p-3 bg-slate-50 rounded-lg"><p className="text-xs text-slate-400">Objects Evaluated</p><p className="text-lg font-bold text-slate-900">{pd.objectsEvaluated.toLocaleString()}</p></div>
+              <div className="p-3 bg-slate-50 rounded-lg"><p className="text-xs text-slate-400">Priority &gt; 0</p><p className="text-lg font-bold text-slate-900">{pd.objectsWithPriorityGreaterThanZero.toLocaleString()}</p></div>
+              <div className="p-3 bg-slate-50 rounded-lg"><p className="text-xs text-slate-400">Average</p><p className="text-lg font-bold text-slate-900">{pd.averagePriority}</p></div>
+              <div className="p-3 bg-slate-50 rounded-lg"><p className="text-xs text-slate-400">Median</p><p className="text-lg font-bold text-slate-900">{pd.medianPriority}</p></div>
+              <div className="p-3 bg-slate-50 rounded-lg"><p className="text-xs text-slate-400">Maximum</p><p className="text-lg font-bold text-slate-900">{pd.maximumPriority}</p></div>
+              <div className="p-3 bg-orange-50 rounded-lg"><p className="text-xs text-slate-400">Priority ≥ 75</p><p className="text-lg font-bold text-orange-600">{pd.priorityGte75.toLocaleString()}</p></div>
+              <div className="p-3 bg-amber-50 rounded-lg"><p className="text-xs text-slate-400">Priority ≥ 50</p><p className="text-lg font-bold text-amber-600">{pd.priorityGte50.toLocaleString()}</p></div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+              <div className="p-3 bg-blue-50 rounded-lg"><p className="text-xs text-slate-400">Priority ≥ 25</p><p className="text-lg font-bold text-blue-600">{pd.priorityGte25.toLocaleString()}</p></div>
+            </div>
+
+            {pd.top20.length > 0 && (
+              <div>
+                <h4 className="text-xs font-semibold text-slate-500 uppercase mb-2">Top 20 Priority Objects — Component Contributions</h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-200 text-left text-slate-400 uppercase">
+                        <th className="py-2 pr-3">#</th>
+                        <th className="py-2 px-3">Title</th>
+                        <th className="py-2 px-3">Type</th>
+                        <th className="py-2 px-3 text-right">Priority</th>
+                        <th className="py-2 px-3 text-right">Coverage</th>
+                        <th className="py-2 px-3 text-right" title="Coverage Gap">Cov Gap</th>
+                        <th className="py-2 px-3 text-right" title="Graph Centrality">Centrality</th>
+                        <th className="py-2 px-3 text-right" title="Required Resource Gaps">Req Gaps</th>
+                        <th className="py-2 px-3 text-right" title="Recommended Resource Gaps">Rec Gaps</th>
+                        <th className="py-2 px-3 text-right" title="Relationship Problems">Rel Prob</th>
+                        <th className="py-2 px-3 text-right" title="Missing Concept References">Miss Refs</th>
+                        <th className="py-2 px-3 text-right" title="Editorial Relevance">Editorial</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pd.top20.map((o, i) => {
+                        const c = o.components || {};
+                        return (
+                          <tr key={o.canonicalUid} className="border-b border-slate-100">
+                            <td className="py-2 pr-3 text-slate-400">{i + 1}</td>
+                            <td className="py-2 px-3 font-medium text-slate-900 max-w-[160px] truncate" title={o.title}>{o.title}</td>
+                            <td className="py-2 px-3 text-slate-500">{o.type}</td>
+                            <td className="py-2 px-3 text-right font-bold text-orange-600">{o.priorityScore}</td>
+                            <td className="py-2 px-3 text-right text-slate-600">{o.coverageScore}</td>
+                            <td className="py-2 px-3 text-right text-slate-600">{c.coverageGap ?? '—'}</td>
+                            <td className="py-2 px-3 text-right text-slate-600">{c.graphCentrality ?? '—'}</td>
+                            <td className="py-2 px-3 text-right text-slate-600">{c.requiredResourceGaps ?? '—'}</td>
+                            <td className="py-2 px-3 text-right text-slate-600">{c.recommendedResourceGaps ?? '—'}</td>
+                            <td className="py-2 px-3 text-right text-slate-600">{c.relationshipProblems ?? '—'}</td>
+                            <td className="py-2 px-3 text-right text-slate-600">{c.missingConceptReferences ?? '—'}</td>
+                            <td className="py-2 px-3 text-right text-slate-600">{c.editorialRelevance ?? '—'}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Resource Resolution Counts */}
       <div className="bg-white border border-slate-200 rounded-xl p-5">

@@ -191,7 +191,7 @@ export default function CoverageIntelligence() {
                 <h1 className="text-2xl font-bold tracking-tight">Coverage Intelligence</h1>
                 <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">v{coverage.coverageEngineVersion}</span>
               </div>
-              <p className="text-slate-300 text-sm">Knowledge Engine v{coverage.releaseVersion} · Build {coverage.buildId}</p>
+              <p className="text-slate-300 text-sm">Knowledge Release {coverage.releaseVersion || '—'} · Build {coverage.buildId}</p>
               {coverage.baselineReset && (
                 <p className="text-xs text-amber-400 mt-1">⚠ Scoring Baseline Reset — v2.3.1 resolution engine</p>
               )}
@@ -218,19 +218,19 @@ export default function CoverageIntelligence() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
             <div className="bg-white/5 rounded-lg p-3">
               <p className="text-xs text-slate-400 uppercase">Canonical Objects</p>
-              <p className="text-xl font-bold text-white">{s.totalObjects.toLocaleString()}</p>
+              <p className="text-xl font-bold text-white">{(s.totalCanonicalObjects || 0).toLocaleString()}</p>
+            </div>
+            <div className="bg-white/5 rounded-lg p-3">
+              <p className="text-xs text-slate-400 uppercase">Coverage Eligible</p>
+              <p className="text-xl font-bold text-white">{(s.totalObjects || 0).toLocaleString()}</p>
             </div>
             <div className="bg-white/5 rounded-lg p-3">
               <p className="text-xs text-slate-400 uppercase">Graph Edges</p>
               <p className="text-xl font-bold text-white">{s.totalEdges.toLocaleString()}</p>
             </div>
             <div className="bg-white/5 rounded-lg p-3">
-              <p className="text-xs text-slate-400 uppercase">Global Coverage</p>
+              <p className="text-xs text-slate-400 uppercase">Global Coverage <span className="text-slate-500 normal-case">(eligible)</span></p>
               <p className="text-xl font-bold text-cyan-400">{s.globalScore}/100</p>
-            </div>
-            <div className="bg-white/5 rounded-lg p-3">
-              <p className="text-xs text-slate-400 uppercase">High Priority Gaps</p>
-              <p className="text-xl font-bold text-orange-400">{s.topCards.highPriorityGaps}</p>
             </div>
           </div>
 

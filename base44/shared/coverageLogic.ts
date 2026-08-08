@@ -616,35 +616,56 @@ export function calculateCoverageScore(resolved: any, resources: any, dimensions
   return Math.round(baseScore * 0.65 + dimAvg * 0.35);
 }
 
-// ── Calculate priority score with safeguards ──
+// ── Calculate priority score with component breakdown ──
+// Returns { score, components } so diagnostics can show each contribution.
 export function calculatePriorityScore(resolved: any, coverageScore: number, centrality: any, resources: any, dimensions: any, pageRankValue: number) {
   const profile = REQUIREMENT_PROFILES[resolved.type] || { required: [], recommended: [] };
-  const allExpected = [...profile.required, ...profile.recommended];
-  const missingCount = allExpected.filter((r) => !resources[r]).length;
+  const missingRequired = profile.required.filter((r) => !resources[r]).length;
+  const missingRecommended = profile.recommended.filter((r) => !resources[r]).length;
 
-  // Normalized component defaults (never zero just because one component is missing)
   const degree = centrality.degree || 0;
-  const inbound = centrality.inbound || 0;
-  const outbound = centrality.outbound || 0;
-
-  // Graph importance: use PageRank if available, fall back to degree centrality
   const prValue = pageRankValue > 0 ? pageRankValue : Math.min(100, degree * 5);
   const graphImportance = Math.min(100, prValue);
 
-  const coverageGapWeight = (100 - coverageScore) * 0.25;
-  const centralityWeight = graphImportance * 0.25;
-  const resourceGapWeight = Math.min(100, missingCount * 15) * 0.20;
-  const graphImportanceWeight = (Math.min(100, (inbound + outbound) * 4)) * 0.15;
-  const editorialImportanceWeight = (
+  // Raw component values (0-100 scale before weighting)
+  const coverageGapRaw = Math.min(100, 100 - coverageScore);
+  const graphCentralityRaw = graphImportance;
+  const requiredResourceGapsRaw = Math.min(100, missingRequired * 25);
+  const recommendedResourceGapsRaw = Math.min(100, missingRecommended * 20);
+
+  const relCount = resolved.allRelationships.length;
+  const unresolvedRels = resolved.allRelationships.filter((r: any) => !r.resolved).length;
+  const relationshipProblemsRaw = Math.min(100,
+    (relCount === 0 ? 50 : 0) +
+    (dimensions.relationships < 30 ? 30 : 0) +
+    Math.min(20, unresolvedRels * 5),
+  );
+
+  const refCount = resolved.references.length;
+  const missingConceptReferencesRaw = refCount === 0 ? 60 : Math.max(0, 40 - refCount * 10);
+
+  const editorialRelevanceRaw = Math.min(100,
     (dimensions.metadata < 80 ? 25 : 0) +
     (dimensions.references < 40 ? 25 : 0) +
     (dimensions.seo < 40 ? 25 : 0) +
-    (dimensions.relationships < 30 ? 25 : 0)
-  ) * 0.15;
+    (dimensions.relationships < 30 ? 25 : 0),
+  );
 
-  const score = coverageGapWeight + centralityWeight + resourceGapWeight + graphImportanceWeight + editorialImportanceWeight;
+  // Weighted contributions (weights sum to 1.0)
+  const components = {
+    coverageGap: Math.round(coverageGapRaw * 0.25),
+    graphCentrality: Math.round(graphCentralityRaw * 0.20),
+    requiredResourceGaps: Math.round(requiredResourceGapsRaw * 0.10),
+    recommendedResourceGaps: Math.round(recommendedResourceGapsRaw * 0.08),
+    relationshipProblems: Math.round(relationshipProblemsRaw * 0.12),
+    missingConceptReferences: Math.round(missingConceptReferencesRaw * 0.10),
+    editorialRelevance: Math.round(editorialRelevanceRaw * 0.15),
+  };
 
-  return Math.round(Math.min(100, Math.max(5, score)));
+  const rawScore = Object.values(components).reduce((a, b) => a + b, 0);
+  const score = Math.round(Math.min(100, Math.max(5, rawScore)));
+
+  return { score, components };
 }
 
 // ── Graph centrality (degree) ──
@@ -860,7 +881,7 @@ export function calculateCategoryCoverage(objects: any[]) {
 }
 
 // ── Health checks ──
-function calculateHealthChecks(diagnostics: any, summary: any) {
+function calculateHealthChecks(diagnostics: any, summary: any, population: any, priority: any, prDiagnostics: any) {
   const checks: Record<string, 'healthy' | 'warning' | 'failed'> = {};
 
   // Category resolution
@@ -879,14 +900,32 @@ function calculateHealthChecks(diagnostics: any, summary: any) {
   // Resource mapping
   checks.resourceMapping = diagnostics.unknownTypeCount === 0 ? 'healthy' : diagnostics.unknownTypeCount < 100 ? 'warning' : 'failed';
 
-  // Priority calculation
-  checks.priorityCalculation = summary.topCards.highPriorityGaps > 0 ? 'healthy' : 'warning';
+  // Priority calculation — healthy if scores have meaningful distribution
+  const maxPriority = priority?.maximumPriority || 0;
+  const withPriority = priority?.objectsWithPriorityGreaterThanZero || 0;
+  if (maxPriority >= 25 && withPriority > 0) checks.priorityCalculation = 'healthy';
+  else if (maxPriority > 0) checks.priorityCalculation = 'warning';
+  else checks.priorityCalculation = 'failed';
+
+  // PageRank health
+  if (prDiagnostics?.failed) checks.pageRankHealth = 'failed';
+  else if (prDiagnostics && prDiagnostics.nodesWithNonZeroPageRank > 0) checks.pageRankHealth = 'healthy';
+  else checks.pageRankHealth = 'warning';
+
+  // Coverage population — validated if eligible count matches evaluated count
+  if (population && population.totalEligible === population.totalEvaluated && population.totalEligible > 0) {
+    checks.coveragePopulation = 'healthy';
+  } else if (population && population.totalEligible > 0) {
+    checks.coveragePopulation = 'warning';
+  } else {
+    checks.coveragePopulation = 'failed';
+  }
 
   return checks;
 }
 
 // ── Anomaly detection ──
-function detectAnomalies(diagnostics: any, summary: any, objects: any[]) {
+function detectAnomalies(diagnostics: any, summary: any, objects: any[], priority: any) {
   const anomalies: { type: string; message: string; severity: 'warning' | 'failed' }[] = [];
 
   // All objects missing one resource type
@@ -905,9 +944,14 @@ function detectAnomalies(diagnostics: any, summary: any, objects: any[]) {
     anomalies.push({ type: 'ZERO_REFERENCES', message: 'Zero references detected across all objects.', severity: 'failed' });
   }
 
-  // Zero priority gaps despite sparse objects
-  if (summary.topCards.highPriorityGaps === 0 && objects.filter((o) => o.coverageScore < 40).length > 100) {
-    anomalies.push({ type: 'ZERO_PRIORITY_GAPS', message: 'Zero priority gaps despite >100 sparse objects.', severity: 'warning' });
+  // Priority calculation failure — all or nearly all scores at the floor (5)
+  if (priority && priority.objectsEvaluated > 50) {
+    const floorCount = objects.filter((o) => o.priorityScore <= 5).length;
+    if (floorCount / priority.objectsEvaluated > 0.95) {
+      anomalies.push({ type: 'PRIORITY_CALCULATION_FAILED', message: `${floorCount} of ${priority.objectsEvaluated} objects have priority at the minimum floor — calculation may have failed.`, severity: 'failed' });
+    } else if (priority.maximumPriority < 25) {
+      anomalies.push({ type: 'PRIORITY_CALCULATION_LOW', message: `Maximum priority score is ${priority.maximumPriority} — no objects reach the High threshold (75).`, severity: 'warning' });
+    }
   }
 
   // More resource connections than graph edges
@@ -922,6 +966,94 @@ function detectAnomalies(diagnostics: any, summary: any, objects: any[]) {
   }
 
   return anomalies;
+}
+
+// ── Coverage population diagnostics (why objects are excluded) ──
+const EXCLUDED_TYPE_REASONS: Record<string, string> = {
+  news: 'News articles are time-sensitive content, not concept-oriented',
+  newsletter: 'Newsletter editions are periodical content, not concept-oriented',
+  author: 'Authors are people, not knowledge concepts',
+  category: 'Categories are organizational structure, not concepts',
+};
+
+export function buildCoveragePopulationDiagnostics(searchIndex: any[]) {
+  const byType: Record<string, { canonical: number; eligible: number; evaluated: number; excluded: number; reason: string | null }> = {};
+
+  for (const obj of searchIndex || []) {
+    const t = obj.type;
+    if (!byType[t]) byType[t] = { canonical: 0, eligible: 0, evaluated: 0, excluded: 0, reason: null };
+    byType[t].canonical++;
+    if (COVERAGE_ELIGIBLE_TYPES.has(t)) {
+      byType[t].eligible++;
+      byType[t].evaluated++;
+    } else {
+      byType[t].excluded++;
+      byType[t].reason = EXCLUDED_TYPE_REASONS[t] || 'Type not included in coverage-eligible set';
+    }
+  }
+
+  const types = Object.entries(byType).map(([type, counts]) => ({
+    type,
+    canonicalCount: counts.canonical,
+    eligibleCount: counts.eligible,
+    evaluatedCount: counts.evaluated,
+    excludedCount: counts.excluded,
+    exclusionReason: counts.reason,
+  })).sort((a, b) => b.canonicalCount - a.canonicalCount);
+
+  const totalCanonical = types.reduce((a, t) => a + t.canonicalCount, 0);
+  const totalEligible = types.reduce((a, t) => a + t.eligibleCount, 0);
+  const totalEvaluated = types.reduce((a, t) => a + t.evaluatedCount, 0);
+  const totalExcluded = types.reduce((a, t) => a + t.excludedCount, 0);
+
+  return {
+    totalCanonical,
+    totalEligible,
+    totalEvaluated,
+    totalExcluded,
+    types,
+  };
+}
+
+// ── Priority score distribution diagnostics ──
+export function buildPriorityDiagnostics(objects: any[]) {
+  const scores = objects.map((o) => o.priorityScore || 0);
+  const sorted = [...scores].sort((a, b) => a - b);
+  const n = scores.length;
+  const sum = scores.reduce((a, b) => a + b, 0);
+  const avg = n > 0 ? sum / n : 0;
+  const median = n > 0 ? sorted[Math.floor(n / 2)] : 0;
+  const max = n > 0 ? sorted[n - 1] : 0;
+  const withPriorityGtZero = scores.filter((s) => s > 0).length;
+
+  const gte75 = scores.filter((s) => s >= 75).length;
+  const gte50 = scores.filter((s) => s >= 50).length;
+  const gte25 = scores.filter((s) => s >= 25).length;
+
+  // Top 20 with component breakdown
+  const top20 = [...objects]
+    .sort((a, b) => (b.priorityScore || 0) - (a.priorityScore || 0))
+    .slice(0, 20)
+    .map((o) => ({
+      canonicalUid: o.canonicalUid,
+      title: o.title,
+      type: o.type,
+      priorityScore: o.priorityScore,
+      coverageScore: o.coverageScore,
+      components: o.diagnostics?.priorityCalculation?.components || {},
+    }));
+
+  return {
+    objectsEvaluated: n,
+    objectsWithPriorityGreaterThanZero: withPriorityGtZero,
+    averagePriority: Math.round(avg * 10) / 10,
+    medianPriority: median,
+    maximumPriority: max,
+    priorityGte75: gte75,
+    priorityGte50: gte50,
+    priorityGte25: gte25,
+    top20,
+  };
 }
 
 // ── Build the full coverage report ──
@@ -973,7 +1105,7 @@ export function buildCoverageReport(
       const coverageScore = calculateCoverageScore(resolved, resources, dimensions);
       const c = centrality[searchObj.id] || { degree: 0, inbound: 0, outbound: 0 };
       const prValue = pageRank[searchObj.id] || 0;
-      const priorityScore = calculatePriorityScore(resolved, coverageScore, c, resources, dimensions, prValue);
+      const { score: priorityScore, components: priorityComponents } = calculatePriorityScore(resolved, coverageScore, c, resources, dimensions, prValue);
       const profile = REQUIREMENT_PROFILES[searchObj.type] || { required: [], recommended: [] };
       const missingResources = [
         ...profile.required.filter((r) => !resources[r]),
@@ -1095,6 +1227,7 @@ export function buildCoverageReport(
             centrality: Math.round(prValue),
             resourceGap: Math.min(100, missingResources.length * 15),
             final: priorityScore,
+            components: priorityComponents,
           },
         },
       };
@@ -1182,8 +1315,10 @@ export function buildCoverageReport(
     }, {}),
   };
 
-  const healthChecks = calculateHealthChecks(diagnostics, summary);
-  const anomalies = detectAnomalies(diagnostics, summary, objects);
+  const coveragePopulation = buildCoveragePopulationDiagnostics(searchIndex);
+  const priorityDiagnostics = buildPriorityDiagnostics(objects);
+  const healthChecks = calculateHealthChecks(diagnostics, summary, coveragePopulation, priorityDiagnostics, prDiagnostics);
+  const anomalies = detectAnomalies(diagnostics, summary, objects, priorityDiagnostics);
 
   // Baseline reset detection
   const baselineReset = !previousSnapshot || previousSnapshot.scoring_schema_version !== SCORING_SCHEMA_VERSION;
@@ -1197,7 +1332,7 @@ export function buildCoverageReport(
     scoringSchemaVersion: SCORING_SCHEMA_VERSION,
     resolutionVersion: RESOLUTION_VERSION,
     buildId: manifest?.buildId,
-    releaseVersion: manifest?.releaseVersion,
+    releaseVersion: manifest?.knowledgeReleaseVersion || manifest?.releaseVersion,
     generatedAt: new Date().toISOString(),
     baselineReset,
     baselineResetReason,
@@ -1208,6 +1343,8 @@ export function buildCoverageReport(
     reconciliation: reconciliation || {},
     duplicateMerges: duplicateMerges || {},
     diagnostics,
+    coveragePopulation,
+    priorityDiagnostics,
     health: healthChecks,
     anomalies,
   };

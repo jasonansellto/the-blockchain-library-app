@@ -47,12 +47,37 @@ export default function PriorityQueue({ coverage }) {
     setCreating(null);
   };
 
+  const pd = coverage.priorityDiagnostics || {};
+
   return (
     <div>
       <div className="mb-4">
         <h2 className="text-lg font-bold text-slate-900">Knowledge Improvement Queue</h2>
         <p className="text-sm text-slate-500">Ranked by improvement priority — important concepts with weak coverage and high graph centrality.</p>
       </div>
+
+      {/* Priority Score Diagnostics */}
+      {pd.objectsEvaluated > 0 && (
+        <div className="mb-6 bg-white border border-slate-200 rounded-xl p-5">
+          <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-3">Priority Score Distribution</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+            <div className="p-3 bg-slate-50 rounded-lg"><p className="text-xs text-slate-400">Evaluated</p><p className="text-lg font-bold text-slate-900">{pd.objectsEvaluated.toLocaleString()}</p></div>
+            <div className="p-3 bg-slate-50 rounded-lg"><p className="text-xs text-slate-400">Priority &gt; 0</p><p className="text-lg font-bold text-slate-900">{pd.objectsWithPriorityGreaterThanZero.toLocaleString()}</p></div>
+            <div className="p-3 bg-slate-50 rounded-lg"><p className="text-xs text-slate-400">Average</p><p className="text-lg font-bold text-slate-900">{pd.averagePriority}</p></div>
+            <div className="p-3 bg-slate-50 rounded-lg"><p className="text-xs text-slate-400">Median</p><p className="text-lg font-bold text-slate-900">{pd.medianPriority}</p></div>
+            <div className="p-3 bg-slate-50 rounded-lg"><p className="text-xs text-slate-400">Maximum</p><p className="text-lg font-bold text-slate-900">{pd.maximumPriority}</p></div>
+            <div className="p-3 bg-orange-50 rounded-lg"><p className="text-xs text-slate-400">≥ 75</p><p className="text-lg font-bold text-orange-600">{pd.priorityGte75.toLocaleString()}</p></div>
+            <div className="p-3 bg-amber-50 rounded-lg"><p className="text-xs text-slate-400">≥ 50</p><p className="text-lg font-bold text-amber-600">{pd.priorityGte50.toLocaleString()}</p></div>
+            <div className="p-3 bg-blue-50 rounded-lg"><p className="text-xs text-slate-400">≥ 25</p><p className="text-lg font-bold text-blue-600">{pd.priorityGte25.toLocaleString()}</p></div>
+          </div>
+          {pd.maximumPriority < 75 && (
+            <p className="text-xs text-amber-600 mt-3">
+              No objects currently reach the High Priority threshold (75). Maximum priority score: {pd.maximumPriority}. See Diagnostics tab for component breakdowns.
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="space-y-2">
         {queue.map((obj, i) => {
           const priority = getPriorityLabel(obj.priorityScore);

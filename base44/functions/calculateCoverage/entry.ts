@@ -110,29 +110,41 @@ export default async function (req) {
       });
     }
 
-    // Store snapshot with versioning
-    try {
-      await base44.asServiceRole.entities.CoverageSnapshot.create({
-        build_id: manifest.buildId,
-        release_version: manifest.releaseVersion,
-        global_score: coverage.summary.globalScore,
-        total_objects: coverage.summary.totalObjects,
-        total_edges: coverage.summary.totalEdges,
-        coverage_levels: coverage.summary.coverageLevels,
-        dimension_scores: coverage.summary.dimensionScores,
-        high_priority_gaps: coverage.summary.topCards.highPriorityGaps,
-        missing_concepts_count: coverage.summary.topCards.missingConcepts,
-        unresolved_relationships_count: coverage.summary.topCards.unresolvedRelationships,
-        research_coverage: coverage.summary.dimensionScores.research,
-        learning_coverage: coverage.summary.dimensionScores.learning,
-        developer_coverage: coverage.summary.dimensionScores.developer,
-        coverage_engine_version: COVERAGE_ENGINE_VERSION,
-        scoring_schema_version: SCORING_SCHEMA_VERSION,
-        resolution_version: 1,
-        baseline_reset: coverage.baselineReset,
-        baseline_reset_reason: coverage.baselineResetReason,
-      });
-    } catch (e) {}
+    // Gate baseline snapshot storage on health checks — do not store a final
+    // corrected baseline until Coverage Population, Priority Calculation,
+    // Category Resolution, Relationship Resolution, and Resource Mapping are healthy.
+    const health = coverage.health || {};
+    const baselineReady =
+      health.coveragePopulation === 'healthy' &&
+      health.priorityCalculation === 'healthy' &&
+      health.categoryResolution === 'healthy' &&
+      health.relationshipResolution === 'healthy' &&
+      health.resourceMapping === 'healthy';
+
+    if (baselineReady) {
+      try {
+        await base44.asServiceRole.entities.CoverageSnapshot.create({
+          build_id: manifest.buildId,
+          release_version: manifest.knowledgeReleaseVersion || manifest.releaseVersion,
+          global_score: coverage.summary.globalScore,
+          total_objects: coverage.summary.totalObjects,
+          total_edges: coverage.summary.totalEdges,
+          coverage_levels: coverage.summary.coverageLevels,
+          dimension_scores: coverage.summary.dimensionScores,
+          high_priority_gaps: coverage.summary.topCards.highPriorityGaps,
+          missing_concepts_count: coverage.summary.topCards.missingConcepts,
+          unresolved_relationships_count: coverage.summary.topCards.unresolvedRelationships,
+          research_coverage: coverage.summary.dimensionScores.research,
+          learning_coverage: coverage.summary.dimensionScores.learning,
+          developer_coverage: coverage.summary.dimensionScores.developer,
+          coverage_engine_version: COVERAGE_ENGINE_VERSION,
+          scoring_schema_version: SCORING_SCHEMA_VERSION,
+          resolution_version: 1,
+          baseline_reset: coverage.baselineReset,
+          baseline_reset_reason: coverage.baselineResetReason || 'v2.3.1 Scoring Schema 2 Baseline — all health checks passed',
+        });
+      } catch (e) {}
+    }
 
     return Response.json({ coverage, cached: false, lastCalculated: now });
   } catch (error) {

@@ -49,7 +49,9 @@ export default function ExplorerStatusPanel() {
 
       {display ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          <StatusCard label="Release" value={display.releaseVersion || '—'} />
+          <StatusCard label="Platform Version" value={display.platformVersion || '—'} />
+          <StatusCard label="Knowledge Release" value={display.knowledgeReleaseVersion || display.releaseVersion || '—'} />
+          <StatusCard label="Compiler Version" value={display.compilerVersion || '—'} />
           <StatusCard label="Build ID" value={display.buildId || '—'} mono />
           <StatusCard label="Canonical Objects" value={display.totals?.canonicalObjects?.toLocaleString() || '—'} />
           <StatusCard label="Graph Edges" value={display.totals?.edges?.toLocaleString() || '—'} />
