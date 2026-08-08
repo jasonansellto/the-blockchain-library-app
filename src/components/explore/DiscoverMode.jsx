@@ -5,7 +5,7 @@ import ResourceTypeGrid from './ResourceTypeGrid';
 import FeaturedKnowledge from './FeaturedKnowledge';
 
 export default function DiscoverMode({ manifest, searchIndex, related, categories, onObjectClick, onTypeFilter, onCategoryFilter, devMode, researchMode }) {
-  const typeCounts = useMemo(() => getTypeCounts(manifest), [manifest]);
+  const typeCounts = useMemo(() => getTypeCounts(searchIndex), [searchIndex]);
   const categoryCounts = useMemo(() => getCategoryCounts(searchIndex), [searchIndex]);
 
   return (

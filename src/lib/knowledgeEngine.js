@@ -263,9 +263,24 @@ export function getFeaturedKnowledge(searchIndex, related, count = 6) {
   return featured;
 }
 
+// Canonical type → display type alias (Explorer UI uses display names)
+const TYPE_ALIASES = {
+  topic: 'article',
+  'code-example': 'code-snippet',
+  infrastructure: 'rpc',
+};
+
 // ── Counts ──
-export function getTypeCounts(manifest) {
-  return manifest?.sourceCounts || {};
+// Compute display-type counts from the search index so numbers stay in sync
+// with the actual canonical objects. (manifest.sourceCounts is not reliable.)
+export function getTypeCounts(searchIndex) {
+  const counts = {};
+  if (!Array.isArray(searchIndex)) return counts;
+  for (const obj of searchIndex) {
+    const displayType = TYPE_ALIASES[obj.type] || obj.type;
+    counts[displayType] = (counts[displayType] || 0) + 1;
+  }
+  return counts;
 }
 
 export function getCategoryCounts(searchIndex) {
