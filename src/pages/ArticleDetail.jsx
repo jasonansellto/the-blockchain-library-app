@@ -181,7 +181,7 @@ export default function ArticleDetail() {
 
   return (
     <div>
-      <Seo title={article.title} description={article.summary} image={article.featured_image} type="article" schemas={schemas} />
+      <Seo title={article.seo_title || article.title} description={article.seo_description || article.summary} image={article.featured_image} type="article" schemas={schemas} />
       <ReadingProgress />
       <GeoSummary type="Article" title={article.title} summary={article.summary} keyConcepts={article.tags || []} relatedLinks={[...related.map(r => ({ title: r.title, type: 'Article', url: `/article/${r.slug}` })), ...relatedGlossary.map(r => ({ title: r.title, type: 'Glossary Term', url: `/glossary/${r.slug}` })), ...relatedBooks.map(r => ({ title: r.title, type: 'Book', url: `/books/${r.slug}` })), ...relatedPaths.map(r => ({ title: r.title, type: 'Learning Path', url: `/learn/${r.slug}` }))]} />
       {/* Breadcrumbs */}
