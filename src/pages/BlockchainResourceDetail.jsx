@@ -115,7 +115,7 @@ export default function BlockchainResourceDetail() {
 
   return (
     <div>
-      <Seo title={name} description={tagline} type="article" schemas={schemas} />
+      <Seo title={resource.seo_title || name} description={resource.seo_description || tagline} type="article" schemas={schemas} />
 
       <div className="border-b border-slate-100 bg-slate-50">
         <div className="container-tbl py-12">
