@@ -16,6 +16,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 
 const STOP = new Set('a an and are as at be by for from how in is it its of on or that the to what when why with your you vs via into than more most new guide explained explaining'.split(' '));
 
+const GENERIC_TERMS = new Set('account accounts collection interface network transaction transactions platform application system community value asset assets market markets address balance block chain record server client protocol standard layer'.split(' '));
+
 const words = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').split(/\s+/).filter((w) => w.length > 2 && !STOP.has(w));
 const empty = (v) => v == null || v === '' || (Array.isArray(v) && v.length === 0);
 const plain = (s) => String(s || '').replace(/!\[[^\]]*\]\([^)]*\)/g, ' ').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[#*_>`|]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -82,6 +84,7 @@ Deno.serve(async (req) => {
       if (!toks.length || toks.length > 4) continue;
       const multi = toks.length > 1;
       if (!multi && !acronym && t.length < 6) continue; // skip short generic single words
+      if (!multi && GENERIC_TERMS.has(toks[0])) continue; // everyday words that happen to be glossary entries
       termByPhrase.set(toks.join(' '), { id: g.id, multi, acronym, raw: t });
     }
     const tokenize = (s) => String(s || '').replace(/[^A-Za-z0-9\s-]/g, ' ').split(/\s+/).filter(Boolean);
