@@ -3,17 +3,15 @@ import { Link } from 'react-router-dom';
 import { Clock, BookOpen, Lock } from 'lucide-react';
 import DifficultyBadge from '@/components/DifficultyBadge';
 import CategoryBadge from '@/components/CategoryBadge';
+import SafeImage from '@/components/SafeImage';
 
 export default function ArticleCard({ article, categoryName, featured = false }) {
   return (
     <Link to={`/article/${article.slug}`} className="group block">
       <article className={`bg-white rounded-xl border border-slate-200 overflow-hidden card-premium hover:border-blue-200 ${featured ? 'flex flex-col' : ''}`}>
-        {article.featured_image && (
-          <div className={`overflow-hidden bg-slate-100 ${featured ? 'h-56' : 'h-44'}`}>
-            <img src={article.featured_image} alt={article.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-          </div>
-        )}
+        <SafeImage src={article.featured_image} alt={article.title}
+          frameClassName={`overflow-hidden bg-slate-100 ${featured ? 'h-56' : 'h-44'}`}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         <div className="p-5">
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             {categoryName && <CategoryBadge name={categoryName} />}
