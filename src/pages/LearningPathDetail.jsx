@@ -112,7 +112,7 @@ export default function LearningPathDetail() {
 
   return (
     <div>
-      <Seo title={path.title} description={path.description} image={path.cover_image} type="article" schemas={schemas} />
+      <Seo title={path.seo_title || path.title} description={path.seo_description || path.description} image={path.cover_image} type="article" schemas={schemas} />
       <GeoSummary type="Learning Path" title={path.title} summary={path.description} keyConcepts={[path.difficulty, pathEstimatedTime(path)].filter(Boolean)} relatedLinks={[]} />
       {/* Hero with cover image */}
       <div className="relative border-b border-slate-100 overflow-hidden">
