@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
       totalWithoutFaqs = batch.length;
     } else {
       const res = await base44.asServiceRole.entities.Article.filter(
-        { status: 'published' }, '-published_date', 200, 0
+        { status: 'published' }, '-published_date', 5000, 0
       );
       const allArticles = res.results || res || [];
       const noFaqArticles = allArticles.filter(a => !a.faq || a.faq.length === 0);
