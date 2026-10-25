@@ -22,21 +22,28 @@ const RELATIONSHIP_FIELDS = [
 ];
 
 // Paginated fetch of every record for an entity type (service-role scope).
+//
+// Pages are ordered by the unique record id. Ordering by updated_date is not
+// safe for skip-based paging: bulk imports share timestamps, so page
+// boundaries shift between requests and records get exported twice or not at
+// all. Results are also de-duplicated by id as a guard.
 export async function fetchAll(base44, entityName) {
-  const all = [];
+  const byId = new Map();
+  const noId = [];
   let skip = 0;
   const limit = 500;
-  let safety = 0;
-  while (safety < 20) {
-    const res = await base44.asServiceRole.entities[entityName].filter({}, '-updated_date', limit, skip);
+  for (let page = 0; page < 200; page++) {
+    const res = await base44.asServiceRole.entities[entityName].filter({}, 'id', limit, skip);
     const batch = res.results || res || [];
     if (!Array.isArray(batch)) break;
-    all.push(...batch);
+    for (const r of batch) {
+      if (r && r.id) byId.set(r.id, r);
+      else noId.push(r);
+    }
     if (batch.length < limit) break;
     skip += limit;
-    safety++;
   }
-  return all;
+  return [...byId.values(), ...noId];
 }
 
 export async function fetchAllTypes(base44) {
