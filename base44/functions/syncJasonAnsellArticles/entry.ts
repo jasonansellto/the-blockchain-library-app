@@ -1,39 +1,74 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
-import TurndownService from 'npm:turndown@7.2.0';
 
-const FEED = 'https://jasonansell.ca/feed/';
+// Syncs articles from jasonansell.ca into The Blockchain Library.
+//
+// jasonansell.ca moved from WordPress to Base44, so the old RSS feed and the
+// /wp-content/uploads/ images no longer exist. This reads the site's public
+// Article data instead and, on every run:
+//   1. imports published articles that are not here yet (matched by slug);
+//   2. repairs featured images that still point at the dead WordPress files —
+//      using the article's new cover image when jasonansell.ca has one, or
+//      clearing the dead link so pages render without a broken image.
+// Images set by hand to any other URL are never touched.
+//
+// Body (optional): { dryRun?: boolean, maxImports?: number, maxRepairs?: number }
+
+const JA_APP_ID = '6aa184855ed6b34685f2f7e8';
+const JA_API = `https://jasonansell.ca/api/apps/${JA_APP_ID}/entities/Article`;
 const AUTHOR_ID = '6a4d2b0cf56d2579d02a65b0';
 
-// WordPress top-level category (from URL path) -> site Category entity id
+// jasonansell.ca category name -> site Category entity id
 const CATEGORY_MAP = {
-  blockchain: '6a4cfe7ce8ddbcb85df987d0',
-  technology: '6a4cfe7ce8ddbcb85df987d4',
-  web3: '6a4cfe7ce8ddbcb85df987d2',
-  crypto: '6a4cfe7ce8ddbcb85df987d1',
-  money: '6a4cfe7ce8ddbcb85df987d5',
-  'affiliate-marketing': '6a4cfe7ce8ddbcb85df987d8',
-  ai: '6a4cfe7ce8ddbcb85df987d3',
+  'Blockchain': '6a4cfe7ce8ddbcb85df987d0',
+  'Crypto': '6a4cfe7ce8ddbcb85df987d1',
+  'Web3': '6a4cfe7ce8ddbcb85df987d2',
+  'Artificial Intelligence': '6a4cfe7ce8ddbcb85df987d3',
+  'Technology': '6a4cfe7ce8ddbcb85df987d4',
+  'Money': '6a4cfe7ce8ddbcb85df987d5',
+  'Affiliate Marketing': '6a4cfe7ce8ddbcb85df987d8',
 };
 
-const stripCdata = (s) => s.replace(/^<!\[CDATA\[/, '').replace(/\]\]>$/, '');
-const decodeEntities = (s) => s.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-const textFromHtml = (html) => decodeEntities(html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
+const META_FIELDS = 'slug,status,title,excerpt,category,tags,published_date,cover_image,canonical_url,legacy_url,legacy_wordpress_id';
 
-// Fetch a post's og:image — the WP RSS feed carries no image tags, so the
-// featured image must be pulled from the article page itself.
-const getOgImage = async (url) => {
-  try {
-    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-    if (!res.ok) return '';
-    const html = await res.text();
-    const headEnd = html.indexOf('</head>');
-    const head = headEnd === -1 ? html : html.slice(0, headEnd + 7);
-    const tag = head.match(/<meta[^>]+og:image[^>]*>/i);
-    if (!tag) return '';
-    const c = tag[0].match(/content=["']([^"']+)["']/i);
-    return c ? c[1] : '';
-  } catch (_e) { return ''; }
+const isDeadLegacyImage = (url) =>
+  typeof url === 'string' && /(^|\/\/)(i\d\.wp\.com\/)?(www\.)?jasonansell\.ca\/wp-content\//i.test(url.replace(/^https?:\/\//, '//'));
+
+const isUsableImage = (url) => {
+  if (!url || typeof url !== 'string' || isDeadLegacyImage(url)) return false;
+  try { return new URL(url).protocol === 'https:'; } catch (_e) { return false; }
 };
+
+async function jaFetch(params) {
+  const res = await fetch(`${JA_API}?${new URLSearchParams(params)}`, { headers: { 'X-App-Id': JA_APP_ID } });
+  if (!res.ok) throw new Error(`jasonansell.ca returned ${res.status}`);
+  const data = await res.json();
+  return Array.isArray(data) ? data : (data.results || []);
+}
+
+async function fetchAllJa() {
+  const all = [];
+  for (let skip = 0; skip < 20000; skip += 500) {
+    const page = await jaFetch({ limit: '500', skip: String(skip), sort: 'id', fields: META_FIELDS });
+    all.push(...page);
+    if (page.length < 500) break;
+  }
+  return all;
+}
+
+async function fetchAllLocal(base44) {
+  const byId = new Map();
+  for (let skip = 0; skip < 50000; skip += 500) {
+    const res = await base44.asServiceRole.entities.Article.filter({}, 'id', 500, skip);
+    const batch = res.results || res || [];
+    for (const a of batch) byId.set(a.id, a);
+    if (batch.length < 500) break;
+  }
+  return [...byId.values()];
+}
+
+async function inBatches(items, size, fn) {
+  for (let i = 0; i < items.length; i += size) await Promise.all(items.slice(i, i + size).map(fn));
+}
 
 Deno.serve(async (req) => {
   try {
@@ -46,118 +81,73 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const turndown = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced', bulletListMarker: '-' });
-    turndown.remove(['script', 'style', 'ins.adsbygoogle', '.advertisement', '.wp-block-jetpack-related-posts', '.sharedaddy', '.sd-sharing']);
+    const body = await req.json().catch(() => ({}));
+    const dryRun = Boolean(body.dryRun);
+    const maxImports = Math.min(Number(body.maxImports) || 50, 200);
+    const maxRepairs = Math.min(Number(body.maxRepairs) || 250, 500);
 
-    // Fetch the latest feed pages (catch-up for a few days of posts).
-    const pages = await Promise.all([1, 2].map(async (p) => {
-      try {
-        const url = p === 1 ? FEED : `${FEED}?paged=${p}`;
-        const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-        if (!res.ok) return '';
-        return await res.text();
-      } catch (_e) { return ''; }
-    }));
-    const xml = pages.join('\n');
+    const [remote, local] = await Promise.all([fetchAllJa(), fetchAllLocal(base44)]);
+    const remoteBySlug = new Map();
+    for (const a of remote) if (a.slug && a.status === 'published') remoteBySlug.set(a.slug, a);
+    const localSlugs = new Set(local.map((a) => a.slug).filter(Boolean));
 
-    // Parse <item> blocks from the RSS feed.
-    const items = [];
-    const itemRegex = /<item>([\s\S]*?)<\/item>/g;
-    let m;
-    while ((m = itemRegex.exec(xml)) !== null) {
-      const block = m[1];
-
-      const titleM = block.match(/<title>([\s\S]*?)<\/title>/);
-      const title = titleM ? decodeEntities(stripCdata(titleM[1])).trim() : '';
-
-      const linkM = block.match(/<link>([\s\S]*?)<\/link>/);
-      const link = linkM ? linkM[1].trim() : '';
-      if (!title || !link) continue;
-
-      const slugM = link.match(/\/([^/]+)\/?$/);
-      const slug = slugM ? slugM[1] : '';
-
-      const pubM = block.match(/<pubDate>([\s\S]*?)<\/pubDate>/);
-      let published_date = '';
-      if (pubM) { const d = new Date(pubM[1].trim()); if (!isNaN(d.getTime())) published_date = d.toISOString().split('T')[0]; }
-
-      const contentM = block.match(/<content:encoded>([\s\S]*?)<\/content:encoded>/);
-      const contentHtml = contentM ? stripCdata(contentM[1]) : '';
-
-      // Featured image: image enclosure > media:content/thumbnail > first <img> in content.
-      let featuredImage = '';
-      const encM = block.match(/<enclosure[^>]+url="([^"]+)"[^>]*type="image/);
-      if (encM) featuredImage = encM[1];
-      if (!featuredImage) {
-        const mediaM = block.match(/<media:(?:content|thumbnail)[^>]+url="([^"]+)"/);
-        if (mediaM) featuredImage = mediaM[1];
-      }
-      if (!featuredImage) {
-        const imgM = contentHtml.match(/<img[^>]+src="([^"]+)"/);
-        if (imgM) featuredImage = imgM[1];
-      }
-
-      // Tags from <category domain="post_tag">.
-      const tags = [];
-      const tagRegex = /<category[^>]*domain="post_tag"[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/category>/g;
-      let tm;
-      while ((tm = tagRegex.exec(block)) !== null) tags.push(decodeEntities(tm[1]).trim());
-
-      // WordPress category from the URL path -> site Category id.
-      const pathM = link.match(/jasonansell\.ca\/([^/]+)\//);
-      const wpCat = pathM ? pathM[1] : '';
-      const category_id = CATEGORY_MAP[wpCat] || null;
-
-      const summary = textFromHtml(contentHtml).slice(0, 300);
-
-      const pidM = block.match(/<wp:post_id>(\d+)<\/wp:post_id>/);
-      const internal_id = pidM ? `ja-${pidM[1]}` : `ja-${slug}`;
-
-      items.push({ title, slug, link, published_date, contentHtml, featuredImage, tags, category_id, summary, internal_id });
+    // 1. Image repairs
+    const repairs = [];
+    for (const a of local) {
+      if (!isDeadLegacyImage(a.featured_image)) continue;
+      const src = remoteBySlug.get(a.slug);
+      repairs.push({ id: a.id, featured_image: src && isUsableImage(src.cover_image) ? src.cover_image : '' });
+    }
+    const repairBatch = repairs.slice(0, maxRepairs);
+    if (!dryRun) {
+      await inBatches(repairBatch, 10, (r) => base44.asServiceRole.entities.Article.update(r.id, { featured_image: r.featured_image }));
     }
 
-    // Deduplicate against already-imported articles by slug.
-    const existingSlugs = new Set();
-    try {
-      const existing = await base44.asServiceRole.entities.Article.list('-updated_date', 5000);
-      const arr = existing.results || existing || [];
-      for (const a of arr) if (a.slug) existingSlugs.add(a.slug);
-    } catch (_e) { /* tolerate — will re-import risk is low */ }
-
-    const newItems = items.filter((it) => it.slug && !existingSlugs.has(it.slug));
+    // 2. New articles
+    const candidates = [...remoteBySlug.values()]
+      .filter((a) => !localSlugs.has(a.slug))
+      .sort((x, y) => String(y.published_date || '').localeCompare(String(x.published_date || '')))
+      .slice(0, maxImports);
 
     const articles = [];
-    for (const it of newItems) {
-      if (!it.featuredImage) it.featuredImage = await getOgImage(it.link);
-      let body = turndown.turndown(it.contentHtml).trim();
-      if (body.length > 50000) body = body.slice(0, 50000) + '\n\n*[Article truncated]*';
+    for (const meta of candidates) {
+      const [full] = await jaFetch({ q: JSON.stringify({ slug: meta.slug }), limit: '1', fields: 'slug,content' });
+      const content = (full?.content || '').trim();
+      if (content.length < 200) continue; // content not available through the API yet
+      const link = meta.canonical_url || meta.legacy_url || `https://jasonansell.ca/articles/${meta.slug}`;
       articles.push({
-        title: it.title,
-        slug: it.slug,
-        body,
-        summary: it.summary,
-        featured_image: it.featuredImage || '',
+        title: meta.title,
+        slug: meta.slug,
+        body: content.length > 50000 ? content.slice(0, 50000) + '\n\n*[Article truncated]*' : content,
+        summary: (meta.excerpt || content.replace(/[#*_>`\[\]]/g, '').slice(0, 300)).trim(),
+        featured_image: isUsableImage(meta.cover_image) ? meta.cover_image : '',
         status: 'published',
-        published_date: it.published_date || new Date().toISOString().split('T')[0],
-        category_id: it.category_id,
-        tags: it.tags,
+        published_date: meta.published_date || new Date().toISOString().split('T')[0],
+        category_id: CATEGORY_MAP[meta.category] || null,
+        tags: Array.isArray(meta.tags) ? meta.tags : [],
         author_id: AUTHOR_ID,
         author_ids: [AUTHOR_ID],
         difficulty: 'intermediate',
         views: 0,
-        internal_id: it.internal_id,
-        source_links: [{ title: 'Jason Ansell', url: it.link }],
+        internal_id: `ja-${meta.legacy_wordpress_id || meta.slug}`,
+        source_links: [{ title: 'Jason Ansell', url: link }],
       });
     }
 
     let created = [];
-    if (articles.length) created = await base44.asServiceRole.entities.Article.bulkCreate(articles);
+    if (articles.length && !dryRun) created = await base44.asServiceRole.entities.Article.bulkCreate(articles);
 
     return Response.json({
-      feedItems: items.length,
-      newFound: newItems.length,
-      imported: created.length,
-      skipped: items.length - newItems.length,
+      dryRun,
+      sourceArticles: remoteBySlug.size,
+      localArticles: local.length,
+      imagesRepaired: dryRun ? 0 : repairBatch.length,
+      imagesRepairable: repairs.length,
+      imagesReplaced: repairBatch.filter((r) => r.featured_image).length,
+      imagesCleared: repairBatch.filter((r) => !r.featured_image).length,
+      imagesRemaining: repairs.length - repairBatch.length,
+      newFound: candidates.length,
+      imported: dryRun ? 0 : (created.length || articles.length),
       titles: articles.map((a) => a.title),
       syncedAt: new Date().toISOString(),
     });
