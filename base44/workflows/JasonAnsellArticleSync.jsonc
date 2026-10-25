@@ -18,7 +18,7 @@
           "then": "end",
           "x-base44": {
             "title": "Sync Jason Ansell articles",
-            "description": "Pull new posts from jasonansell.ca RSS and import them"
+            "description": "Import new jasonansell.ca articles and repair legacy WordPress image links"
           }
         }
       }
@@ -41,5 +41,5 @@
       "ends_after_count": null
     }
   },
-  "description": "Pulls new articles from jasonansell.ca every day at 9am (Toronto) via the site's RSS feed and imports them as published Article entities, deduplicating by slug."
+  "description": "Pulls new articles from jasonansell.ca every day at 9am (Toronto) from the site's public article data and imports them as published Article entities, deduplicating by slug."
 }

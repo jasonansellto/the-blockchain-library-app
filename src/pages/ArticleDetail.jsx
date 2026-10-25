@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import SafeImage from '@/components/SafeImage';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import MarkdownContent from '@/components/MarkdownContent';

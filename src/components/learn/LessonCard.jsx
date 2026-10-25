@@ -1,4 +1,5 @@
 import React, { forwardRef } from 'react';
+import SafeImage from '@/components/SafeImage';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, ChevronRight, Clock } from 'lucide-react';
 
