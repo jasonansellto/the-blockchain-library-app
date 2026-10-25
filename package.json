@@ -2,6 +2,13 @@
   "name": "base44-app",
   "private": true,
   "version": "0.0.0",
+  "description": "Source code for theblockchainlibrary.com, the open-source blockchain knowledge platform.",
+  "license": "MIT",
+  "homepage": "https://theblockchainlibrary.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jasonansellto/the-blockchain-library-app.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",

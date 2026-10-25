@@ -1,77 +1,77 @@
-# Base44 Project
+# The Blockchain Library — Website
 
-Use this repository to run and edit the app locally, then publish changes back through Base44.
+Source code for [theblockchainlibrary.com](https://theblockchainlibrary.com): an open-source knowledge platform for blockchain education, developer resources, research and structured, AI-ready knowledge.
 
-Any change pushed to the repo will also be reflected in the Base44 Builder.
+The site is built on [Base44](https://base44.com) (React + Vite frontend, Base44 entities and backend functions). This repository is connected to the live app with two-way sync: changes made in Base44 are pushed here automatically, and changes merged into `main` here are pulled into Base44.
 
-## Prerequisites
+## Related repositories
 
-1. Clone the repository using the project's Git URL.
-2. Navigate to the project directory.
-3. Install dependencies: `npm install`.
-4. Install the Base44 CLI: `npm install -g base44@latest`.
+| Repository | What it holds |
+| --- | --- |
+| **the-blockchain-library-app** (this repo) | Website pages, components, backend functions, data models |
+| [the-blockchain-library](https://github.com/jasonansellto/the-blockchain-library) | Knowledge engine: compiler, canonical knowledge release, docs |
 
-See the [Base44 CLI docs](https://docs.base44.com/developers/references/cli/get-started/overview) if you want to run Base44 commands directly.
-
-## Run Locally
-
-Run the full local development environment from the project root:
-
-```bash
-base44 dev
+```text
+theblockchainlibrary.com (this repo, on Base44)   authored content
+        │  daily "Sync from Base44" workflow
+        ▼
+the-blockchain-library (knowledge engine)          canonical release → public/knowledge/
+        ├──▶ docs.theblockchainlibrary.com
+        └──▶ website Explorer (reads the release from GitHub)
 ```
 
-`base44 dev` starts the local Base44 development backend and, when this app is configured for it, also starts the frontend dev server for you. Use the frontend URL printed by the command.
+## Project layout
 
-For example, when the Base44 project config includes a `serveCommand`, `base44 dev` can launch the frontend too:
-
-```json5
-{
-  "site": {
-    "serveCommand": "npm run dev"
-  }
-}
+```text
+src/
+  pages/          route components (public site + admin)
+  components/     shared UI
+  lib/            knowledge engine client, SEO, helpers
+  api/            Base44 SDK client
+base44/
+  entities/       data models (Article, GlossaryTerm, Book, …)
+  functions/      backend functions (search, export, sitemap, …)
+  workflows/      scheduled automations
+  shared/         logic shared between functions
 ```
 
-In a Base44 project this lives in `base44/config.jsonc`.
+## Run locally
 
-## Run Only The Frontend
-
-If you only want to work on the frontend against the hosted Base44 backend, run:
+Requires Node.js 20+.
 
 ```bash
+npm install
 npm run dev
 ```
 
-Open the local URL printed by Vite.
-
-## Use The Hosted Backend
-
-For frontend-only development, create or update `.env.local` in the project root:
+The frontend runs against the hosted backend. Create `.env.local`:
 
 ```bash
-VITE_BASE44_APP_ID=your_app_id
-VITE_BASE44_APP_BASE_URL=https://your-app.base44.app
+VITE_BASE44_APP_ID=6a4cfcf76d7d1bf88148c979
+VITE_BASE44_APP_BASE_URL=https://theblockchainlibrary.com
 ```
 
-`VITE_BASE44_APP_ID` identifies the Base44 app.
+Public pages work without signing in. Admin pages and backend functions that change data need maintainer access, so for those changes describe how you tested in your pull request and a maintainer will verify on the platform.
 
-`VITE_BASE44_APP_BASE_URL` tells the Base44 Vite plugin where to send local `/api` requests. Point it at your deployed Base44 app URL when you want the local frontend to use the hosted backend.
+To run a full local backend with the [Base44 CLI](https://docs.base44.com/developers/references/cli/get-started/overview): `npm install -g base44@latest`, then `base44 dev`.
 
-When you use `base44 dev`, the command injects the local Base44 values for you, so `.env.local` is mainly needed for frontend-only workflows.
-
-## Publish Your Changes
-
-After pushing your changes to git, open the Base44 dashboard and publish the app:
+## Before opening a pull request
 
 ```bash
-base44 dashboard open
+npm run lint
+npm run build
 ```
 
-## Docs & Support
+CI runs both on every pull request.
 
-Documentation: [https://docs.base44.com/Integrations/Using-GitHub](https://docs.base44.com/Integrations/Using-GitHub)
+## Contributing
 
-Base44 CLI command reference: [https://docs.base44.com/developers/references/cli/commands/introduction](https://docs.base44.com/developers/references/cli/commands/introduction)
+See [CONTRIBUTING.md](CONTRIBUTING.md). Content corrections (an article, glossary definition, book or research entry) are best raised as issues; code changes as pull requests.
 
-Support: [https://app.base44.com/support](https://app.base44.com/support)
+## Security
+
+Never commit secrets — API keys and tokens live in Base44 app secrets, not in code. Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
+
+## License
+
+[MIT](LICENSE) © 2026 Jason Ansell.
