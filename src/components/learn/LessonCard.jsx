@@ -33,11 +33,9 @@ const LessonCard = forwardRef(({ lesson, index, total, article, isDone, authed, 
       <div className="flex-1 min-w-0 pb-3">
         <div onClick={handleClick}
           className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${lessonLink ? 'cursor-pointer hover:shadow-sm' : ''} ${isDone ? 'bg-teal-50 border-teal-200' : 'bg-white border-slate-200 hover:border-blue-200'}`}>
-          {article?.featured_image && (
-            <div className="shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-slate-100">
-              <img src={article.featured_image} alt="" className="w-full h-full object-cover" loading="lazy" />
-            </div>
-          )}
+          <SafeImage src={article?.featured_image}
+            frameClassName="shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-slate-100"
+            className="w-full h-full object-cover" />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className="text-xs font-bold text-slate-400">Lesson {order}</span>
