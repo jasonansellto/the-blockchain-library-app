@@ -66,6 +66,15 @@ async function fetchAllLocal(base44) {
   return [...byId.values()];
 }
 
+// Many old /wp-content/ URLs still work (jasonansell.ca serves a mirror of the
+// original uploads), so a legacy URL only counts as dead if it fails to load.
+async function loadsAsImage(url) {
+  try {
+    const res = await fetch(url, { headers: { Range: 'bytes=0-63', 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(15000) });
+    return (res.ok || res.status === 206) && (res.headers.get('content-type') || '').startsWith('image/');
+  } catch (_e) { return false; }
+}
+
 async function inBatches(items, size, fn) {
   for (let i = 0; i < items.length; i += size) await Promise.all(items.slice(i, i + size).map(fn));
 }
@@ -92,9 +101,11 @@ Deno.serve(async (req) => {
     const localSlugs = new Set(local.map((a) => a.slug).filter(Boolean));
 
     // 1. Image repairs
+    const legacy = local.filter((a) => isDeadLegacyImage(a.featured_image));
+    const dead = [];
+    await inBatches(legacy, 10, async (a) => { if (!(await loadsAsImage(a.featured_image))) dead.push(a); });
     const repairs = [];
-    for (const a of local) {
-      if (!isDeadLegacyImage(a.featured_image)) continue;
+    for (const a of dead) {
       const src = remoteBySlug.get(a.slug);
       repairs.push({ id: a.id, featured_image: src && isUsableImage(src.cover_image) ? src.cover_image : '' });
     }
