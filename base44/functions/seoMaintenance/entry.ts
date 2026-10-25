@@ -105,20 +105,48 @@ Deno.serve(async (req) => {
       return counts;
     }
 
+    // Count term usage per article, then weight by rarity (IDF) so specific terms
+    // like "Account Abstraction" outrank ones used everywhere like "Blockchain".
+    const N = Math.max(published.length, 1);
+    const perArticle = new Map(); // articleId -> { body: Map, title: Map }
+    const df = new Map(); // glossaryId -> #articles using it
+    for (const a of published) {
+      const body = phraseCounts(`${a.summary || ''} ${plain(a.body || '').slice(0, 20000)}`);
+      const title = phraseCounts(a.title);
+      perArticle.set(a.id, { body, title });
+      for (const id of new Set([...body.keys(), ...title.keys()])) df.set(id, (df.get(id) || 0) + 1);
+    }
+    const idf = (id) => Math.log(N / (df.get(id) || 1));
     const usesTerm = new Map(); // glossaryId -> [{id: articleId, score}]
     const articleTerms = new Map(); // articleId -> [{id: glossaryId, score}]
     for (const a of published) {
-      const bodyCounts = phraseCounts(`${a.summary || ''} ${plain(a.body || '').slice(0, 20000)}`);
-      const titleCounts = phraseCounts(a.title);
+      const { body, title } = perArticle.get(a.id);
       const scored = [];
-      for (const [id, n] of bodyCounts) {
-        const score = n + (titleCounts.has(id) ? 5 : 0);
+      for (const id of new Set([...body.keys(), ...title.keys()])) {
+        if ((df.get(id) || 0) > N * 0.25) continue; // used by >25% of articles: too generic to link
+        const n = body.get(id) || 0;
+        const score = ((n ? 1 + Math.log(n) : 0) + (title.has(id) ? 2 : 0)) * idf(id);
         scored.push({ id, score });
         if (!usesTerm.has(id)) usesTerm.set(id, []);
         usesTerm.get(id).push({ id: a.id, score });
       }
-      for (const [id] of titleCounts) if (!bodyCounts.has(id)) scored.push({ id, score: 6 });
       articleTerms.set(a.id, scored);
+    }
+
+    // Keyword rarity across articles, for matching books and research.
+    const kwDf = new Map();
+    const articleKeywords = new Map();
+    for (const a of published) {
+      const kws = new Set([...(a.tags || []).map((t) => String(t).toLowerCase()), ...words(a.title)]);
+      articleKeywords.set(a.id, kws);
+      for (const k of kws) kwDf.set(k, (kwDf.get(k) || 0) + 1);
+    }
+    const kwIdf = (k) => Math.log((N + 1) / ((kwDf.get(k) || 0) + 1));
+    const docKeywords = (d) => new Set([...(d.tags || []).map((t) => String(t).toLowerCase()), ...words(d.title)]);
+    function keywordScore(articleKws, doc) {
+      let s = 0; let shared = 0;
+      for (const k of docKeywords(doc)) if (articleKws.has(k)) { s += kwIdf(k); shared++; }
+      return shared >= 2 ? s : 0;
     }
 
     // ---- article similarity ----
@@ -141,16 +169,16 @@ Deno.serve(async (req) => {
         if (ids.length) data.related_articles = ids;
       }
       if (empty(a.related_glossary)) {
-        const ids = topN(articleTerms.get(a.id) || [], 6, 2);
+        const ids = topN(articleTerms.get(a.id) || [], 6, 3);
         if (ids.length) data.related_glossary = ids;
       }
-      const keyset = new Set([...tags, ...aw.get(a.id)]);
+      const kws = articleKeywords.get(a.id);
       if (empty(a.related_books)) {
-        const ids = topN(books.filter((b) => b.status !== 'draft').map((b) => ({ id: b.id, score: 2 * overlap(keyset, tagSet(b)) + overlap(keyset, new Set(words(b.title))) })), 3, 3);
+        const ids = topN(books.filter((b) => b.status !== 'draft').map((b) => ({ id: b.id, score: keywordScore(kws, b) })), 3, 6);
         if (ids.length) data.related_books = ids;
       }
       if (empty(a.related_research)) {
-        const ids = topN(research.map((r) => ({ id: r.id, score: 2 * overlap(keyset, tagSet(r)) + overlap(keyset, new Set(words(r.title))) })), 3, 3);
+        const ids = topN(research.map((r) => ({ id: r.id, score: keywordScore(kws, r) })), 3, 6);
         if (ids.length) data.related_research = ids;
       }
       // Articles get AI-written SEO with their FAQs; fall back here once that is done.
