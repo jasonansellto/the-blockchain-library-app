@@ -149,7 +149,10 @@ Deno.serve(async (req) => {
         const ids = topN(usesTerm.get(g.id) || [], 5, 1);
         if (ids.length) data.related_articles = ids;
       }
-      if (empty(g.seo_title)) data.seo_title = seoTitle(`${g.title}: Definition & Meaning`, 60).length <= 60 ? `${g.title}: Definition & Meaning` : seoTitle(g.title);
+      if (empty(g.seo_title) && g.title) {
+        const full = `${g.title}: Definition & Meaning`;
+        data.seo_title = full.length <= 55 ? full : seoTitle(g.title);
+      }
       if (empty(g.seo_description) && g.definition) data.seo_description = clip(`${g.title}: ${g.definition}`, 155);
       push('GlossaryTerm', g.id, data);
     }
