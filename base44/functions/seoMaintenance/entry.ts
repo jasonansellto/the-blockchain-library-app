@@ -253,7 +253,17 @@ Deno.serve(async (req) => {
 
     const summary = {};
     for (const u of updates) for (const k of Object.keys(u.data)) summary[`${u.entity}.${k}`] = (summary[`${u.entity}.${k}`] || 0) + 1;
-    return Response.json({ dryRun, pendingUpdates: updates.length, applied, remaining: updates.length - applied, failed: failed.slice(0, 10), fields: summary });
+
+    // dryRun preview: show proposed links as titles for a few articles.
+    let preview;
+    if (dryRun && body.preview) {
+      const titleOf = new Map([...articles, ...glossary, ...books, ...research].map((x) => [x.id, x.title]));
+      preview = updates.filter((u) => u.entity === 'Article').slice(0, Math.min(Number(body.preview) || 5, 15)).map((u) => ({
+        article: titleOf.get(u.id),
+        ...Object.fromEntries(Object.entries(u.data).filter(([k]) => k.startsWith('related_')).map(([k, v]) => [k, v.map((id) => titleOf.get(id))])),
+      }));
+    }
+    return Response.json({ dryRun, pendingUpdates: updates.length, applied, remaining: updates.length - applied, failed: failed.slice(0, 10), fields: summary, preview });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
