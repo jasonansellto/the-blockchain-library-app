@@ -80,7 +80,7 @@ export default function GlossaryDetail() {
 
   return (
     <div>
-      <Seo title={term.title} description={term.seo_description || term.definition} type="article" schemas={schemas} />
+      <Seo title={term.seo_title || term.title} description={term.seo_description || term.definition} type="article" schemas={schemas} />
       <GeoSummary type="Glossary Term" title={term.title} summary={term.simple_explanation || term.definition} keyConcepts={[term.subcategory, ...(term.advantages || []), ...(term.limitations || [])].filter(Boolean)} relatedLinks={[...relatedTerms.map(r => ({ title: r.title, type: 'Glossary Term', url: `/glossary/${r.slug}` })), ...relatedArticles.map(r => ({ title: r.title, type: 'Article', url: `/article/${r.slug}` }))]} />
       <div className="border-b border-slate-100 bg-slate-50">
         <div className="container-tbl py-3">
