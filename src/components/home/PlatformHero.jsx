@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Github, Network, Cpu, Layers } from 'lucide-react';
+import { ArrowRight, Github, Cpu, Layers } from 'lucide-react';
 import { platformLinks } from '@/lib/platformLinks';
 import NeuralGraph from '@/components/animations/NeuralGraph';
 

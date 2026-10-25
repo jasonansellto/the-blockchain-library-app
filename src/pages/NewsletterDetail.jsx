@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import MarkdownContent from '@/components/MarkdownContent';
-import { ChevronRight, Calendar, Tag, Mail, ArrowLeft } from 'lucide-react';
+import { ChevronRight, Calendar, Tag, ArrowLeft } from 'lucide-react';
 import NewsletterSignup from '@/components/NewsletterSignup';
 
 export default function NewsletterDetail() {

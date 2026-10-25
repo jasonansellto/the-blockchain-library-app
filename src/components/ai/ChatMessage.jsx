@@ -1,7 +1,7 @@
 import React from 'react';
 import MarkdownContent from '@/components/MarkdownContent';
 import { Link } from 'react-router-dom';
-import { Bot, User, BookOpen, ArrowRight, Terminal } from 'lucide-react';
+import { Bot, User, BookOpen, ArrowRight } from 'lucide-react';
 
 export default function ChatMessage({ message }) {
   const isUser = message.role === 'user';

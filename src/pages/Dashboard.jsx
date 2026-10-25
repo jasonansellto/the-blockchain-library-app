@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Loader2, BookMarked, GraduationCap, Clock, User, ChevronRight, ArrowRight, BookOpen, CheckCircle2, Circle, LogOut, Sparkles, Mail } from 'lucide-react';
+import { Loader2, BookMarked, GraduationCap, Clock, User, ChevronRight, ArrowRight, BookOpen, CheckCircle2, LogOut, Sparkles } from 'lucide-react';
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);

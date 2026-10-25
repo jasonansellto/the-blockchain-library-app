@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, Library, GraduationCap, Code2, BookMarked, FileText, Sparkles, Network } from 'lucide-react';
+import { ArrowRight, Library, GraduationCap, Code2, BookMarked, FileText, Sparkles, Network } from 'lucide-react';
 import Reveal from '@/components/animations/Reveal';
 import StaggerGroup from '@/components/animations/StaggerGroup';
 import { platformLinks } from '@/lib/platformLinks';

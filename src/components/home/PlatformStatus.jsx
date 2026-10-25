@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Map, CheckCircle2, Clock, Circle } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Clock, Circle } from 'lucide-react';
 import Reveal from '@/components/animations/Reveal';
 import { platformLinks } from '@/lib/platformLinks';
 

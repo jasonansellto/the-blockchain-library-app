@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ExternalLink } from 'lucide-react';
 
 export default function CategoryCard({ category, articleCount }) {
   return (

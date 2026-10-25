@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Code2, Network, BookOpen, Webhook, Terminal, ArrowRight, ChevronRight, Loader2 } from 'lucide-react';
+import { Code2, Network, BookOpen, Terminal, ArrowRight, ChevronRight, Loader2 } from 'lucide-react';
 import Seo from '@/components/Seo';
 import { buildBreadcrumbSchema } from '@/lib/seoSchemas';
 import SnippetCard from '@/components/cards/SnippetCard';

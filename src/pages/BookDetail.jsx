@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ChevronRight, Star, BookOpen, FileText, Calendar, BookMarked, User, Sparkles, ListChecks, Tag, ArrowRight, Share2 } from 'lucide-react';
+import { ChevronRight, Star, BookOpen, Calendar, BookMarked, User, Sparkles, ListChecks, Tag, Share2 } from 'lucide-react';
 import Seo from '@/components/Seo';
 import { buildBookSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 import CitationBox from '@/components/CitationBox';

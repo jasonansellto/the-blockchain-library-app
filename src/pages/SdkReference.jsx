@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, ArrowRight, BookOpen } from 'lucide-react';
+import { ChevronRight, ArrowRight } from 'lucide-react';
 import Seo from '@/components/Seo';
 import { buildBreadcrumbSchema } from '@/lib/seoSchemas';
 import CodeBlock from '@/components/CodeBlock';

@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Loader2, Filter, BookOpen, ChevronDown } from 'lucide-react';
 import ArticleCard from '@/components/cards/ArticleCard';
-import DifficultyBadge from '@/components/DifficultyBadge';
 import Seo from '@/components/Seo';
 import { buildCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/seoSchemas';
 

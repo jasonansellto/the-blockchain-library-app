@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ChevronRight, BookOpen, FileText, ExternalLink, Lightbulb, CheckCircle2, AlertTriangle, HelpCircle, Sparkles, Target, Cog, Globe, ArrowRight, Share2 } from 'lucide-react';
+import { ChevronRight, BookOpen, FileText, ExternalLink, Lightbulb, CheckCircle2, AlertTriangle, HelpCircle, Sparkles, Target, Cog, Globe, Share2 } from 'lucide-react';
 import DifficultyBadge from '@/components/DifficultyBadge';
 import CategoryBadge from '@/components/CategoryBadge';
 import Seo from '@/components/Seo';

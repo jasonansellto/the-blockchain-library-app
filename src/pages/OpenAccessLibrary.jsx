@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, ArrowRight, Library, Boxes } from 'lucide-react';
+import { ChevronRight, ArrowRight, Boxes } from 'lucide-react';
 import Seo from '@/components/Seo';
 import { openAccessResources, badgeStyles } from '@/lib/openAccessResources';
 

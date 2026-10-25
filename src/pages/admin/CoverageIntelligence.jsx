@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Loader2, AlertCircle, RefreshCw, Download, GitBranch, FileJson, FileSpreadsheet, ChevronRight, Stethoscope, ShieldCheck, Archive } from 'lucide-react';
+import { Loader2, AlertCircle, RefreshCw, GitBranch, FileJson, FileSpreadsheet, Stethoscope, Archive } from 'lucide-react';
 import Seo from '@/components/Seo';
 import CoverageDashboard from '@/components/admin/coverage/CoverageDashboard';
 import CoverageObjectList from '@/components/admin/coverage/CoverageObjectList';

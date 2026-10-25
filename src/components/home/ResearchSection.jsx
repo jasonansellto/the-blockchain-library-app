@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, FileText, ExternalLink } from 'lucide-react';
+import { FileText, ExternalLink } from 'lucide-react';
 import Reveal from '@/components/animations/Reveal';
 import StaggerGroup from '@/components/animations/StaggerGroup';
 import ResearchCard from '@/components/cards/ResearchCard';

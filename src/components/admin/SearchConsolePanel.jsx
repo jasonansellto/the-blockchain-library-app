@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import {
   Loader2, AlertCircle, RefreshCw, MousePointerClick, Eye,
-  TrendingUp, MapPin, Search as SearchIcon, Link2, FileText, Trash2, Plus
+  TrendingUp, MapPin, Search as SearchIcon, FileText, Trash2, Plus
 } from 'lucide-react';
 
 const RANGE_OPTIONS = [
@@ -99,7 +99,7 @@ export default function SearchConsolePanel() {
     }
   }, [data]);
 
-  useEffect(() => { fetchData(days, siteUrl); /* eslint-disable-next-line */ }, []);
+  useEffect(() => { fetchData(days, siteUrl);   }, []);
 
   const handleRefresh = () => fetchData(days, siteUrl);
 
