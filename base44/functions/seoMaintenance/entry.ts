@@ -39,8 +39,6 @@ function seoTitle(title, max = 55) {
   return t.slice(0, t.slice(0, max).lastIndexOf(' ')).replace(/[,;:–—-]+$/, '');
 }
 
-const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
 async function fetchAll(base44, entity) {
   const byId = new Map();
   for (let skip = 0; skip < 60000; skip += 500) {
@@ -72,7 +70,6 @@ Deno.serve(async (req) => {
       ['Article', 'GlossaryTerm', 'Book', 'ResearchPaper', 'BlockchainResource', 'CodeSnippet', 'LearningPath', 'Category'].map((e) => fetchAll(base44, e)),
     );
     const published = articles.filter((a) => a.status === 'published');
-    const catName = new Map(categories.map((c) => [c.id, c.name]));
 
     // ---- glossary matchers (specific terms only) ----
     // Single pass per article: count 1–4 word phrases and look them up.
@@ -115,7 +112,6 @@ Deno.serve(async (req) => {
       const titleCounts = phraseCounts(a.title);
       const scored = [];
       for (const [id, n] of bodyCounts) {
-        const meta = [...termByPhrase.values()].length ? null : null; // placeholder for clarity
         const score = n + (titleCounts.has(id) ? 5 : 0);
         scored.push({ id, score });
         if (!usesTerm.has(id)) usesTerm.set(id, []);
