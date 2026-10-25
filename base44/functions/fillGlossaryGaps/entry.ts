@@ -77,15 +77,21 @@ Deno.serve(async (req) => {
       return Response.json({ dryRun: true, missingTotal: Array.isArray(missing) ? missing.length : 0, wouldCreate: Object.fromEntries(groups) });
     }
 
+    // Small chunks: large batches make the AI return nothing.
     const results = [];
-    for (const [category, terms] of groups) {
-      const r = await fetch(`${FUNCTIONS}/generateGlossaryBatch`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-App-Id': APP_ID },
-        body: JSON.stringify({ category, terms }),
-      });
-      const out = await r.json().catch(() => ({}));
-      results.push({ category, terms, created: out.created ?? 0, error: out.error });
+    const started = Date.now();
+    for (const [category, all] of groups) {
+      for (let i = 0; i < all.length; i += 3) {
+        if (Date.now() - started > 240_000) break;
+        const terms = all.slice(i, i + 3);
+        const r = await fetch(`${FUNCTIONS}/generateGlossaryBatch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-App-Id': APP_ID },
+          body: JSON.stringify({ category, terms }),
+        });
+        const out = await r.json().catch(() => ({}));
+        results.push({ category, terms, created: out.created ?? 0, error: out.error });
+      }
     }
     const created = results.reduce((n, r) => n + (Number(r.created) || 0), 0);
     return Response.json({ requested: candidates.length, created, results });
