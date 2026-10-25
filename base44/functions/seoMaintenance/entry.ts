@@ -242,10 +242,12 @@ Deno.serve(async (req) => {
     const failed = [];
     if (!dryRun) {
       const started = Date.now();
+      let attempted = 0;
       for (let i = 0; i < batch.length; i += 10) {
-        // pace: ≤ ~280 updates per rolling minute
+        // pace: ≤ 240 update attempts per minute (platform limit is 350/min per caller)
         const minute = Math.floor((Date.now() - started) / 60000);
-        if (applied >= (minute + 1) * 280) await new Promise((r) => setTimeout(r, (minute + 1) * 60000 - (Date.now() - started) + 500));
+        if (attempted >= (minute + 1) * 240) await new Promise((r) => setTimeout(r, (minute + 1) * 60000 - (Date.now() - started) + 1000));
+        attempted += Math.min(10, batch.length - i);
         await Promise.all(batch.slice(i, i + 10).map(async (u) => {
           try { await base44.asServiceRole.entities[u.entity].update(u.id, u.data); applied++; }
           catch (e) { failed.push(`${u.entity}:${u.id}: ${String(e?.message || e).slice(0, 120)}`); }
