@@ -1,0 +1,47 @@
+{
+  "name": "AI Article Enrichment",
+  "description": "Every hour, adds FAQs, key takeaways and an SEO title/description to up to 12 published articles that don't have FAQs yet (newest first). Stops on its own once every article is done.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "23 * * * *",
+      "one_time_date": null,
+      "timezone": "America/Toronto",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "do": [
+      {
+        "enrich": {
+          "call": "invoke_backend_function",
+          "then": "end",
+          "with": {
+            "args": {
+              "limit": 12
+            },
+            "function_name": "enrichArticles"
+          },
+          "x-base44": {
+            "description": "FAQs, key takeaways and SEO metadata via AI",
+            "title": "Enrich articles"
+          }
+        }
+      }
+    ],
+    "document": {
+      "dsl": "1.0.0",
+      "name": "ai_article_enrichment",
+      "namespace": "base44",
+      "version": "1.0"
+    }
+  }
+}
