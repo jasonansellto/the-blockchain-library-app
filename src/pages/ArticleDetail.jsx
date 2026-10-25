@@ -252,11 +252,8 @@ export default function ArticleDetail() {
           )}
 
           <article className="flex-1 min-w-0 max-w-3xl mx-auto">
-            {article.featured_image && (
-              <div className="mb-8 rounded-xl overflow-hidden bg-slate-100">
-                <img src={article.featured_image} alt={article.title} className="w-full h-auto" />
-              </div>
-            )}
+            <SafeImage src={article.featured_image} alt={article.title} loading="eager"
+              frameClassName="mb-8 rounded-xl overflow-hidden bg-slate-100" className="w-full h-auto" />
             <div className="prose-tbl">
               <MarkdownContent>{(article.access_level === 'premium' && !isAuthed) ? (article.body || '').split('\n').slice(0, 5).join('\n') + '\n\n...' : (article.body || '')}</MarkdownContent>
             </div>
