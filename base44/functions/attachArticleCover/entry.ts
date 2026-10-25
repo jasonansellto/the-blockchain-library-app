@@ -7,8 +7,13 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 // Access: the workflow's KNOWLEDGE_SYNC_TOKEN (x-knowledge-sync-token header),
 // or a signed-in admin/editor.
 // Body: { articleId: string, imageBase64: string (JPEG), filename?: string }
+//   or: { articleId: string, imageUrl: string } — link an original image hosted on
+//       jasonansell.ca or Base44 storage; this may replace a generated cover
+//       (a *-cover.jpg file) but never any other existing image.
 
 const MAX_BYTES = 1_000_000;
+const ALLOWED_IMAGE_HOSTS = ['jasonansell.ca', 'base44.app', 'media.base44.com'];
+const isGeneratedCover = (url) => typeof url === 'string' && /-cover\.jpg$/i.test(url);
 
 function timingSafeEqual(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
@@ -29,9 +34,27 @@ Deno.serve(async (req) => {
       if (user.role !== 'admin' && user.role !== 'editor') return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { articleId, imageBase64, filename } = await req.json().catch(() => ({}));
-    if (typeof articleId !== 'string' || typeof imageBase64 !== 'string') {
-      return Response.json({ error: 'articleId and imageBase64 are required' }, { status: 400 });
+    const { articleId, imageBase64, imageUrl, filename } = await req.json().catch(() => ({}));
+    if (typeof articleId !== 'string' || (typeof imageBase64 !== 'string' && typeof imageUrl !== 'string')) {
+      return Response.json({ error: 'articleId and imageBase64 or imageUrl are required' }, { status: 400 });
+    }
+
+    if (typeof imageUrl === 'string') {
+      let host = '';
+      try { const u = new URL(imageUrl); host = u.protocol === 'https:' ? u.hostname.replace(/^www\./, '') : ''; } catch (_e) { /* invalid */ }
+      if (!ALLOWED_IMAGE_HOSTS.includes(host)) return Response.json({ error: 'imageUrl host not allowed' }, { status: 400 });
+      const head = await fetch(imageUrl, { method: 'GET', headers: { Range: 'bytes=0-63' } }).catch(() => null);
+      const type = head?.headers.get('content-type') || '';
+      if (!head || !(head.ok || head.status === 206) || !type.startsWith('image/')) {
+        return Response.json({ error: 'imageUrl does not load as an image' }, { status: 422 });
+      }
+      const target = await base44.asServiceRole.entities.Article.get(articleId).catch(() => null);
+      if (!target) return Response.json({ error: 'Article not found' }, { status: 404 });
+      if (target.featured_image && !isGeneratedCover(target.featured_image)) {
+        return Response.json({ skipped: true, reason: 'Article already has an original image', featured_image: target.featured_image });
+      }
+      await base44.asServiceRole.entities.Article.update(target.id, { featured_image: imageUrl });
+      return Response.json({ attached: true, slug: target.slug, featured_image: imageUrl, replacedGenerated: isGeneratedCover(target.featured_image) });
     }
 
     const bytes = Uint8Array.from(atob(imageBase64), (c) => c.charCodeAt(0));
