@@ -55,6 +55,7 @@ Deno.serve(async (req) => {
     const candidates = (Array.isArray(missing) ? missing : [])
       .filter((m) => m && m.label && (m.count || 0) >= minMentions)
       .filter((m) => /[a-z]/i.test(m.label) && m.label.length >= 3 && m.label.length <= 60 && !/^https?:/i.test(m.label))
+      .filter((m) => !/^[0-9a-f]{24}$/i.test(m.label.trim())) // unresolved record IDs, not concepts
       .filter((m) => !known.has(norm(m.label)) && !known.has(norm(m.label.replace(/s$/i, ''))))
       .sort((a, b) => (b.count || 0) - (a.count || 0))
       .slice(0, limit);
