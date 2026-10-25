@@ -1,0 +1,47 @@
+{
+  "name": "Glossary Gap Filling",
+  "description": "Daily: creates glossary entries (AI) for up to 12 concepts the site already references but has no page for, taken from the Knowledge Engine's missing-concepts list.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "13 11 * * *",
+      "one_time_date": null,
+      "timezone": "America/Toronto",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "do": [
+      {
+        "fill": {
+          "call": "invoke_backend_function",
+          "then": "end",
+          "with": {
+            "args": {
+              "limit": 12
+            },
+            "function_name": "fillGlossaryGaps"
+          },
+          "x-base44": {
+            "description": "Create entries for referenced-but-missing concepts",
+            "title": "Fill glossary gaps"
+          }
+        }
+      }
+    ],
+    "document": {
+      "dsl": "1.0.0",
+      "name": "glossary_gap_filling",
+      "namespace": "base44",
+      "version": "1.0"
+    }
+  }
+}
