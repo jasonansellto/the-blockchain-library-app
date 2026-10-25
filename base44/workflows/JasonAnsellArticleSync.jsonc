@@ -15,24 +15,10 @@
             "function_name": "syncJasonAnsellArticles",
             "args": {}
           },
-          "then": "generate_covers",
+          "then": "end",
           "x-base44": {
             "title": "Sync Jason Ansell articles",
             "description": "Import new jasonansell.ca articles and repair legacy WordPress image links"
-          }
-        }
-      },
-      {
-        "generate_covers": {
-          "call": "invoke_backend_function",
-          "with": {
-            "function_name": "generateArticleCovers",
-            "args": {}
-          },
-          "then": "end",
-          "x-base44": {
-            "title": "Generate article covers",
-            "description": "Create branded cover images for published articles that have none"
           }
         }
       }
