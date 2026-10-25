@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Sitemap index. Each child sitemap is generated live from the site content (base44/functions/generateSitemap). -->
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap><loc>https://theblockchainlibrary.com/functions/generateSitemap?type=pages</loc></sitemap>
+  <sitemap><loc>https://theblockchainlibrary.com/functions/generateSitemap?type=articles</loc></sitemap>
+  <sitemap><loc>https://theblockchainlibrary.com/functions/generateSitemap?type=glossary</loc></sitemap>
+  <sitemap><loc>https://theblockchainlibrary.com/functions/generateSitemap?type=books</loc></sitemap>
+  <sitemap><loc>https://theblockchainlibrary.com/functions/generateSitemap?type=research</loc></sitemap>
+  <sitemap><loc>https://theblockchainlibrary.com/functions/generateSitemap?type=authors</loc></sitemap>
+  <sitemap><loc>https://theblockchainlibrary.com/functions/generateSitemap?type=learning-paths</loc></sitemap>
+  <sitemap><loc>https://theblockchainlibrary.com/functions/generateSitemap?type=categories</loc></sitemap>
+  <sitemap><loc>https://theblockchainlibrary.com/functions/generateSitemap?type=developers</loc></sitemap>
+  <sitemap><loc>https://theblockchainlibrary.com/functions/generateSitemap?type=newsletter</loc></sitemap>
+  <sitemap><loc>https://theblockchainlibrary.com/functions/generateSitemap?type=tags</loc></sitemap>
+</sitemapindex>
