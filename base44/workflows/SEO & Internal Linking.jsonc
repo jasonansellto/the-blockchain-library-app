@@ -1,0 +1,47 @@
+{
+  "name": "SEO & Internal Linking",
+  "description": "Daily: fills missing SEO titles/descriptions and links each article to related articles, glossary terms, books and research (and glossary terms back to articles). Never overwrites anything already set.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "47 10 * * *",
+      "one_time_date": null,
+      "timezone": "America/Toronto",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "do": [
+      {
+        "seo": {
+          "call": "invoke_backend_function",
+          "then": "end",
+          "with": {
+            "args": {
+              "maxUpdates": 1000
+            },
+            "function_name": "seoMaintenance"
+          },
+          "x-base44": {
+            "description": "Fill empty SEO fields and related-content links",
+            "title": "SEO & linking maintenance"
+          }
+        }
+      }
+    ],
+    "document": {
+      "dsl": "1.0.0",
+      "name": "seo_internal_linking",
+      "namespace": "base44",
+      "version": "1.0"
+    }
+  }
+}
