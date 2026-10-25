@@ -75,31 +75,53 @@ Deno.serve(async (req) => {
     const catName = new Map(categories.map((c) => [c.id, c.name]));
 
     // ---- glossary matchers (specific terms only) ----
-    const terms = glossary
-      .filter((g) => g.title && g.title.length >= 4)
-      .map((g) => {
-        const t = g.title.trim();
-        const multi = /\s/.test(t);
-        const acronym = /^[A-Z0-9]{2,6}$/.test(t);
-        return { g, multi, re: new RegExp(`\\b${escapeRe(t)}s?\\b`, acronym ? 'g' : 'gi') };
-      })
-      .filter((x) => x.multi || x.g.title.length >= 6 || /^[A-Z0-9]{2,6}$/.test(x.g.title));
-
-    const articleText = new Map(published.map((a) => [a.id, `${a.title}\n${a.summary || ''}\n${plain(a.body || '').slice(0, 20000)}`]));
-    const usesTerm = new Map(); // glossaryId -> [{articleId, n}]
-    const articleTerms = new Map(); // articleId -> scored glossary ids
-    for (const a of published) {
-      const text = articleText.get(a.id);
-      const scored = [];
-      for (const { g, multi, re } of terms) {
-        const n = (text.match(re) || []).length;
-        if (!n) continue;
-        const inTitle = re.test(a.title); re.lastIndex = 0;
-        const score = n + (inTitle ? 5 : 0) + (multi ? 2 : 0);
-        scored.push({ id: g.id, score });
-        if (!usesTerm.has(g.id)) usesTerm.set(g.id, []);
-        usesTerm.get(g.id).push({ id: a.id, score });
+    // Single pass per article: count 1–4 word phrases and look them up.
+    const termByPhrase = new Map(); // normalized phrase -> { id, multi, acronym }
+    for (const g of glossary) {
+      const t = String(g.title || '').trim();
+      if (t.length < 2) continue;
+      const acronym = /^[A-Z0-9]{2,6}$/.test(t);
+      const toks = t.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').split(/\s+/).filter(Boolean);
+      if (!toks.length || toks.length > 4) continue;
+      const multi = toks.length > 1;
+      if (!multi && !acronym && t.length < 6) continue; // skip short generic single words
+      termByPhrase.set(toks.join(' '), { id: g.id, multi, acronym, raw: t });
+    }
+    const tokenize = (s) => String(s || '').replace(/[^A-Za-z0-9\s-]/g, ' ').split(/\s+/).filter(Boolean);
+    function phraseCounts(text) {
+      const toks = tokenize(text);
+      const lower = toks.map((t) => t.toLowerCase());
+      const counts = new Map();
+      for (let i = 0; i < lower.length; i++) {
+        let p = '';
+        for (let n = 0; n < 4 && i + n < lower.length; n++) {
+          p = n ? `${p} ${lower[i + n]}` : lower[i];
+          for (const key of [p, p.endsWith('s') ? p.slice(0, -1) : null]) {
+            if (!key) continue;
+            const hit = termByPhrase.get(key);
+            if (!hit) continue;
+            if (hit.acronym && n === 0 && toks[i] !== hit.raw && toks[i] !== `${hit.raw}s`) continue;
+            counts.set(hit.id, (counts.get(hit.id) || 0) + 1);
+          }
+        }
       }
+      return counts;
+    }
+
+    const usesTerm = new Map(); // glossaryId -> [{id: articleId, score}]
+    const articleTerms = new Map(); // articleId -> [{id: glossaryId, score}]
+    for (const a of published) {
+      const bodyCounts = phraseCounts(`${a.summary || ''} ${plain(a.body || '').slice(0, 20000)}`);
+      const titleCounts = phraseCounts(a.title);
+      const scored = [];
+      for (const [id, n] of bodyCounts) {
+        const meta = [...termByPhrase.values()].length ? null : null; // placeholder for clarity
+        const score = n + (titleCounts.has(id) ? 5 : 0);
+        scored.push({ id, score });
+        if (!usesTerm.has(id)) usesTerm.set(id, []);
+        usesTerm.get(id).push({ id: a.id, score });
+      }
+      for (const [id] of titleCounts) if (!bodyCounts.has(id)) scored.push({ id, score: 6 });
       articleTerms.set(a.id, scored);
     }
 
