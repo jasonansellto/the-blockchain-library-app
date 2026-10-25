@@ -28,6 +28,7 @@ const SITEMAP_CONFIG = [
   { type: 'categories', entity: 'Category', urlPath: (i) => `/topics/${i.slug}`, filter: {}, changefreq: 'weekly', priority: '0.8' },
   { type: 'developers', entity: 'CodeSnippet', urlPath: (i) => `/developers/snippets/${i.slug}`, filter: {}, changefreq: 'monthly', priority: '0.6' },
   { type: 'newsletter', entity: 'NewsletterEdition', urlPath: (i) => `/newsletter/${i.slug}`, filter: {}, changefreq: 'weekly', priority: '0.5' },
+  { type: 'resources', entity: 'BlockchainResource', urlPath: (i) => `/resources/blockchain/${i.slug}`, filter: {}, changefreq: 'monthly', priority: '0.6' },
   { type: 'tags', entity: 'tags' }
 ];
 
